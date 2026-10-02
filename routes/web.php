@@ -10,6 +10,10 @@ Route::get('/', function () {
     return view('pembeli.pages.produk.katalog');
 })->name('katalog');
 
+Route::get('/katalogProduk', function(){
+    return view('pembeli.pages.produk.katalog');
+});
+
 Route::get('/produk/{slug}', function ($slug) {
     return view('pembeli.pages.produk.detail_produk');
 })->name('produk.detail');
