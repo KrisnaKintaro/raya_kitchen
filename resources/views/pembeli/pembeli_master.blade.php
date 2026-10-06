@@ -8,6 +8,17 @@
     <title>@yield('title', 'Raya Kitchen - Bakery Fresh & Yummy')</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Sembunyikan scrollbar global tapi halaman tetep bisa di-scroll */
+        html, body {
+            -ms-overflow-style: none;  /* IE & Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, & Opera */
+        }
+    </style>
 
     <script>
         tailwind.config = {

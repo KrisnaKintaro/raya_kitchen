@@ -1,4 +1,4 @@
-<nav class="bg-buyer-primary/40 border-b border-white sticky top-0 z-50 shadow-[0_10px_30px_-10px_rgba(192,153,206,0.15)] transition-all duration-300">
+<nav class="bg-[#E6D6EB] border-b border-white sticky top-0 z-50 shadow-[0_10px_30px_-10px_rgba(192,153,206,0.25)] transition-all duration-300">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
 
         <!-- Kiri: Logo & Nama Brand (Clay Effect) -->

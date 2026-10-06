@@ -3,51 +3,43 @@
 namespace App\Http\Controllers\Api\Pembeli;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 
 class KatalogController extends Controller
 {
     public function index(Request $request)
     {
-        $produk = [
-            [
-                'id' => 1,
-                'nama' => 'Sepatu Sneakers Casual White',
-                'slug' => 'sepatu-sneakers-casual-white',
-                'harga' => 250000,
-                'kategori' => 'Fashion',
-                'gambar' => 'https://via.placeholder.com/300x300?text=Sepatu+Casual',
-            ],
-            [
-                'id' => 2,
-                'nama' => 'Kemeja Flannel Oversize',
-                'slug' => 'kemeja-flannel-oversize',
-                'harga' => 135000,
-                'kategori' => 'Pakaian',
-                'gambar' => 'https://via.placeholder.com/300x300?text=Kemeja+Flannel',
-            ],
-            [
-                'id' => 3,
-                'nama' => 'Tas Backpack Laptop 15 Inch',
-                'slug' => 'tas-backpack-laptop-15-inch',
-                'harga' => 185000,
-                'kategori' => 'Aksesoris',
-                'gambar' => 'https://via.placeholder.com/300x300?text=Tas+Backpack',
-            ],
-            [
-                'id' => 4,
-                'nama' => 'Jam Tangan Minimalis Water Resistant',
-                'slug' => 'jam-tangan-minimalis',
-                'harga' => 320000,
-                'kategori' => 'Aksesoris',
-                'gambar' => 'https://via.placeholder.com/300x300?text=Jam+Tangan',
-            ]
-        ];
+        // Ambil semua kategori induk yang aktif
+        $categories = Product::where('is_active', true)
+            ->select('id', 'name')
+            ->get();
+
+        // Ambil semua varian roti beserta nama kategorinya
+        $variants = ProductVariant::with('product:id,name')
+            ->whereHas('product', function($q) {
+                $q->where('is_active', true);
+            })
+            ->get()
+            ->map(function($variant) {
+                return [
+                    'id' => $variant->id,
+                    'product_id' => $variant->product_id,
+                    'variant_name' => $variant->variant_name,
+                    'price' => $variant->price,
+                    'image_url' => $variant->image_url,
+                    'category_name' => $variant->product->name ?? 'Uncategorized',
+                ];
+            });
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data katalog berhasil dimuat',
-            'data' => $produk
+            'data' => [
+                'categories' => $categories,
+                'variants' => $variants
+            ]
         ], 200);
     }
 }
