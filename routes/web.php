@@ -14,8 +14,8 @@ Route::get('/katalogProduk', function(){
     return view('pembeli.pages.produk.katalog');
 });
 
-Route::get('/produk/{slug}', function ($slug) {
-    return view('pembeli.pages.produk.detail_produk');
+Route::get('/produk/{id}', function ($id) {
+    return view('pembeli.pages.produk.detail_produk', compact('id'));
 })->name('produk.detail');
 
 Route::get('/tentang-kami', function () {

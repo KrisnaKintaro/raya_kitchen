@@ -11,4 +11,5 @@ Route::get('/user', function (Request $request) {
 
 Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
+    Route::get('/katalog/{id}', [KatalogController::class, 'show']);
 });
