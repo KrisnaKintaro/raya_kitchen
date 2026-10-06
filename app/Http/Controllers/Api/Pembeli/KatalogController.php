@@ -42,4 +42,29 @@ class KatalogController extends Controller
             ]
         ], 200);
     }
+
+    public function show($id)
+    {
+        // Ambil data varian beserta relasi induknya (kategori/deskripsi)
+        $variant = ProductVariant::with('product')->find($id);
+
+        if (!$variant) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Waduh, produk tidak ditemukan bjir.'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $variant->id,
+                'nama' => $variant->variant_name,
+                'kategori' => $variant->product->name ?? 'Kategori Umum',
+                'deskripsi' => $variant->product->description ?? 'Deskripsi roti belum tersedia, tapi dijamin enak cuy!',
+                'harga' => $variant->price,
+                'gambar' => $variant->image_url,
+            ]
+        ], 200);
+    }
 }
