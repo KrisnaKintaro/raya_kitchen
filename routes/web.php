@@ -65,3 +65,14 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
+Route::get('/checkout', function () {
+    return view('pembeli.checkout');
+});
+
+Route::get('/nota', function () {
+    return view('pembeli.nota');
+});
+
+Route::get('/riwayat', function () {
+    return view('pembeli.riwayat');
+});
