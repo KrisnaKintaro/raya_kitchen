@@ -47,7 +47,6 @@ Route::middleware(['auth'])->group(function () {
 // AUTH ROUTES (Login, Register, dll). Nani saja untuk ini
 // ==========================================
 // Nanti ini bakal fiisi pakai Controller khusus Auth lu.
-// Gw bikinin dummy routes-nya dulu biar link di navbar/footer lu nggak error 404.
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
