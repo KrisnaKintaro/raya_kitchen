@@ -85,6 +85,10 @@ $(document).ready(function() {
             url: "{{ url('/api/pembeli/katalog') }}",
             type: "GET",
             dataType: "JSON",
+            headers: {
+                "Bypass-Tunnel-Reminder": "true",
+                "ngrok-skip-browser-warning": "69420"
+            },
             beforeSend: function() {
                 $('#loading-spinner').removeClass('hidden').show();
                 $('#produk-container').hide().empty();
@@ -188,11 +192,9 @@ $(document).ready(function() {
             let hargaFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price);
             let animationDelay = index * 50;
 
-            // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
             let finalImageUrl = item.image_url;
             if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                // Menghilangkan slash '/' di awal biar nggak nabrak sama fungsi asset()
-                finalImageUrl = "{{ asset('') }}" + finalImageUrl.replace(/^\//, '');
+                finalImageUrl = "{{ asset('/') }}" + finalImageUrl.replace(/^\//, '');
             }
 
             html += `
