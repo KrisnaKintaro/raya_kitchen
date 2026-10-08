@@ -188,10 +188,17 @@ $(document).ready(function() {
             let hargaFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(item.price);
             let animationDelay = index * 50;
 
+            // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
+            let finalImageUrl = item.image_url;
+            if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+                // Menghilangkan slash '/' di awal biar nggak nabrak sama fungsi asset()
+                finalImageUrl = "{{ asset('') }}" + finalImageUrl.replace(/^\//, '');
+            }
+
             html += `
                 <div class="opacity-0 animate-fade-up bg-buyer-bg p-3.5 rounded-[2rem] shadow-[inset_0_-4px_6px_rgba(192,153,206,0.2),inset_0_4px_6px_rgba(255,255,255,1),0_10px_20px_rgba(192,153,206,0.15)] border border-white flex flex-col group hover:-translate-y-2 hover:shadow-[inset_0_-4px_6px_rgba(192,153,206,0.2),inset_0_4px_6px_rgba(255,255,255,1),0_15px_30px_rgba(192,153,206,0.25)] transition-all duration-300" style="animation-delay: ${animationDelay}ms;">
                     <div class="relative w-full h-48 sm:h-56 rounded-2xl overflow-hidden shadow-[inset_0_2px_8px_rgba(0,0,0,0.1)] mb-4 bg-gray-100">
-                        <img src="${item.image_url}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" alt="${item.variant_name}">
+                        <img src="${finalImageUrl}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" alt="${item.variant_name}">
                         <div class="absolute top-3 right-3 px-3 py-1.5 bg-white/90 backdrop-blur-md text-buyer-primary text-[10px] font-extrabold rounded-full shadow-[0_4px_10px_rgba(192,153,206,0.2)] border border-white/50">
                             ${item.category_name}
                         </div>
