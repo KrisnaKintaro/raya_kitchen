@@ -116,8 +116,15 @@ $(document).ready(function() {
                         style: 'currency', currency: 'IDR', minimumFractionDigits: 0
                     }).format(data.harga);
 
+                    // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
+                    let finalImageUrl = data.gambar;
+                    if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+                        // Menghilangkan slash '/' di awal biar nggak nabrak sama fungsi asset()
+                        finalImageUrl = "{{ asset('') }}" + finalImageUrl.replace(/^\//, '');
+                    }
+
                     // Isi data ke elemen HTML
-                    $('#pd-gambar').attr('src', data.gambar);
+                    $('#pd-gambar').attr('src', finalImageUrl);
                     $('#pd-kategori').text(data.kategori);
                     $('#pd-nama').text(data.nama);
                     $('#pd-harga').text(hargaFormatted);
