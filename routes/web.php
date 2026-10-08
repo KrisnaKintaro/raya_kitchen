@@ -66,9 +66,9 @@ Route::post('/logout', function () {
 })->name('logout');
 
 Route::get('/checkout', function () {
-    return view('pembeli.checkout');
+    return view('pembeli.pages.checkout');
 });
 
 Route::get('/nota', function () {
-    return view('pembeli.nota');
+    return view('pembeli.pages.nota');
 });

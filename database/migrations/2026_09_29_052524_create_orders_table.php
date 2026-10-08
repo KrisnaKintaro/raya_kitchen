@@ -13,12 +13,14 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('order_number')->unique();
+            $table->string('recipient_name');
+            $table->string('recipient_whatsapp');
+            $table->text('shipping_address')->nullable();
             $table->decimal('total_amount', 12, 2);
             $table->enum('status', ['pending', 'diproses', 'siap_diambil', 'selesai', 'dibatalkan'])->default('pending');
-            $table->enum('order_source', ['web', 'whatsapp']);
-            $table->text('shipping_address')->nullable(); 
+            $table->enum('order_source', ['web', 'whatsapp'])->default('web');
             $table->timestamps();
         });
     }
