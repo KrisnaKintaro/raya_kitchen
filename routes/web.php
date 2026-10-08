@@ -65,3 +65,6 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
+Route::get('/checkout', function () {
+    return view('pembeli.checkout');
+});
