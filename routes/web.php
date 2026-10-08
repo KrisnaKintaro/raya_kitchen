@@ -72,7 +72,3 @@ Route::get('/checkout', function () {
 Route::get('/nota', function () {
     return view('pembeli.nota');
 });
-
-Route::get('/riwayat', function () {
-    return view('pembeli.riwayat');
-});
