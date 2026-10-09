@@ -56,6 +56,10 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/register', function () {
         return view('auth.pembeli.register');
     })->name('register');
+
+    Route::get('/otp', function () {
+        return view('auth.pembeli.otp');
+    })->name('otp');
 });
 
 // Route Logout (Harus POST sesuai standar keamanan Laravel)
