@@ -12,6 +12,8 @@
         "deploying-to-cloud",
         "laravel-best-practices",
         "testing-best-practices",
+        "fluxui-development",
+        "livewire-development",
         "tailwindcss-development"
     ]
 }

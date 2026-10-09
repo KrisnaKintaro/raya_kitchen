@@ -1,7 +1,13 @@
 @import 'tailwindcss';
 
+@source '../../vendor/livewire/flux/stubs/**/*.blade.php';
+@source '../../vendor/livewire/flux/resources/views/**/*.blade.php';
+@source '../../vendor/kstmostofa/laravel-whatsapp/resources/views/**/*.blade.php';
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
