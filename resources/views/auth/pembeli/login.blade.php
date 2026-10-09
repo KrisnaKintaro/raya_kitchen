@@ -87,14 +87,25 @@
                         <input type="number" id="wa_number" name="whatsapp_number" placeholder="8123456789" class="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all appearance-none" required>
                     </div>
                 </div>
-
-                <!-- Input Password (Efek Tenggelam/Mendelep) -->
                 <div>
                     <div class="flex justify-between items-center mb-1.5 px-3">
                         <label class="text-xs font-extrabold text-buyer-textPrimary uppercase tracking-wider">Password</label>
                         <a href="{{ url('forgot-password') }}" class="text-[11px] font-extrabold text-buyer-primary hover:text-buyer-hover hover:underline underline-offset-2 transition-all">Lupa Password?</a>
                     </div>
-                    <input type="password" id="password" name="password" placeholder="••••••••" class="w-full px-4 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+
+                    <div class="relative">
+                        <input type="password" id="password" name="password" placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+
+                        <button type="button" id="toggle-password" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 pr-4 flex items-center text-buyer-textSecondary hover:text-buyer-primary transition-colors">
+                            <svg id="icon-eye" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            <svg id="icon-eye-off" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Remember Me -->
@@ -121,6 +132,16 @@
     <!-- SCRIPT AJAX LOGIN -->
     <script>
         $(document).ready(function() {
+            $('#toggle-password').on('click', function() {
+                const input = $('#password');
+                const isHidden = input.attr('type') === 'password';
+
+                input.attr('type', isHidden ? 'text' : 'password');
+                $('#icon-eye').toggleClass('hidden', isHidden);
+                $('#icon-eye-off').toggleClass('hidden', !isHidden);
+                $(this).attr('aria-label', isHidden ? 'Sembunyikan password' : 'Tampilkan password');
+            });
+
             $('#form-login').on('submit', function(e) {
                 e.preventDefault();
 
@@ -136,7 +157,7 @@
                 $('#alert-error').addClass('hidden');
 
                 $.ajax({
-                    url: "{{ url('/api/pembeli/login') }}",
+                    url: "{{ url('api/auth/login') }}",
                     type: "POST",
                     data: {
                         whatsapp_number: wa_number,

@@ -121,19 +121,21 @@ class RegisterController extends Controller
             'whatsapp_number' => $registerData['whatsapp_number'],
             'password' => $registerData['password'],
             'role' => $registerData['role'],
-            'email_verified_at' => now(), 
+            'email_verified_at' => now(),
         ]);
 
         // 5. Bersihin sampah di Cache biar OTP-nya ga bisa dipake 2x
         Cache::forget('otp_' . $waNumber);
         Cache::forget('register_data_' . $waNumber);
 
-        // 6. Auto login user-nya
         Auth::login($user);
 
+        $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'status' => 'success',
-            'message' => 'Akun berhasil diverifikasi dan dibuat!'
+            'message' => 'Akun berhasil diverifikasi dan dibuat!',
+            'token' => $token,
+            'data' => $user
         ]);
     }
 }
