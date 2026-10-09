@@ -38,7 +38,7 @@
         <!-- Kolom Kiri: Foto Roti + Overlay Ungu -->
         <div class="hidden md:block md:w-5/12 relative bg-buyer-primary">
             <!-- Foto Bakery -->
-            <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=1000&auto=format&fit=crop" alt="Bakery" class="absolute inset-0 w-full h-full object-cover">
+            <img src="{{ asset('asset/bakery_login.jpg') }}" alt="Bakery" class="absolute inset-0 w-full h-full object-cover">
             <!-- Overlay warna primer -->
             <div class="absolute inset-0 bg-buyer-primary/70 mix-blend-multiply"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-buyer-primary/90 to-transparent"></div>
