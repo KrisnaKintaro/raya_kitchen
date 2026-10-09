@@ -60,6 +60,14 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/otp', function () {
         return view('auth.pembeli.otp');
     })->name('otp');
+
+    Route::get('/forgot-password', function () {
+        return view('auth.pembeli.forgot_password');
+    })->name('password.request');
+
+    Route::get('/reset-password/{token}', function ($token) {
+        return view('auth.pembeli.reset_password', ['token' => $token]);
+    })->name('password.reset');
 });
 
 // Route Logout (Harus POST sesuai standar keamanan Laravel)

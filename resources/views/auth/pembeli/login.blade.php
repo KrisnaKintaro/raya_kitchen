@@ -92,7 +92,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-1.5 px-3">
                         <label class="text-xs font-extrabold text-buyer-textPrimary uppercase tracking-wider">Password</label>
-                        <a href="#" class="text-[11px] font-extrabold text-buyer-primary hover:text-buyer-hover hover:underline underline-offset-2 transition-all">Lupa Password?</a>
+                        <a href="{{ url('forgot-password') }}" class="text-[11px] font-extrabold text-buyer-primary hover:text-buyer-hover hover:underline underline-offset-2 transition-all">Lupa Password?</a>
                     </div>
                     <input type="password" id="password" name="password" placeholder="••••••••" class="w-full px-4 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
                 </div>
