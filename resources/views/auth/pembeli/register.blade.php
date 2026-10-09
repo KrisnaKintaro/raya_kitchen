@@ -94,15 +94,34 @@
                     </div>
                 </div>
 
-                <!-- Input Password & Konfirmasi (Bersebelahan di desktop) -->
+                <!-- Input Password & Konfirmasi -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Password Utama -->
                     <div>
                         <label class="block text-xs font-extrabold text-buyer-textPrimary ml-3 mb-1.5 uppercase tracking-wider">Password</label>
-                        <input type="password" id="password" name="password" placeholder="••••••••" class="w-full px-4 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+                        <div class="relative">
+                            <input type="password" id="password" name="password" placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+
+                            <!-- Tombol Mata (Toggle Password) -->
+                            <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-4 flex items-center text-buyer-textSecondary hover:text-buyer-primary focus:outline-none transition-colors" data-target="password">
+                                <svg class="w-5 h-5 icon-eye" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <svg class="w-5 h-5 icon-eye-slash hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                            </button>
+                        </div>
                     </div>
+
+                    <!-- Ulangi Password -->
                     <div>
                         <label class="block text-xs font-extrabold text-buyer-textPrimary ml-3 mb-1.5 uppercase tracking-wider">Ulangi Password</label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" placeholder="••••••••" class="w-full px-4 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+                        <div class="relative">
+                            <input type="password" id="password_confirmation" name="password_confirmation" placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl bg-buyer-bg shadow-[inset_0_3px_6px_rgba(192,153,206,0.2),inset_0_-2px_4px_rgba(255,255,255,0.8)] border border-transparent focus:outline-none focus:ring-2 focus:ring-buyer-primary/50 focus:bg-white text-sm font-bold text-buyer-textPrimary placeholder:font-semibold placeholder:text-buyer-textSecondary/50 transition-all" required>
+
+                            <!-- Tombol Mata (Toggle Password Konfirmasi) -->
+                            <button type="button" class="toggle-password absolute inset-y-0 right-0 pr-4 flex items-center text-buyer-textSecondary hover:text-buyer-primary focus:outline-none transition-colors" data-target="password_confirmation">
+                                <svg class="w-5 h-5 icon-eye" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                <svg class="w-5 h-5 icon-eye-slash hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -121,9 +140,25 @@
         </div>
     </div>
 
-    <!-- SCRIPT AJAX REGISTER -->
+    <!-- SCRIPT AJAX REGISTER & TOGGLE PASSWORD -->
     <script>
         $(document).ready(function() {
+
+            // Logic Toggle (Mata) Password
+            $('.toggle-password').on('click', function() {
+                let targetId = $(this).data('target');
+                let inputEl = $('#' + targetId);
+                let type = inputEl.attr('type') === 'password' ? 'text' : 'password';
+
+                // Ubah Tipe Input
+                inputEl.attr('type', type);
+
+                // Ganti Icon SVG (Tutup / Buka Mata)
+                $(this).find('.icon-eye').toggleClass('hidden');
+                $(this).find('.icon-eye-slash').toggleClass('hidden');
+            });
+
+            // Logic Register Submit
             $('#form-register').on('submit', function(e) {
                 e.preventDefault();
 
@@ -146,7 +181,7 @@
                 $('#alert-box').addClass('hidden');
 
                 $.ajax({
-                    url: "{{ url('/api/pembeli/register') }}",
+                    url: "{{ url('api/auth/register') }}",
                     type: "POST",
                     data: {
                         name: name,
@@ -159,11 +194,11 @@
                         if(response.status === 'success') {
                             $('#alert-box').removeClass('hidden bg-red-50 text-red-600 border-red-100 shadow-[inset_0_2px_4px_rgba(239,68,68,0.05)]')
                                 .addClass('bg-green-50 text-green-600 border-green-100 shadow-[inset_0_2px_4px_rgba(34,197,94,0.05)]')
-                                .text('Daftar berhasil cuy! Redirecting...');
+                                .text('Kode OTP dikirim cuy! Redirecting...');
 
-                            // Auto login & lempar ke home
+                            // Lempar ke halaman OTP bawa parameter nomor WA
                             setTimeout(() => {
-                                window.location.href = "{{ url('/') }}";
+                                window.location.href = "{{ route('otp') }}?wa=" + response.whatsapp_number;
                             }, 1500);
                         } else {
                             resetBtn();
@@ -174,7 +209,6 @@
                         resetBtn();
                         let errorMsg = 'Gagal terhubung ke server. Coba lagi cuy.';
 
-                        // Nge-handle validasi error dari Laravel (misal WA udah terdaftar)
                         if(xhr.responseJSON && xhr.responseJSON.errors) {
                             let firstError = Object.values(xhr.responseJSON.errors)[0][0];
                             errorMsg = firstError;
