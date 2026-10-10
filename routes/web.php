@@ -25,6 +25,7 @@ Route::get('/tentang-kami', function () {
 
 // ==========================================
 // PROTECTED ROUTES (Hanya buat user yang udah Login)
+// taruh semua route tampilan yang baru bisa diakses jika sudah login disini
 // ==========================================
 Route::middleware(['auth'])->group(function () {
 
@@ -68,13 +69,11 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/reset-password', function () {
         return view('auth.pembeli.reset_password');
     })->name('password.reset');
-});
 
-// Route Logout (Harus POST sesuai standar keamanan Laravel)
-Route::post('/logout', function () {
-    // Nanti diganti Auth::logout() di controller
-    return redirect('/');
-})->name('logout');
+    Route::post('/logout', function () {
+        return redirect('/');
+    })->name('logout');
+});
 
 Route::get('/checkout', function () {
     return view('pembeli.pages.checkout');
