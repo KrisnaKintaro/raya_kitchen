@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
@@ -15,6 +16,8 @@ Route::prefix('auth')->middleware('web')->group(function () {
     Route::post('/verify-otp', [RegisterController::class, 'verifyOtp']);
     Route::post('/login', [LogInOutController::class, 'login']);
     Route::get('/logout',[LogInOutController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('/forgot-password', [ForgResetPasswordController::class, 'sendResetLink']);
+    Route::post('/reset-password', [ForgResetPasswordController::class, 'resetPassword']);
 });
 
 // ========================================================================================

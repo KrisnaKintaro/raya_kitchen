@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -61,9 +62,24 @@ class RegisterController extends Controller
         $pesan = "Halo *{$request->name}*! 👋\n\nSelamat datang di *Raya Kitchen*!\nIni kode OTP buat verifikasi pendaftaran mu:\n\n*{$otp}*\n\nKode ini hanya berlaku 5 menit ya. Jangan kasih tau siapa-siapa!";
 
         try {
-            $waId = $waNumber . '@c.us';
+            $target = $waNumber;
 
-            WhatsApp::web('bot_bakery')->messages()->sendText($waId, $pesan);
+            $randomDelay = rand(2, 6);
+
+            // Tembak API Fonnte
+            $response = Http::withHeaders([
+                'Authorization' => env('FONNTE_TOKEN'),
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $target,
+                'message' => $pesan,
+                'delay' => (string) $randomDelay,
+                'typing' => true,
+            ]);
+
+            // Cek kalau API Fonnte ngasih pesan gagal
+            if (!$response->successful() || $response->json('status') == false) {
+                Log::error('Fonnte Error: ' . $response->body());
+            }
 
         } catch (\Throwable $e) {
             Log::error('WA Error: ' . $e->getMessage());

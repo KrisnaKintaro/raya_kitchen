@@ -65,8 +65,8 @@ Route::middleware(['guest'])->group(function () {
         return view('auth.pembeli.forgot_password');
     })->name('password.request');
 
-    Route::get('/reset-password/{token}', function ($token) {
-        return view('auth.pembeli.reset_password', ['token' => $token]);
+    Route::get('/reset-password', function () {
+        return view('auth.pembeli.reset_password');
     })->name('password.reset');
 });
 
