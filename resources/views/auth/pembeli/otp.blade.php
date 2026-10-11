@@ -72,52 +72,152 @@
     <!-- SCRIPT LOGIC OTP -->
     <script>
         $(document).ready(function() {
-            // Ambil nomor WA dari URL parameter (?wa=628xxx)
             const urlParams = new URLSearchParams(window.location.search);
             const waNumber = urlParams.get('wa');
 
             if(waNumber) {
-                // Sensor sedikit nomornya biar aman (62812****890)
                 let maskedWa = waNumber.substring(0, 5) + '****' + waNumber.substring(waNumber.length - 3);
                 $('#display-wa').text('+' + maskedWa);
             } else {
-                window.location.href = "{{ route('register') }}"; // Tendang ke register kalau gaada param
+                window.location.href = "{{ route('register') }}";
             }
 
-            // Auto-next kotak input pas ngetik angka
+            // Fungsi untuk menampilkan pesan Sukses/Error
+            function showSuccess(msg) {
+                $('#alert-box').removeClass('hidden bg-red-50 text-red-600 border-red-100 shadow-[inset_0_2px_4px_rgba(239,68,68,0.05)]')
+                    .addClass('bg-green-50 text-green-600 border-green-100')
+                    .text(msg);
+            }
+
+            function showError(msg) {
+                $('#alert-box').removeClass('hidden bg-green-50 text-green-600 border-green-100')
+                    .addClass('bg-red-50 text-red-600 border-red-100 shadow-[inset_0_2px_4px_rgba(239,68,68,0.05)]')
+                    .text(msg);
+            }
+
+            // ==========================================
+            // LOGIC COUNTDOWN & RESEND OTP (ANTI REFRESH)
+            // ==========================================
+            let resendBtn = $('#resend-btn');
+            let timerInterval;
+
+            // Fungsi untuk menyalakan tombol kembali
+            function enableResendButton() {
+                resendBtn.prop('disabled', false)
+                         .removeClass('text-gray-400 cursor-not-allowed')
+                         .addClass('text-buyer-primary hover:text-buyer-hover hover:underline');
+                resendBtn.text('Kirim Ulang');
+            }
+
+            // Fungsi Hitung Mundur
+            function startResendCooldown(seconds) {
+                // Matikan tombol
+                resendBtn.prop('disabled', true)
+                         .removeClass('text-buyer-primary hover:text-buyer-hover hover:underline')
+                         .addClass('text-gray-400 cursor-not-allowed');
+
+                timerInterval = setInterval(function() {
+                    resendBtn.text(`Tunggu sebentar (${seconds}s)`);
+                    seconds--;
+
+                    if(seconds < 0) {
+                        clearInterval(timerInterval);
+                        enableResendButton();
+                    }
+                }, 1000);
+            }
+
+            // --- CEK LOCALSTORAGE SAAT HALAMAN DIBUKA ---
+            let now = new Date().getTime();
+            let cooldownEnd = localStorage.getItem('otp_cooldown_' + waNumber);
+
+            if (cooldownEnd) {
+                // Kalau ada data cooldown di browser
+                if (cooldownEnd > now) {
+                    // Waktu belum habis, lanjut hitung sisa detiknya
+                    let sisaDetik = Math.ceil((cooldownEnd - now) / 1000);
+                    startResendCooldown(sisaDetik);
+                } else {
+                    // Waktu udah habis (udah lebih dari 60 dtk), nyalakan tombol
+                    enableResendButton();
+                }
+            } else {
+                // User BARU SAJA mendarat dari halaman Register
+                // Set waktu target 60 detik dari sekarang dan simpan di browser
+                localStorage.setItem('otp_cooldown_' + waNumber, now + (60 * 1000));
+                startResendCooldown(60);
+            }
+
+            // --- AKSI SAAT TOMBOL KIRIM ULANG DITEKAN ---
+            resendBtn.on('click', function() {
+                if($(this).prop('disabled')) return;
+
+                $(this).text('Mengirim...');$(this).prop('disabled', true).addClass('text-gray-400 cursor-not-allowed');
+
+                $.ajax({
+                    url: "{{ url('api/auth/resend-otp') }}",
+                    type: "POST",
+                    data: {
+                        whatsapp_number: waNumber,
+                        _token: $('input[name="_token"]').val()
+                    },
+                    success: function(response) {
+                        showSuccess(response.message);
+                        $('.otp-input').val('');$('.otp-input').first().focus();
+
+                        // Set ulang cooldown 60 detik baru ke localStorage
+                        let newTime = new Date().getTime();
+                        localStorage.setItem('otp_cooldown_' + waNumber, newTime + (60 * 1000));
+
+                        // Jalankan ulang animasi timer
+                        startResendCooldown(60);
+                    },
+                    error: function(xhr) {
+                        let errorMsg = xhr.responseJSON?.message || 'Gagal mengirim ulang OTP!';
+                        showError(errorMsg);
+
+                        if(xhr.status === 429) {
+                            // Kalau ditolak Backend karena belum 60 detik, paksa jalanin timer sisa
+                            let sisaBackend = 60; // Default fallback
+                            startResendCooldown(sisaBackend);
+                        } else {
+                            enableResendButton();
+                        }
+                    }
+                });
+            });
+
+            // ==========================================
+            // LOGIC SUBMIT VERIFIKASI (TETAP SAMA)
+            // ==========================================
             $('.otp-input').on('keyup', function(e) {
                 let key = e.which;
                 if(key >= 48 && key <= 57 || key >= 96 && key <= 105) {
-                    // Kalau angka, pindah ke kotak kanan
                     $(this).next('.otp-input').focus();
                 } else if(key === 8) {
-                    // Kalau backspace, hapus lalu pindah ke kotak kiri
                     $(this).prev('.otp-input').focus();
                 }
             });
 
-            // Submit Verifikasi OTP
             $('#form-otp').on('submit', function(e) {
                 e.preventDefault();
 
-                // Gabungin 6 value input jadi 1 string
                 let otpCode = '';
                 $('.otp-input').each(function() {
                     otpCode += $(this).val();
                 });
 
                 if(otpCode.length < 6) {
-                    showError('Kode OTP harus 6 digit cuy!');
+                    showError('Kode OTP harus 6 digit ya!');
                     return;
                 }
 
-                // Loading state
                 $('#btn-text').text('Mengecek...');
                 $('#btn-submit').prop('disabled', true).addClass('opacity-80 cursor-wait');
                 $('#alert-box').addClass('hidden');
 
                 $.ajax({
-                    url: "{{ url('api/auth/verify-otp') }}", 
+                    url: "{{ url('api/auth/verify-otp') }}",
                     type: "POST",
                     data: {
                         whatsapp_number: waNumber,
@@ -126,11 +226,7 @@
                     },
                     success: function(response) {
                         if(response.status === 'success') {
-                            $('#alert-box').removeClass('hidden bg-red-50 text-red-600 border-red-100')
-                                .addClass('bg-green-50 text-green-600 border-green-100')
-                                .text('Verifikasi Sukses! Mengalihkan...');
-
-                            // Arahin ke halaman Home/Dashboard
+                            showSuccess('Verifikasi Sukses! Mengalihkan...');
                             setTimeout(() => {
                                 window.location.href = "{{ url('/') }}";
                             }, 1500);
@@ -139,18 +235,11 @@
                     error: function(xhr) {
                         $('#btn-text').text('Verifikasi OTP');
                         $('#btn-submit').prop('disabled', false).removeClass('opacity-80 cursor-wait');
-
                         let errorMsg = xhr.responseJSON?.message || 'Kode OTP salah atau kadaluarsa!';
                         showError(errorMsg);
                     }
                 });
             });
-
-            function showError(msg) {
-                $('#alert-box').removeClass('hidden bg-green-50 text-green-600 border-green-100')
-                    .addClass('bg-red-50 text-red-600 border-red-100 shadow-[inset_0_2px_4px_rgba(239,68,68,0.05)]')
-                    .text(msg);
-            }
         });
     </script>
 </body>

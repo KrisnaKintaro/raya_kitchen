@@ -47,11 +47,10 @@ class RegisterController extends Controller
             ], 422);
         }
 
-        // 4. Generate OTP 6 Digit & Simpan di Cache (valid 5 menit)
         $otp = rand(100000, 999999);
         Cache::put('otp_' . $waNumber, $otp, now()->addMinutes(5));
+        Cache::put('otp_cooldown_' . $waNumber, true, now()->addSeconds(60));
 
-        // 5. Simpan Data Registrasi ke Cache (Biar user dibikin SETELAH OTP bener)
         Cache::put('register_data_' . $waNumber, [
             'name' => $request->name,
             'whatsapp_number' => $waNumber,
@@ -153,5 +152,67 @@ class RegisterController extends Controller
             'token' => $token,
             'data' => $user
         ]);
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $request->validate([
+            'whatsapp_number' => 'required|string',
+        ]);
+
+        $waNumber = $request->whatsapp_number;
+
+        // 1. Cek apakah sesi pendaftaran masih ada (karena datanya kita simpan 5 menit)
+        $registerData = Cache::get('register_data_' . $waNumber);
+        if (!$registerData) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sesi pendaftaranmu udah habis, silakan isi form daftar ulang dari awal ya.'
+            ], 400);
+        }
+
+        // 2. Cek Perlindungan Spam (Cooldown 60 Detik)
+        if (Cache::has('otp_cooldown_' . $waNumber)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Sabar ya, tunggu 60 detik dulu sebelum minta kode OTP baru!'
+            ], 429); // 429 = Too Many Requests
+        }
+
+        // 3. Generate OTP Baru & Perbarui Cache
+        $newOtp = rand(100000, 999999);
+
+        // Simpan OTP baru (tetap valid 5 menit)
+        Cache::put('otp_' . $waNumber, $newOtp, now()->addMinutes(5));
+
+        // Kunci permintaan OTP selama 60 detik ke depan
+        Cache::put('otp_cooldown_' . $waNumber, true, now()->addSeconds(60));
+
+        // 4. Kirim pesan WA via Fonnte
+        $pesan = "Halo *{$registerData['name']}*! 👋\n\nIni kode OTP *BARU* buat verifikasi pendaftaranmu:\n\n*{$newOtp}*\n\nKode ini berlaku 5 menit ya.";
+
+        try {
+            $randomDelay = rand(2, 6);
+
+            $response = Http::withHeaders([
+                'Authorization' => env('FONNTE_TOKEN'),
+            ])->post('https://api.fonnte.com/send', [
+                'target' => $waNumber,
+                'message' => $pesan,
+                'delay' => (string) $randomDelay,
+                'typing' => true,
+            ]);
+
+            if (!$response->successful() || $response->json('status') == false) {
+                Log::error('Fonnte Error Resend OTP: ' . $response->body());
+            }
+        } catch (\Throwable $e) {
+            Log::error('WA Error Resend OTP: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Sip! Kode OTP baru udah dikirim ke WA kamu.'
+        ], 200);
     }
 }

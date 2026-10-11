@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->middleware('web')->group(function () {
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/verify-otp', [RegisterController::class, 'verifyOtp']);
+    Route::post('/resend-otp', [RegisterController::class, 'resendOtp']);
     Route::post('/login', [LogInOutController::class, 'login']);
     Route::get('/logout',[LogInOutController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('/forgot-password', [ForgResetPasswordController::class, 'sendResetLink']);
