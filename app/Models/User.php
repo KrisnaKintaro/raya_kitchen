@@ -21,7 +21,6 @@ use HasApiTokens ,HasFactory, Notifiable;
         'whatsapp_number',
         'password',
         'role',
-        'address',
         'profile_photo',
     ];
 
@@ -38,5 +37,10 @@ use HasApiTokens ,HasFactory, Notifiable;
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
     }
 }
