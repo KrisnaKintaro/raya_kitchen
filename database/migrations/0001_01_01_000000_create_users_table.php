@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('password');
 
             $table->enum('role', ['admin', 'pelanggan'])->default('pelanggan');
-            $table->text('address')->nullable();
             $table->string('profile_photo')->nullable();
 
             $table->rememberToken();
