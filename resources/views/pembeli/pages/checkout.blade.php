@@ -19,44 +19,53 @@
                 {{-- Card Data Pengiriman --}}
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
                     <h2 class="text-lg font-bold text-gray-800 mb-1">Data Pengiriman</h2>
-                    <p class="text-sm text-gray-500 mb-6">Pastikan informasi penerima sudah benar.</p>
+                    <p class="text-sm text-gray-500 mb-6">Pilih alamat tersimpan atau masukkan alamat baru.</p>
 
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penerima</label>
-                            <input type="text" value="Andi Pratama" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" readonly>
+                            <input type="text" value="{{ auth()->user()->name ?? '' }}" placeholder="Masukkan nama penerima" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
-                            <input type="text" value="+62 812 3456 7890" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm" readonly>
+                            <input type="text" value="{{ auth()->user()->phone ?? '' }}" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
                         </div>
 
+                        {{-- Pilihan Alamat Pengiriman --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Pengiriman</label>
-                            <textarea rows="2" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm resize-none" readonly>Jl. Contoh No. 12, Kediri</textarea>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-sm font-medium text-gray-700">Alamat Pengiriman</label>
+                                <a href="{{ url('/profil') }}" class="text-xs text-purple-600 hover:underline font-semibold">+ Kelola Alamat di Profil</a>
+                            </div>
+                            <select class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700">
+                                <option value="">-- Pilih Alamat Tersimpan --</option>
+                                <option value="1" selected>🏠 Rumah - Jl. Raya Kediri No. 12, Kediri</option>
+                                <option value="2">🏢 Kantor - Jl. Pemuda No. 45, Kediri</option>
+                            </select>
                         </div>
 
+                        {{-- Catatan Pesanan --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan (Opsional)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Pesanan (Opsional)</label>
                             <input type="text" placeholder="Contoh: Titip di satpam / Minta sambal ekstra" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
                         </div>
                     </div>
                 </div>
 
-                {{-- Card Metode Pembayaran --}}
+                {{-- Card Metode Pembayaran (Transfer Bank Only) --}}
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
                     <h2 class="text-lg font-bold text-gray-800 mb-4">Metode Pembayaran</h2>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="flex items-center justify-center p-3 rounded-xl border-2 border-purple-500 bg-purple-50 cursor-pointer text-purple-700 font-semibold text-sm">
-                            <input type="radio" name="payment_method" value="transfer" class="hidden" checked>
-                            Transfer
-                        </label>
-                        <label class="flex items-center justify-center p-3 rounded-xl border-2 border-gray-200 bg-white cursor-pointer text-gray-600 font-semibold text-sm hover:border-purple-300">
-                            <input type="radio" name="payment_method" value="cod" class="hidden">
-                            COD (Bayar di Tempat)
+                    <div class="space-y-3">
+                        <label class="flex items-center justify-between p-4 rounded-xl border-2 border-purple-500 bg-purple-50 cursor-pointer text-purple-700 font-semibold text-sm">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="payment_method" value="transfer" class="accent-purple-600 w-4 h-4" checked>
+                                <span>Transfer Bank (BCA / BRI / Mandiri)</span>
+                            </div>
+                            <span class="text-xs bg-purple-200 text-purple-800 px-2.5 py-1 rounded-full font-bold">Rekomendasi</span>
                         </label>
                     </div>
+                    <p class="text-xs text-gray-400 mt-3">*Nomor rekening tujuan transfer akan muncul pada halaman Nota Digital setelah pesanan dikonfirmasi.</p>
                 </div>
 
             </div>
@@ -104,9 +113,9 @@
                             <span class="text-xl font-extrabold text-purple-700">Rp 37.000</span>
                         </div>
 
-                        <button type="button" class="w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md transition duration-200 text-center">
+                        <a href="{{ url('/nota') }}" class="block w-full py-3.5 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl shadow-md transition duration-200 text-center">
                             Konfirmasi Pesanan
-                        </button>
+                        </a>
                     </div>
 
                 </div>

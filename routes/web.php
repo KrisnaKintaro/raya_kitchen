@@ -41,6 +41,19 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.profil');
     })->name('profil');
 
+    // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
+    Route::get('/checkout', function () {
+        return view('pembeli.pages.checkout');
+    })->name('checkout');
+
+    Route::get('/nota', function () {
+        return view('pembeli.pages.nota');
+    })->name('nota');
+
+    Route::get('/riwayat-pesanan', function () {
+        return view('pembeli.pages.riwayat_pesanan');
+    })->name('riwayat-pesanan');
+
 });
 
 
@@ -73,12 +86,4 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/logout', function () {
         return redirect('/');
     })->name('logout');
-});
-
-Route::get('/checkout', function () {
-    return view('pembeli.pages.checkout');
-});
-
-Route::get('/nota', function () {
-    return view('pembeli.pages.nota');
 });
