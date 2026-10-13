@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Pembeli\CartController;
+use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +31,12 @@ Route::prefix('auth')->middleware('web')->group(function () {
 Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
+
+    // Tambahan Route AJAX Keranjang & Checkout
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/update', [CartController::class, 'update']);
+    Route::post('/cart/delete', [CartController::class, 'destroy']);
+    Route::post('/checkout/process', [CheckoutController::class, 'store']);
 });
 
 
