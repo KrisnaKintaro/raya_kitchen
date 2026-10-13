@@ -16,10 +16,10 @@
             {{-- KOLOM KIRI: Data Pengiriman & Metode Pembayaran --}}
             <div class="lg:col-span-2 space-y-6">
                 
-                {{-- Card Data Pengiriman --}}
+                {{-- Card Data Pengiriman (Alamat Shopee-like) --}}
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
                     <h2 class="text-lg font-bold text-gray-800 mb-1">Data Pengiriman</h2>
-                    <p class="text-sm text-gray-500 mb-6">Pilih alamat tersimpan atau masukkan alamat baru.</p>
+                    <p class="text-sm text-gray-500 mb-6">Alamat utama otomatis terpilih. Kamu bisa menggantinya jika perlu.</p>
 
                     <div class="space-y-4">
                         <div>
@@ -32,20 +32,19 @@
                             <input type="text" value="{{ auth()->user()->phone ?? '' }}" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
                         </div>
 
-                        {{-- Pilihan Alamat Pengiriman --}}
+                        {{-- Pilihan Alamat (Default ke is_primary = true) --}}
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="block text-sm font-medium text-gray-700">Alamat Pengiriman</label>
-                                <a href="{{ url('/profil') }}" class="text-xs text-purple-600 hover:underline font-semibold">+ Kelola Alamat di Profil</a>
+                                <label class="block text-sm font-medium text-gray-700">Pilih Alamat Pengiriman</label>
+                                <a href="{{ url('/profil') }}" class="text-xs text-purple-600 hover:underline font-semibold">+ Tambah / Kelola Alamat</a>
                             </div>
                             <select class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700">
-                                <option value="">-- Pilih Alamat Tersimpan --</option>
-                                <option value="1" selected>🏠 Rumah - Jl. Raya Kediri No. 12, Kediri</option>
+                                {{-- Contoh dinamis backend nantinya: loop alamat user, cek is_primary --}}
+                                <option value="1" selected>🏠 [Utama] Rumah - Jl. Raya Kediri No. 12, Kediri</option>
                                 <option value="2">🏢 Kantor - Jl. Pemuda No. 45, Kediri</option>
                             </select>
                         </div>
 
-                        {{-- Catatan Pesanan --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Pesanan (Opsional)</label>
                             <input type="text" placeholder="Contoh: Titip di satpam / Minta sambal ekstra" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm">
@@ -53,19 +52,29 @@
                     </div>
                 </div>
 
-                {{-- Card Metode Pembayaran (Transfer Bank Only) --}}
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100">
+                {{-- Card Metode Pembayaran (Transfer Bank & COD) --}}
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100" x-data="{ payment: 'transfer' }">
                     <h2 class="text-lg font-bold text-gray-800 mb-4">Metode Pembayaran</h2>
                     <div class="space-y-3">
-                        <label class="flex items-center justify-between p-4 rounded-xl border-2 border-purple-500 bg-purple-50 cursor-pointer text-purple-700 font-semibold text-sm">
+                        {{-- Opsi Transfer Bank --}}
+                        <label @click="payment = 'transfer'" :class="payment === 'transfer' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-700'" class="flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer font-semibold text-sm transition">
                             <div class="flex items-center gap-3">
                                 <input type="radio" name="payment_method" value="transfer" class="accent-purple-600 w-4 h-4" checked>
                                 <span>Transfer Bank (BCA / BRI / Mandiri)</span>
                             </div>
-                            <span class="text-xs bg-purple-200 text-purple-800 px-2.5 py-1 rounded-full font-bold">Rekomendasi</span>
+                            <span class="text-xs bg-purple-200 text-purple-800 px-2.5 py-1 rounded-full font-bold">Upload Bukti</span>
+                        </label>
+
+                        {{-- Opsi COD --}}
+                        <label @click="payment = 'cod'" :class="payment === 'cod' ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-200 bg-white text-gray-700'" class="flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer font-semibold text-sm transition">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="payment_method" value="cod" class="accent-purple-600 w-4 h-4">
+                                <span>COD (Bayar di Tempat)</span>
+                            </div>
+                            <span class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">Status: Unpaid</span>
                         </label>
                     </div>
-                    <p class="text-xs text-gray-400 mt-3">*Nomor rekening tujuan transfer akan muncul pada halaman Nota Digital setelah pesanan dikonfirmasi.</p>
+                    <p class="text-xs text-gray-400 mt-3">*Pesanan dengan metode apapun akan tercatat berstatus <strong class="text-gray-600">Unpaid</strong> hingga diverifikasi/diupdate oleh Admin.</p>
                 </div>
 
             </div>
