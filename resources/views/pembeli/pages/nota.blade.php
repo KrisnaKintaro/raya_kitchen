@@ -1,7 +1,12 @@
 @extends('pembeli.pembeli_master')
 
 @section('content')
-{{-- CSS KHUSUS PRINT & MODAL --}}
+@php
+    $method = request('method', 'transfer');
+    $address = request('address', '🏠 [Utama] Rumah - Jl. Raya Kediri No. 12, Kediri');
+@endphp
+
+{{-- CSS KHUSUS PRINT --}}
 <style>
 @media print {
     body * {
@@ -44,10 +49,16 @@
         {{-- Card Struk / Nota Digital --}}
         <div id="nota-card" class="bg-white p-6 sm:p-10 rounded-2xl shadow-sm border border-purple-100 relative overflow-hidden">
             
-            {{-- Watermark Status (Bisa berubah via JS) --}}
-            <div id="status-badge" class="absolute top-6 right-6 border-2 border-amber-500 text-amber-600 font-extrabold text-xs px-3 py-1 rounded-md transform rotate-12 opacity-90 bg-amber-50">
-                MENUNGGU PEMBAYARAN
-            </div>
+            {{-- Watermark Status --}}
+            @if($method === 'cod')
+                <div id="status-badge" class="absolute top-6 right-6 border-2 border-amber-500 text-amber-600 font-extrabold text-xs px-3 py-1 rounded-md transform rotate-12 opacity-90 bg-amber-50">
+                    COD - MENUNGGU PEMBAYARAN
+                </div>
+            @else
+                <div id="status-badge" class="absolute top-6 right-6 border-2 border-purple-500 text-purple-600 font-extrabold text-xs px-3 py-1 rounded-md transform rotate-12 opacity-90 bg-purple-50">
+                    TRANSFER - UNPAID
+                </div>
+            @endif
 
             {{-- Header Toko --}}
             <div class="text-center border-b border-gray-100 pb-6">
@@ -72,27 +83,42 @@
                 </div>
                 <div class="text-right">
                     <p class="text-xs text-gray-400 uppercase font-medium">Metode Pembayaran</p>
-                    <p class="font-semibold text-purple-700 mt-0.5">Transfer Bank</p>
+                    <p class="font-semibold {{ $method === 'cod' ? 'text-amber-700' : 'text-purple-700' }} mt-0.5">
+                        {{ $method === 'cod' ? 'COD (Bayar di Tempat)' : 'Transfer Bank' }}
+                    </p>
+                </div>
+                <div class="col-span-2 pt-2 border-t border-gray-50">
+                    <p class="text-xs text-gray-400 uppercase font-medium">Alamat Pengiriman</p>
+                    <p class="font-medium text-gray-700 mt-0.5">{{ $address }}</p>
                 </div>
             </div>
 
-            {{-- Kotak Informasi Rekening Tujuan Transfer --}}
-            <div class="my-6 p-4 bg-purple-50 rounded-2xl border border-purple-200 text-sm">
-                <p class="font-bold text-purple-900 mb-2">Silakan Transfer Pembayaran Ke:</p>
-                <div class="space-y-1 text-gray-700 text-xs sm:text-sm font-medium">
-                    <div class="flex justify-between">
-                        <span>Bank BCA:</span>
-                        <span class="font-bold text-gray-900">1234-5678-9010 (a.n Raya Kitchen)</span>
+            {{-- Kotak Informasi Rekening / Keterangan COD --}}
+            @if($method === 'transfer')
+                <div class="my-6 p-4 bg-purple-50 rounded-2xl border border-purple-200 text-sm">
+                    <p class="font-bold text-purple-900 mb-2">Silakan Transfer Pembayaran Ke:</p>
+                    <div class="space-y-1 text-gray-700 text-xs sm:text-sm font-medium">
+                        <div class="flex justify-between">
+                            <span>Bank BCA:</span>
+                            <span class="font-bold text-gray-900">1234-5678-9010 (a.n Raya Kitchen)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Bank Mandiri:</span>
+                            <span class="font-bold text-gray-900">0987-6543-2109 (a.n Raya Kitchen)</span>
+                        </div>
                     </div>
-                    <div class="flex justify-between">
-                        <span>Bank Mandiri:</span>
-                        <span class="font-bold text-gray-900">0987-6543-2109 (a.n Raya Kitchen)</span>
-                    </div>
+                    <p class="text-[11px] text-gray-500 mt-3 pt-2 border-t border-purple-200/60">
+                        *Harap transfer sesuai dengan total pembayaran di bawah. Unggah bukti transfer di bawah setelah melakukan pembayaran.
+                    </p>
                 </div>
-                <p class="text-[11px] text-gray-500 mt-3 pt-2 border-t border-purple-200/60">
-                    *Harap transfer sesuai dengan total pembayaran di bawah. Unggah bukti transfer di bawah setelah melakukan pembayaran.
-                </p>
-            </div>
+            @else
+                <div class="my-6 p-4 bg-amber-50 rounded-2xl border border-amber-200 text-sm">
+                    <p class="font-bold text-amber-900 mb-1">📦 Instruksi Pembayaran COD:</p>
+                    <p class="text-xs text-amber-800">
+                        Siapkan uang pas sejumlah <strong class="text-gray-900">Rp 37.000</strong> saat kurir mengantarkan pesanan ke alamatmu. Status pesanan akan otomatis diperbarui oleh Admin saat pembayaran diterima.
+                    </p>
+                </div>
+            @endif
 
             {{-- Table Item Roti --}}
             <div class="py-6 border-b border-gray-100">
@@ -150,20 +176,27 @@
                     Cek Riwayat Pesanan
                 </a>
                 
-                <button type="button" onclick="openModal()" id="btn-upload" class="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-center text-sm transition shadow-md flex items-center justify-center gap-2">
-                    📤 Upload Bukti Transfer
-                </button>
+                @if($method === 'transfer')
+                    <button type="button" onclick="openModal()" id="btn-upload" class="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-center text-sm transition shadow-md flex items-center justify-center gap-2">
+                        📤 Upload Bukti Transfer
+                    </button>
 
-                <div id="status-terkirim" class="hidden flex-1 py-3 px-4 bg-green-100 text-green-700 font-bold rounded-xl text-center text-sm flex items-center justify-center gap-2">
-                    ✓ Bukti Transfer Terkirim
-                </div>
+                    <div id="status-terkirim" class="hidden flex-1 py-3 px-4 bg-green-100 text-green-700 font-bold rounded-xl text-center text-sm flex items-center justify-center gap-2">
+                        ✓ Bukti Transfer Terkirim
+                    </div>
+                @else
+                    <div class="flex-1 py-3 px-4 bg-amber-100 text-amber-800 font-bold rounded-xl text-center text-sm flex items-center justify-center gap-2">
+                        🤝 Bayar Tunai Saat Kurir Tiba
+                    </div>
+                @endif
             </div>
 
         </div>
 
     </div>
 
-    {{-- MODAL UPLOAD BUKTI TRANSFER (Pure JS Modal) --}}
+    {{-- MODAL UPLOAD BUKTI TRANSFER --}}
+    @if($method === 'transfer')
     <div id="uploadModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 print:hidden hidden">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
             <div class="flex justify-between items-center border-b pb-3">
@@ -195,33 +228,36 @@
             </form>
         </div>
     </div>
+    @endif
 
 </div>
 
 {{-- SCRIPT JAVASCRIPT SEDERHANA --}}
 <script>
 function openModal() {
-    document.getElementById('uploadModal').classList.remove('hidden');
+    let modal = document.getElementById('uploadModal');
+    if (modal) modal.classList.remove('hidden');
 }
 
 function closeModal() {
-    document.getElementById('uploadModal').classList.add('hidden');
+    let modal = document.getElementById('uploadModal');
+    if (modal) modal.classList.add('hidden');
 }
 
 function submitBukti(event) {
-    event.preventDefault(); // Mencegah reload halaman
-    
-    // Tutup modal
+    event.preventDefault();
     closeModal();
     
-    // Sembunyikan tombol upload, tampilkan status terkirim
-    document.getElementById('btn-upload').classList.add('hidden');
-    document.getElementById('status-terkirim').classList.remove('hidden');
+    let btnUpload = document.getElementById('btn-upload');
+    let statusTerkirim = document.getElementById('status-terkirim');
+    if (btnUpload) btnUpload.classList.add('hidden');
+    if (statusTerkirim) statusTerkirim.classList.remove('hidden');
     
-    // Ubah status watermark jadi Menunggu Verifikasi Admin
     let badge = document.getElementById('status-badge');
-    badge.className = "absolute top-6 right-6 border-2 border-blue-500 text-blue-600 font-extrabold text-xs px-3 py-1 rounded-md transform rotate-12 opacity-90 bg-blue-50";
-    badge.innerText = "MENUNGGU VERIFIKASI ADMIN";
+    if (badge) {
+        badge.className = "absolute top-6 right-6 border-2 border-blue-500 text-blue-600 font-extrabold text-xs px-3 py-1 rounded-md transform rotate-12 opacity-90 bg-blue-50";
+        badge.innerText = "MENUNGGU VERIFIKASI ADMIN";
+    }
 }
 </script>
 @endsection
