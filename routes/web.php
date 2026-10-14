@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
@@ -63,6 +64,18 @@ Route::middleware(['auth'])->group(function () {
 
     // 2. Route untuk mengambil dan menyimpan DATA berformat JSON ke ProfileController
     
+    // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
+    Route::get('/checkout', function () {
+        return view('pembeli.pages.checkout');
+    })->name('checkout');
+
+    // Nota diubah mengarah ke CheckoutController agar data dari database tampil secara dinamis
+    Route::get('/nota', [CheckoutController::class, 'showNota'])->name('nota');
+
+    Route::get('/riwayat-pesanan', function () {
+        return view('pembeli.pages.riwayat_pesanan');
+    })->name('riwayat-pesanan');
+
 });
 
 

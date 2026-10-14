@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Pembeli\CartController;
+use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
@@ -35,6 +37,14 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
 }); 
+
+    // Tambahan Route AJAX Keranjang & Checkout
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/update', [CartController::class, 'update']);
+    Route::post('/cart/delete', [CartController::class, 'destroy']);
+    Route::post('/checkout/process', [CheckoutController::class, 'store']);
+});
+
 
 // ========================================================================================
 // ROUTE TAMPILAN ADMIN
