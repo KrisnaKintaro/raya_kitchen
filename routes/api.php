@@ -4,9 +4,10 @@ use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
+use App\Http\Controllers\Api\Pembeli\ProfileController;
+use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 // ===========================
 // ROUTE AUTH
@@ -23,19 +24,20 @@ Route::prefix('auth')->middleware('web')->group(function () {
 
 // ========================================================================================
 // ROUTE TAMPILAN PEMBELI
-// Semua api route atau api gateway masukkan ke prefix pembeli
-// jadi ntar pake nya atau manggilnya api/pembeli/nama api nya
 // ========================================================================================
-Route::prefix('pembeli')->group(function () {
+// ========================================================================================
+// ROUTE TAMPILAN PEMBELI
+// ========================================================================================
+Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
-});
-
+    Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
+    Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
+    Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
+}); 
 
 // ========================================================================================
 // ROUTE TAMPILAN ADMIN
-// Semua api route atau api gateway masukkan ke prefix admin
-// jadi ntar pake nya atau manggilnya api/admin/nama api nya
 // ========================================================================================
 Route::prefix('admin')->group(function () {
     // Tambahkan route admin di sini

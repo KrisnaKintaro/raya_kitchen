@@ -77,9 +77,13 @@
                 <span class="font-black text-buyer-primary text-xl">Rp 60.000</span>
             </div>
 
-            <button class="w-full py-3 bg-buyer-primary text-white font-extrabold text-sm rounded-xl shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.4),0_4px_10px_rgba(192,153,206,0.4)] hover:-translate-y-[2px] active:translate-y-0.5 transition-all text-center">
-                Lanjut ke Checkout
-            </button>
+            <!-- Form Tombol Lanjut ke Checkout -->
+            <form action="{{ route('checkout.proses') }}" method="POST">
+                @csrf
+                <button type="submit" class="w-full py-3 bg-buyer-primary text-white font-extrabold text-sm rounded-xl shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.4),0_4px_10px_rgba(192,153,206,0.4)] hover:-translate-y-[2px] active:translate-y-0.5 transition-all text-center">
+                    Lanjut ke Checkout
+                </button>
+            </form>
         </div>
     </div>
 
@@ -90,7 +94,6 @@
 <script>
 $(document).ready(function() {
     console.log("Halaman keranjang siap!");
-    // Nanti logika AJAX untuk interaksi keranjang bisa ditaruh di sini
 });
 </script>
 @endpush
