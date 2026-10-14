@@ -140,7 +140,7 @@
 @push('script')
 <script>
 $(document).ready(function() {
-    console.log("Halaman keranjang interaktif siap!");
+    console.log("Halaman keranjang siap!");
 });
 </script>
 @endpush

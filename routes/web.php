@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Pembeli\ProfileController;
+use App\Http\Controllers\Api\Pembeli\CheckoutController;
 
 // ==========================================
 // PUBLIC ROUTES (Bisa diakses siapa aja)
@@ -34,14 +36,34 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.keranjang');
     })->name('keranjang');
 
-    Route::get('/pesanan', function () {
-        return view('pembeli.pages.pesanan');
+    // ==========================================
+    // PERUBAHAN DI SINI UNTUK PESANAN & CHECKOUT
+    // ==========================================
+    
+    // 1. Route Tampilan Halaman (Hanya me-render file Blade HTML)
+    Route::get('/riwayat-pesanan', function () {
+        return view('pembeli.pages.riwayat_pesanan');
     })->name('pesanan');
 
+
+
+    // ==========================================
+    // PERUBAHAN DI SINI UNTUK PROFIL
+    // ==========================================
+    
+    // 1. Route HANYA untuk menampilkan file Blade (Halaman visual)
+    // Halaman Profil Utama (Hanya Informasi Akun)
     Route::get('/profil', function () {
         return view('pembeli.pages.profil');
     })->name('profil');
 
+    // Halaman Kelola Alamat Terpisah
+    Route::get('/alamat', function () {
+        return view('pembeli.pages.alamat');
+    })->name('alamat');
+
+    // 2. Route untuk mengambil dan menyimpan DATA berformat JSON ke ProfileController
+    
     // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
     Route::get('/checkout', function () {
         return view('pembeli.pages.checkout');
@@ -58,10 +80,8 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// AUTH ROUTES (Login, Register, dll). Nani saja untuk ini
+// AUTH ROUTES (Login, Register, dll). Nanti saja untuk ini
 // ==========================================
-// Nanti ini bakal fiisi pakai Controller khusus Auth lu.
-
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
         return view('auth.pembeli.login');
@@ -86,4 +106,12 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/logout', function () {
         return redirect('/');
     })->name('logout');
+});
+
+Route::get('/checkout', function () {
+    return view('pembeli.pages.checkout');
+});
+
+Route::get('/nota', function () {
+    return view('pembeli.pages.nota');
 });
