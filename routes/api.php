@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
+use App\Http\Controllers\Api\Pembeli\TentangKamiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +31,10 @@ Route::prefix('auth')->middleware('web')->group(function () {
 Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
+    Route::get('/tentang-kami', [TentangKamiController::class, 'index']);
 });
+
+
 
 // Perlu login untuk akses route di bawah ini
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
