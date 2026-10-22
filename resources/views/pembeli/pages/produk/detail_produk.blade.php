@@ -119,8 +119,7 @@ $(document).ready(function() {
                     // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
                     let finalImageUrl = data.gambar;
                     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                        // Menghilangkan slash '/' di awal biar nggak nabrak sama fungsi asset()
-                        finalImageUrl = "{{ asset('') }}" + finalImageUrl.replace(/^\//, '');
+                        finalImageUrl = "{{ asset('storage/produk') }}/" + finalImageUrl.replace(/^\//, '');
                     }
 
                     // Isi data ke elemen HTML
@@ -169,7 +168,7 @@ $(document).ready(function() {
         let namaRoti = $('#pd-nama').text().trim();
 
         // Nanti diganti sama AJAX POST ke cart
-        alert(`Siaapp! ${qty} porsi ${namaRoti} berhasil dimasukin ke keranjang bjir! 🛒`);
+        alert(`Siaapp! ${qty} porsi ${namaRoti} berhasil dimasukin ke keranjang! 🛒`);
     });
 });
 </script>

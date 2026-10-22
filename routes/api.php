@@ -7,7 +7,6 @@ use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
-use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,24 +26,24 @@ Route::prefix('auth')->middleware('web')->group(function () {
 // ========================================================================================
 // ROUTE TAMPILAN PEMBELI
 // ========================================================================================
-// ========================================================================================
-// ROUTE TAMPILAN PEMBELI
-// ========================================================================================
-Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
+// API ga perlu login
+Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
+});
+
+// Perlu login untuk akses route di bawah ini
+Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
     Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-}); 
 
-    // Tambahan Route AJAX Keranjang & Checkout
+    // Tambahan Route AJAX Keranjang & Checkout (Protected inside buyer prefix)
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart/update', [CartController::class, 'update']);
     Route::post('/cart/delete', [CartController::class, 'destroy']);
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
 });
-
 
 // ========================================================================================
 // ROUTE TAMPILAN ADMIN

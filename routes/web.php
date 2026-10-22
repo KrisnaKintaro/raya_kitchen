@@ -3,7 +3,6 @@
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
-use App\Http\Controllers\Api\Pembeli\CheckoutController;
 
 // ==========================================
 // PUBLIC ROUTES (Bisa diakses siapa aja)
