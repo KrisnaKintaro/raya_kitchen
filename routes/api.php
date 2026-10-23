@@ -47,6 +47,7 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::post('/cart/update', [CartController::class, 'update']);
     Route::post('/cart/delete', [CartController::class, 'destroy']);
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
+    Route::post('/cart/store', [CartController::class, 'store']);
 });
 
 // ========================================================================================

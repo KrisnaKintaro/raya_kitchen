@@ -107,10 +107,3 @@ Route::middleware(['guest'])->group(function () {
     })->name('logout');
 });
 
-Route::get('/checkout', function () {
-    return view('pembeli.pages.checkout');
-});
-
-Route::get('/nota', function () {
-    return view('pembeli.pages.nota');
-});
