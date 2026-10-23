@@ -106,4 +106,4 @@ Route::middleware(['guest'])->group(function () {
         return redirect('/');
     })->name('logout');
 });
-
+Route::post('/checkout/alamat-ajax', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax');
