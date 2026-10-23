@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\BankAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,7 @@ class CheckoutController extends Controller
         try {
             $totalAmount = 0;
             foreach ($cartItems as $item) {
-                // Tanda * untuk perkalian sudah dibenarkan
+                // Perbaikan syntax perkalian
                 $totalAmount += $item->productVariant->price * $item->quantity;
             }
             
@@ -53,7 +54,7 @@ class CheckoutController extends Controller
             // Simpan ke tabel order_items
             foreach ($cartItems as $item) {
                 $price = $item->productVariant->price;
-                // Tanda * untuk perkalian sudah dibenarkan
+                // Perbaikan syntax perkalian
                 $itemSubtotal = $price * $item->quantity;
 
                 OrderItem::create([
@@ -95,7 +96,33 @@ class CheckoutController extends Controller
         }
     }
 
-    // Method untuk menampilkan Nota dari database
+    public function index(Request $request)
+    {
+        $userId = Auth::id() ?? 1;
+
+        $orders = Order::with('transaction')->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'order_number' => $order->order_number,
+                    'status' => strtoupper(str_replace('_', ' ', $order->status)),
+                    'payment_method' => $order->transaction->payment_method ?? '-',
+                    'payment_status' => $order->transaction->payment_status ?? 'unpaid',
+                    'date' => $order->created_at->format('d M Y, H:i'),
+                    'recipient_name' => $order->recipient_name,
+                    'recipient_whatsapp' => $order->recipient_whatsapp,
+                    'shipping_address' => $order->shipping_address,
+                    'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $orders
+        ]);
+    }
+
     public function showNota(Request $request)
     {
         $orderNumber = $request->query('order_number');
@@ -108,31 +135,51 @@ class CheckoutController extends Controller
             return redirect()->route('katalog')->with('error', 'Nota tidak ditemukan.');
         }
 
-        return view('pembeli.pages.nota', compact('order'));
+        $banks = BankAccount::where('is_active', true)->get();
+
+        return view('pembeli.pages.nota', compact('order', 'banks'));
     }
 
-    public function index(Request $request)
+    public function storeAddressAjax(Request $request)
     {
-        $userId = Auth::id() ?? 1;
+        $request->validate([
+            'label' => 'required|string|max:50',
+            'province' => 'required|string',
+            'city' => 'required|string',
+            'district' => 'required|string',
+            'postal_code' => 'required|string|max:10',
+            'street_address' => 'required|string',
+        ]);
 
-        $orders = Order::where('user_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($order) {
-                return [
-                    'order_number' => $order->order_number,
-                    'status' => strtoupper(str_replace('_', ' ', $order->status)),
-                    'date' => $order->created_at->format('d M Y, H:i'),
-                    'recipient_name' => $order->recipient_name,
-                    'recipient_whatsapp' => $order->recipient_whatsapp,
-                    'shipping_address' => $order->shipping_address,
-                    'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
-                ];
-            });
+        $user = auth()->user();
+        
+        // Jadikan alamat utama jika ini alamat pertama
+        $isPrimary = $user->addresses()->count() === 0;
+
+        $address = $user->addresses()->create([
+            'label' => $request->label,
+            
+            // Penambahan kolom agar tidak error Mass Assignment
+            'recipient_name' => $user->name,
+            'recipient_whatsapp' => $user->whatsapp_number,
+            
+            'province' => $request->province,
+            'city' => $request->city,
+            'district' => $request->district,
+            'postal_code' => $request->postal_code,
+            'street_address' => $request->street_address,
+            'is_primary' => $isPrimary,
+        ]);
+
+        // Format teks alamat untuk dimasukkan ke dropdown
+        $teksLengkap = ($isPrimary ? '[Utama] ' : '') . $address->label . ' - ' . $address->street_address . ', ' . $address->district . ', ' . $address->city . ', ' . $address->province . ' ' . $address->postal_code;
 
         return response()->json([
             'status' => 'success',
-            'data' => $orders
+            'data' => [
+                'value' => $teksLengkap,
+                'text' => $teksLengkap
+            ]
         ]);
     }
 }

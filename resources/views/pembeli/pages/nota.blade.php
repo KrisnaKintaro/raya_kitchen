@@ -69,14 +69,18 @@
 
             {{-- Kotak Informasi Rekening / Keterangan COD --}}
             @if($order->transaction->payment_method === 'transfer')
-                <div class="my-6 p-4 bg-purple-50 rounded-2xl border border-purple-200 text-sm">
-                    <p class="font-bold text-purple-900 mb-2">Silakan Transfer Pembayaran Ke:</p>
-                    <div class="space-y-1 text-gray-700 text-xs sm:text-sm font-medium">
-                        <div class="flex justify-between"><span>Bank BCA:</span><span class="font-bold text-gray-900">1234-5678-9010 (a.n Raya Kitchen)</span></div>
-                        <div class="flex justify-between"><span>Bank Mandiri:</span><span class="font-bold text-gray-900">0987-6543-2109 (a.n Raya Kitchen)</span></div>
-                    </div>
-                </div>
-            @endif
+                            <div class="my-6 p-4 bg-purple-50 rounded-2xl border border-purple-200 text-sm">
+                                <p class="font-bold text-purple-900 mb-2">Silakan Transfer Pembayaran Ke:</p>
+                                <div class="space-y-2 text-gray-700 text-xs sm:text-sm font-medium">
+                                    @foreach($banks as $bank)
+                                        <div class="flex justify-between items-center p-2 bg-white rounded-lg border border-purple-100 shadow-sm">
+                                            <span class="text-gray-500">Bank {{ $bank->bank_name }}:</span>
+                                            <span class="font-bold text-gray-900 text-right">{{ $bank->account_number }}<br><span class="text-xs text-gray-400">a.n {{ $bank->account_name }}</span></span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
 
             {{-- Table Item Roti --}}
             <div class="py-6 border-b border-gray-100">
@@ -114,7 +118,6 @@
 
             {{-- Tombol Aksi Konfirmasi --}}
             <div class="mt-6 pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3 print:hidden">
-                <a href="{{ url('/riwayat-pesanan') }}?success=true" class="flex-1 py-3 px-4 bg-gray-100 text-gray-700 font-bold rounded-xl text-center text-sm transition">Cek Riwayat Pesanan</a>
                 
                 @if($order->transaction->payment_method === 'transfer')
                     <button type="button" onclick="$('#uploadModal').removeClass('hidden')" id="btn-upload" class="flex-1 py-3 px-4 bg-purple-600 text-white font-bold rounded-xl text-center text-sm transition shadow-md">Upload Bukti Transfer</button>

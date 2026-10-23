@@ -67,6 +67,8 @@
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Kode Pos</label>
                         <input type="text" name="postal_code" required
+                            inputmode="numeric" pattern="[0-9]*"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full p-3.5 text-sm font-medium rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-400">
                     </div>
                 </div>
