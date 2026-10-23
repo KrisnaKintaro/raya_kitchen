@@ -26,7 +26,6 @@
 
         <div class="flex flex-col md:flex-row gap-8 lg:gap-12">
             <!-- Kolom Kiri: Gambar Produk -->
-            <!-- Dibatasi lebarnya md:w-5/12 biar proporsional dan ga menuhin layar -->
             <div class="w-full md:w-5/12 shrink-0">
                 <div class="relative w-full aspect-square rounded-[2rem] overflow-hidden shadow-[inset_0_4px_10px_rgba(0,0,0,0.08)] bg-white border-4 border-white group">
                     <img id="pd-gambar" src="" alt="Gambar Produk" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -39,7 +38,6 @@
             </div>
 
             <!-- Kolom Kanan: Detail & Form Add to Cart -->
-            <!-- Lebar md:w-7/12 -->
             <div class="w-full md:w-7/12 flex flex-col py-2">
 
                 <h1 id="pd-nama" class="text-3xl lg:text-4xl font-black text-buyer-textPrimary drop-shadow-sm mb-3 leading-tight">
@@ -50,7 +48,7 @@
                     <!-- Harga -->
                 </p>
 
-                <!-- Box Deskripsi (Efek Tenggelam/Inset) -->
+                <!-- Box Deskripsi -->
                 <div class="bg-buyer-primary/5 p-5 rounded-2xl shadow-[inset_0_2px_5px_rgba(192,153,206,0.15),0_1px_1px_rgba(255,255,255,1)] border border-white mb-8">
                     <h3 class="font-extrabold text-buyer-textPrimary mb-2 text-sm uppercase tracking-wider">Deskripsi Produk</h3>
                     <p id="pd-deskripsi" class="text-buyer-textSecondary font-medium text-sm leading-relaxed">
@@ -58,14 +56,14 @@
                     </p>
                 </div>
 
-                <!-- Spacer biar tombol selalu di bawah kalau teks deskripsi pendek -->
+                <!-- Spacer biar tombol selalu di bawah -->
                 <div class="mt-auto"></div>
 
                 <!-- Kontrol Kuantitas & Tombol Beli -->
                 <h3 class="font-extrabold text-buyer-textPrimary mb-3 text-sm">Jumlah Pembelian</h3>
                 <div class="flex flex-col sm:flex-row gap-4 items-center">
 
-                    <!-- Kontrol Jumlah (Padat & Proporsional) -->
+                    <!-- Kontrol Jumlah -->
                     <div class="flex items-center justify-between bg-white rounded-2xl p-1.5 shadow-[inset_0_2px_5px_rgba(192,153,206,0.15)] border border-gray-50 w-full sm:w-36 shrink-0 h-14">
                         <button id="btn-min" class="w-10 h-10 flex items-center justify-center bg-buyer-bg text-buyer-primary font-black rounded-xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.2),inset_0_2px_4px_rgba(255,255,255,1)] hover:bg-white active:scale-95 transition-all text-lg">
                             −
@@ -116,22 +114,18 @@ $(document).ready(function() {
                         style: 'currency', currency: 'IDR', minimumFractionDigits: 0
                     }).format(data.harga);
 
-                    // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
                     let finalImageUrl = data.gambar;
                     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
                         finalImageUrl = "{{ asset('storage/produk') }}/" + finalImageUrl.replace(/^\//, '');
                     }
 
-                    // Isi data ke elemen HTML
                     $('#pd-gambar').attr('src', finalImageUrl);
                     $('#pd-kategori').text(data.kategori);
                     $('#pd-nama').text(data.nama);
                     $('#pd-harga').text(hargaFormatted);
                     $('#pd-deskripsi').text(data.deskripsi);
 
-                    // Tampilkan container detail dengan efek fade-in
                     $('#detail-container').removeClass('hidden');
-                    // Pakai setTimeout kecil biar transisi CSS opacity jalannya mulus
                     setTimeout(() => {
                         $('#detail-container').addClass('opacity-100');
                     }, 50);
@@ -140,14 +134,11 @@ $(document).ready(function() {
             error: function(xhr) {
                 $('#loading-spinner').hide();
                 alert('Gagal mengambil detail produk. Pastiin ID-nya bener cuy!');
-                window.location.href = '/'; // Balikin ke katalog kalau error
+                window.location.href = '/'; 
             }
         });
     }
 
-    // ==========================================
-    // LOGIC KONTROL JUMLAH (PLUS / MINUS)
-    // ==========================================
     const inputQty = $('#input-qty');
 
     $('#btn-plus').click(function() {
@@ -162,13 +153,38 @@ $(document).ready(function() {
         }
     });
 
-    // Simulasi klik masuk keranjang
+    // LOGIC BARU: Insert ke Cart via AJAX
     $('#btn-add-cart').click(function() {
         let qty = inputQty.val();
-        let namaRoti = $('#pd-nama').text().trim();
+        let btn = $(this);
+        let originalText = btn.html();
 
-        // Nanti diganti sama AJAX POST ke cart
-        alert(`Siaapp! ${qty} porsi ${namaRoti} berhasil dimasukin ke keranjang! 🛒`);
+        btn.html('<span class="animate-pulse">Memproses...</span>').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/cart/store",
+            type: "POST",
+            data: {
+                product_variant_id: productId,
+                quantity: qty,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.href = '/keranjang'; // Langsung pindah ke keranjang
+                }
+            },
+            error: function(xhr) {
+                // Kalau error 401 berarti belum login
+                if(xhr.status === 401) {
+                    alert('Lu harus login dulu cuy buat pesen roti!');
+                    window.location.href = '/login';
+                } else {
+                    alert('Gagal memasukkan ke keranjang.');
+                }
+                btn.html(originalText).prop('disabled', false);
+            }
+        });
     });
 });
 </script>

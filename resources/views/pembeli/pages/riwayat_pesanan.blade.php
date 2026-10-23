@@ -118,7 +118,7 @@ $(document).ready(function() {
                             </div>
 
                             <div class="flex items-center gap-2 w-full md:w-auto">
-                                <a href="/nota?order=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.2),inset_0_2px_4px_rgba(255,255,255,1),0_2px_5px_rgba(192,153,206,0.15)] hover:bg-white transition-all">
+                                <a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.2),inset_0_2px_4px_rgba(255,255,255,1),0_2px_5px_rgba(192,153,206,0.15)] hover:bg-white transition-all">
                                     Lihat Nota
                                 </a>
                             </div>

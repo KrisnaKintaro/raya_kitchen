@@ -60,4 +60,32 @@ class CartController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'Item tidak ditemukan'], 404);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'product_variant_id' => 'required',
+            'quantity' => 'required|integer|min:1'
+        ]);
+
+        $userId = Auth::id() ?? 1; 
+
+        // Cek apakah item sudah ada di keranjang
+        $cart = Cart::where('user_id', $userId)
+            ->where('product_variant_id', $request->product_variant_id)
+            ->first();
+
+        if ($cart) {
+            $cart->quantity += $request->quantity;
+            $cart->save();
+        } else {
+            Cart::create([
+                'user_id' => $userId,
+                'product_variant_id' => $request->product_variant_id,
+                'quantity' => $request->quantity,
+            ]);
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Berhasil masuk keranjang!']);
+    }
 }

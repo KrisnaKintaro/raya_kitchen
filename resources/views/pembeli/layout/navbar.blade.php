@@ -28,11 +28,20 @@
             @endguest
 
             @auth
+                @php
+                    // BARI INI YANG KETINGGALAN CUY
+                    $cartCount = \App\Models\Cart::where('user_id', auth()->id())->sum('quantity');
+                @endphp
                 <!-- Tombol Keranjang -->
                 <a href="/keranjang" class="relative p-3.5 bg-white border-2 border-gray-50 text-buyer-primary rounded-full shadow-[inset_0_-2px_4px_rgba(192,153,206,0.1),0_4px_10px_rgba(192,153,206,0.2)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300 group">
                     <svg class="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <!-- Badge Notifikasi -->
-                    <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-[inset_0_-2px_2px_rgba(0,0,0,0.2),0_2px_4px_rgba(239,68,68,0.4)] border-2 border-[#E6D6EB]">3</span>
+                    
+                    <!-- Badge Notifikasi (Hanya muncul jika keranjang tidak kosong) -->
+                    @if($cartCount > 0)
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-[inset_0_-2px_2px_rgba(0,0,0,0.2),0_2px_4px_rgba(239,68,68,0.4)] border-2 border-[#E6D6EB]">
+                            {{ $cartCount }}
+                        </span>
+                    @endif
                 </a>
 
                 <!-- Profil Dropdown -->
