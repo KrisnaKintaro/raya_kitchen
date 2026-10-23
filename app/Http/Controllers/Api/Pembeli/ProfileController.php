@@ -65,6 +65,22 @@ class ProfileController extends Controller
         ], 200);
     }
 
+    public function hapusAlamat($id)
+    {
+        $address = auth()->user()->addresses()->find($id);
+        
+        if (!$address) {
+            return response()->json(['status' => 'error', 'message' => 'Alamat tidak ditemukan.'], 404);
+        }
+
+        $address->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Alamat berhasil dihapus.'
+        ]);
+    }
+
     // Menyimpan / Memperbarui alamat menggunakan metode POST
     public function update(Request $request)
     {

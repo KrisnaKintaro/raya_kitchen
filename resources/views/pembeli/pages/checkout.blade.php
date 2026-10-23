@@ -22,7 +22,7 @@
                             <input type="text" id="penerima_phone" value="{{ auth()->user()->whatsapp_number }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm">
                         </div>
                         
-                        <!-- BAGIAN ALAMAT YANG DIGANTI -->
+                        <!-- BAGIAN ALAMAT -->
                         <div>
                             <div class="flex justify-between items-center mb-2">
                                 <label class="block text-sm font-bold text-gray-700">Pilih Alamat Pengiriman</label>
@@ -31,13 +31,14 @@
                             @php $addresses = auth()->user()->addresses()->orderByDesc('is_primary')->get(); @endphp
                             
                             @if($addresses->isEmpty())
-                                <div id="no-address-alert" class="p-4 border-2 border-dashed border-red-200 bg-red-50 rounded-xl text-center">
+                                <div id="no-address-alert" class="p-6 border-2 border-dashed border-red-200 bg-red-50/50 rounded-2xl text-center">
                                     <p class="text-sm text-red-600 font-bold mb-3">Kamu belum memiliki alamat pengiriman.</p>
-                                    <button type="button" onclick="openAddressModal()" class="py-2 px-6 bg-purple-600 text-white font-bold rounded-lg text-sm shadow-md hover:bg-purple-700 transition">
+                                    <button type="button" onclick="openAddressModal()" class="py-2.5 px-6 bg-purple-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-purple-700 transition">
                                         + Tambah Alamat Sekarang
                                     </button>
                                 </div>
                                 <select id="alamat_select" class="hidden w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700" required></select>
+                                <button type="button" id="btn-tambah-alamat-tambahan" onclick="openAddressModal()" class="hidden mt-2 text-xs font-bold text-purple-600 hover:underline">+ Tambah Alamat Lain</button>
                             @else
                                 <select id="alamat_select" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700" required>
                                     @foreach($addresses as $addr)
@@ -50,8 +51,6 @@
                                 <button type="button" onclick="openAddressModal()" class="mt-2 text-xs font-bold text-purple-600 hover:underline">+ Tambah Alamat Lain</button>
                             @endif
                         </div>
-                        <!-- AKHIR BAGIAN ALAMAT -->
-
                     </div>
                 </div>
 
@@ -100,51 +99,55 @@
     </div>
 </div>
 
-<!-- BAGIAN MODAL HTML YANG DITAMBAH -->
-<div id="addressModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden">
-    <div class="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-black text-gray-800">Tambah Alamat</h3>
-            <button type="button" onclick="$('#addressModal').addClass('hidden')" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
+<!-- MODAL TAMBAH ALAMAT AUTOCOMPLETE -->
+<div id="addressModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-2xl relative transform scale-95 transition-transform duration-300">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-black text-gray-800">Tambah Alamat Baru</h3>
+            <button type="button" onclick="closeAddressModal()" class="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
         </div>
         
         <form id="form-tambah-alamat" class="space-y-4">
             <div>
                 <label class="text-xs font-bold text-gray-600">Label (Misal: Rumah / Kantor)</label>
-                <input type="text" name="label" required class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400">
+                <input type="text" name="label" required class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400">
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
-                <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="relative">
                     <label class="text-xs font-bold text-gray-600">Provinsi</label>
-                    <select id="provinsi" required class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white"><option value="">Pilih Provinsi...</option></select>
-                    <input type="hidden" name="province" id="province_name">
+                    <input type="text" id="provinsi" name="province" required autocomplete="off" list="list-provinsi" 
+                        class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400" placeholder="Ketik provinsi...">
+                    <datalist id="list-provinsi"></datalist>
                 </div>
-                <div>
+                <div class="relative">
                     <label class="text-xs font-bold text-gray-600">Kota / Kabupaten</label>
-                    <select id="kota" required disabled class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white"><option value="">Pilih Kota...</option></select>
-                    <input type="hidden" name="city" id="city_name">
+                    <input type="text" id="kota" name="city" required autocomplete="off" list="list-kota" disabled
+                        class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400 disabled:opacity-60" placeholder="Ketik kota...">
+                    <datalist id="list-kota"></datalist>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
-                <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="relative">
                     <label class="text-xs font-bold text-gray-600">Kecamatan</label>
-                    <select id="kecamatan" required disabled class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white"><option value="">Pilih Kecamatan...</option></select>
-                    <input type="hidden" name="district" id="district_name">
+                    <input type="text" id="kecamatan" name="district" required autocomplete="off" list="list-kecamatan" disabled
+                        class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400 disabled:opacity-60" placeholder="Ketik kecamatan...">
+                    <datalist id="list-kecamatan"></datalist>
                 </div>
                 <div>
                     <label class="text-xs font-bold text-gray-600">Kode Pos</label>
-                    <input type="number" name="postal_code" required class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white">
+                    <input type="text" name="postal_code" required inputmode="numeric" pattern="[0-9]*" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                        class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-2 focus:ring-purple-400">
                 </div>
             </div>
 
             <div>
                 <label class="text-xs font-bold text-gray-600">Alamat Lengkap (Jalan, No, RT/RW)</label>
-                <textarea name="street_address" required rows="3" class="w-full mt-1 p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
+                <textarea name="street_address" required rows="3" class="w-full mt-1 p-3 border rounded-xl text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
             </div>
 
-            <button type="submit" id="btn-simpan-alamat" class="w-full py-3 bg-purple-600 text-white font-bold rounded-xl shadow-md hover:bg-purple-700 transition">
+            <button type="submit" id="btn-simpan-alamat" class="w-full py-3.5 mt-2 bg-purple-600 text-white font-bold rounded-xl shadow-md hover:bg-purple-700 transition">
                 Simpan & Gunakan Alamat
             </button>
         </form>
@@ -154,16 +157,48 @@
 
 @push('script')
 <script>
+// Variabel Global Data Wilayah
+let provincesData = [];
+let citiesData = [];
+let districtsData = [];
+
+// Buka Tutup Modal
+function openAddressModal() {
+    $('#addressModal').removeClass('hidden');
+    setTimeout(() => {
+        $('#addressModal').removeClass('opacity-0');
+        $('#addressModal > div').removeClass('scale-95');
+    }, 10);
+    
+    // Tarik data provinsi jika belum ada
+    if(provincesData.length === 0) {
+        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
+            .then(res => res.json())
+            .then(data => {
+                provincesData = data;
+                let options = '';
+                data.forEach(p => options += `<option value="${p.name}">`);
+                $('#list-provinsi').html(options);
+            });
+    }
+}
+
+function closeAddressModal() {
+    $('#addressModal').addClass('opacity-0');
+    $('#addressModal > div').addClass('scale-95');
+    setTimeout(() => { $('#addressModal').addClass('hidden'); }, 300);
+}
+
 $(document).ready(function() {
     function formatRupiah(number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); }
 
-    // Efek UI Radio Button Pembayaran
+    // UI Payment Radio
     $('input[name="payment_method"]').change(function() {
         $('.payment-lbl').removeClass('border-purple-500 bg-purple-50 text-purple-700').addClass('border-gray-200 bg-white text-gray-700');
         $(this).closest('label').removeClass('border-gray-200 bg-white text-gray-700').addClass('border-purple-500 bg-purple-50 text-purple-700');
     });
 
-    // Ambil Data Keranjang buat Summary
+    // Fetch Cart
     $.get('/api/pembeli/cart', function(res) {
         if(res.status === 'success') {
             let itemsHTML = ''; let subtotal = 0;
@@ -180,7 +215,92 @@ $(document).ready(function() {
         }
     });
 
-    // Proses Submit Checkout ke Controller
+    // --- AUTOCOMPLETE LOGIC ---
+    $('#provinsi').on('input', function() {
+        let selectedVal = $(this).val();
+        let selectedProv = provincesData.find(p => p.name === selectedVal);
+        
+        $('#kota').val('').prop('disabled', true);
+        $('#list-kota').empty();
+        $('#kecamatan').val('').prop('disabled', true);
+        $('#list-kecamatan').empty();
+
+        if (selectedProv) {
+            $('#kota').attr('placeholder', 'Memuat data kota...').prop('disabled', false);
+            fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProv.id}.json`)
+                .then(res => res.json())
+                .then(data => {
+                    citiesData = data;
+                    let options = '';
+                    data.forEach(c => options += `<option value="${c.name}">`);
+                    $('#list-kota').html(options);
+                    $('#kota').attr('placeholder', 'Ketik nama kota...');
+                });
+        }
+    });
+
+    $('#kota').on('input', function() {
+        let selectedVal = $(this).val();
+        let selectedCity = citiesData.find(c => c.name === selectedVal);
+        
+        $('#kecamatan').val('').prop('disabled', true);
+        $('#list-kecamatan').empty();
+
+        if (selectedCity) {
+            $('#kecamatan').attr('placeholder', 'Memuat data kecamatan...').prop('disabled', false);
+            fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selectedCity.id}.json`)
+                .then(res => res.json())
+                .then(data => {
+                    districtsData = data;
+                    let options = '';
+                    data.forEach(d => options += `<option value="${d.name}">`);
+                    $('#list-kecamatan').html(options);
+                    $('#kecamatan').attr('placeholder', 'Ketik nama kecamatan...');
+                });
+        }
+    });
+
+    // --- SUBMIT ALAMAT BARU ---
+    $('#form-tambah-alamat').submit(function(e) {
+        e.preventDefault();
+        
+        if(!provincesData.find(p => p.name === $('#provinsi').val())) {
+            alert('Silakan pilih Provinsi dari daftar yang muncul saat mengetik.'); return;
+        }
+
+        let btn = $('#btn-simpan-alamat');
+        let originalText = btn.html();
+        btn.html('Menyimpan...').prop('disabled', true);
+
+        $.ajax({
+            url: "{{ route('alamat.ajax') }}",
+            type: "POST",
+            data: $(this).serialize(),
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                if(res.status === 'success') {
+                    // Update UI Dropdown Checkout
+                    $('#no-address-alert').addClass('hidden');
+                    $('#btn-tambah-alamat-tambahan').removeClass('hidden');
+                    let select = $('#alamat_select');
+                    select.removeClass('hidden').append(new Option(res.data.text, res.data.value, true, true));
+                    
+                    closeAddressModal();
+                    $('#form-tambah-alamat')[0].reset();
+                    $('#kota, #kecamatan').prop('disabled', true);
+                }
+            },
+            error: function(xhr) {
+                let errorMsg = xhr.responseJSON?.message || 'Pastikan semua form terisi dengan benar.';
+                alert('Gagal: ' + errorMsg);
+            },
+            complete: function() {
+                btn.html(originalText).prop('disabled', false);
+            }
+        });
+    });
+
+    // --- PROSES CHECKOUT ---
     $('#btn-konfirmasi').click(function() {
         let addressVal = $('#alamat_select').val();
         if(!addressVal) {
@@ -211,88 +331,6 @@ $(document).ready(function() {
                 btn.text('Konfirmasi Pesanan').prop('disabled', false);
             }
         });
-    });
-});
-
-// BAGIAN SCRIPT EMSIFA DAN AJAX MODAL YANG DITAMBAH
-function openAddressModal() {
-    $('#addressModal').removeClass('hidden');
-    if($('#provinsi option').length === 1) { 
-        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
-            .then(response => response.json())
-            .then(provinces => {
-                let options = '<option value="">Pilih Provinsi...</option>';
-                provinces.forEach(p => options += `<option value="${p.id}" data-name="${p.name}">${p.name}</option>`);
-                $('#provinsi').html(options);
-            });
-    }
-}
-
-$('#provinsi').change(function() {
-    let id = $(this).val();
-    $('#province_name').val($(this).find(':selected').data('name'));
-    $('#kota').html('<option value="">Loading...</option>').prop('disabled', true);
-    $('#kecamatan').html('<option value="">Pilih Kecamatan...</option>').prop('disabled', true);
-    
-    if(id) {
-        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${id}.json`)
-            .then(res => res.json())
-            .then(cities => {
-                let options = '<option value="">Pilih Kota...</option>';
-                cities.forEach(c => options += `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`);
-                $('#kota').html(options).prop('disabled', false);
-            });
-    }
-});
-
-$('#kota').change(function() {
-    let id = $(this).val();
-    $('#city_name').val($(this).find(':selected').data('name'));
-    $('#kecamatan').html('<option value="">Loading...</option>').prop('disabled', true);
-    
-    if(id) {
-        fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${id}.json`)
-            .then(res => res.json())
-            .then(districts => {
-                let options = '<option value="">Pilih Kecamatan...</option>';
-                districts.forEach(d => options += `<option value="${d.id}" data-name="${d.name}">${d.name}</option>`);
-                $('#kecamatan').html(options).prop('disabled', false);
-            });
-    }
-});
-
-$('#kecamatan').change(function() {
-    $('#district_name').val($(this).find(':selected').data('name'));
-});
-
-$('#form-tambah-alamat').submit(function(e) {
-    e.preventDefault();
-    let btn = $('#btn-simpan-alamat');
-    let originalText = btn.html();
-    btn.html('Menyimpan...').prop('disabled', true);
-
-    $.ajax({
-        url: "{{ route('alamat.ajax') }}",
-        type: "POST",
-        data: $(this).serialize(),
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        success: function(res) {
-            if(res.status === 'success') {
-                $('#no-address-alert').addClass('hidden');
-                let select = $('#alamat_select');
-                select.removeClass('hidden').append(new Option(res.data.text, res.data.value, true, true));
-                
-                $('#addressModal').addClass('hidden');
-                $('#form-tambah-alamat')[0].reset();
-                $('#kota, #kecamatan').prop('disabled', true);
-            }
-        },
-        error: function(xhr) {
-            alert('Gagal menyimpan alamat. Pastikan semua field terisi.');
-        },
-        complete: function() {
-            btn.html(originalText).prop('disabled', false);
-        }
     });
 });
 </script>

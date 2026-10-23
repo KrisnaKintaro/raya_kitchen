@@ -37,11 +37,16 @@ Route::prefix('pembeli')->group(function () {
 
 
 // Perlu login untuk akses route di bawah ini
+// Perlu login untuk akses route di bawah ini
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
     Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
+    
+    // ROUTE HAPUS ALAMAT DITAMBAHKAN DI SINI
+    Route::delete('alamat/{id}', [ProfileController::class, 'hapusAlamat']);
+    
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-
+    
     // Tambahan Route AJAX Keranjang & Checkout (Protected inside buyer prefix)
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart/update', [CartController::class, 'update']);
