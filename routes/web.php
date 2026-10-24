@@ -38,19 +38,20 @@ Route::middleware(['auth'])->group(function () {
     // ==========================================
     // PERUBAHAN DI SINI UNTUK PESANAN & CHECKOUT
     // ==========================================
-    
+
     // 1. Route Tampilan Halaman (Hanya me-render file Blade HTML)
     Route::get('/riwayat-pesanan', function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('pesanan');
 
-
+    // Halaman Staging Pembayaran
+    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran'])->name('pembayaran');
 
     // ==========================================
     // PERUBAHAN DI SINI UNTUK PROFIL
     // ==========================================
-    
-    // 1. Route HANYA untuk menampilkan file Blade (Halaman visual)
+
+    // Route HANYA untuk menampilkan file Blade (Halaman visual)
     // Halaman Profil Utama (Hanya Informasi Akun)
     Route::get('/profil', function () {
         return view('pembeli.pages.profil');
@@ -62,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('alamat');
 
     // 2. Route untuk mengambil dan menyimpan DATA berformat JSON ke ProfileController
-    
+
     // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
     Route::get('/checkout', function () {
         return view('pembeli.pages.checkout');

@@ -18,9 +18,15 @@ return new class extends Migration
             $table->string('recipient_name');
             $table->string('recipient_whatsapp');
             $table->text('shipping_address')->nullable();
+            $table->date('delivery_date')->nullable();
+            $table->time('delivery_time')->nullable();
             $table->decimal('total_amount', 12, 2);
+            $table->decimal('dp_amount', 12, 2)->default(0);
+            $table->decimal('remaining_amount', 12, 2)->default(0);
             $table->enum('status', ['pending', 'diproses', 'siap_diambil', 'selesai', 'dibatalkan'])->default('pending');
             $table->enum('order_source', ['web', 'whatsapp'])->default('web');
+            $table->text('cancellation_reason')->nullable();
+            $table->string('refund_account_number')->nullable();
             $table->timestamps();
         });
     }

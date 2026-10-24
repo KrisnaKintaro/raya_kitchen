@@ -9,16 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->date('delivery_date')->nullable()->after('shipping_address');
-            $table->time('delivery_time')->nullable()->after('delivery_date');
-            $table->decimal('dp_amount', 12, 2)->default(0)->after('total_amount');
+            $table->string('refund_proof')->nullable()->after('refund_account_number');
         });
     }
 
     public function down(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['delivery_date', 'delivery_time', 'dp_amount']);
+            $table->dropColumn('refund_proof');
         });
     }
 };

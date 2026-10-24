@@ -5,93 +5,75 @@ namespace App\Http\Controllers\Api\Pembeli;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Cart;
+use App\Models\StoreSetting;
+use App\Models\StoreHoliday;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class PreorderController extends Controller
 {
-    // Settingan Kuota Harian
-    private $maxVariantsPerDay = 5;
-    private $maxQtyPerDay = 130;
-
     public function getHeatmap(Request $request)
     {
         $bulan = $request->bulan ?? date('m');
         $tahun = $request->tahun ?? date('Y');
         $userId = Auth::id() ?? 1;
 
-        // 1. Ambil isi keranjang user yang lagi mau checkout
-        $cartItems = Cart::where('user_id', $userId)->pluck('product_variant_id')->toArray();
+        $setting = StoreSetting::first();
+        $maxQtyPerDay = $setting?->max_qty_per_day ?? 60;
+
         $cartQty = Cart::where('user_id', $userId)->sum('quantity');
 
-        // Kalau keranjang kosong, cegah error
-        if (empty($cartItems)) {
-            return response()->json(['status' => 'error', 'message' => 'Keranjang kosong cuy!']);
+        if ($cartQty == 0) {
+            return response()->json(['status' => 'error', 'message' => 'Keranjang lu kosong cuy!']);
         }
 
-        // 2. Ambil data orderan orang lain di bulan tersebut (Yang nggak dibatalkan)
         $orders = Order::with('items')
             ->whereMonth('delivery_date', $bulan)
             ->whereYear('delivery_date', $tahun)
-            ->whereNotIn('status', ['dibatalkan', 'pending']) // Asumsi pending = belum bayar DP. Kalo udah diverifikasi baru masuk kuota.
+            ->whereNotIn('status', ['dibatalkan', 'pending'])
             ->get();
 
-        // 3. Rekap total Qty & Varian per tanggal
         $rekapHarian = [];
         foreach ($orders as $order) {
             $tgl = $order->delivery_date;
-
-            if (!isset($rekapHarian[$tgl])) {
-                $rekapHarian[$tgl] = ['total_qty' => 0, 'variants' => []];
-            }
+            if (!isset($rekapHarian[$tgl])) $rekapHarian[$tgl] = 0;
 
             foreach ($order->items as $item) {
-                $rekapHarian[$tgl]['total_qty'] += $item->quantity;
-                // Masukin ID varian ke array kalau belum ada (biar dapet varian unik)
-                if (!in_array($item->product_variant_id, $rekapHarian[$tgl]['variants'])) {
-                    $rekapHarian[$tgl]['variants'][] = $item->product_variant_id;
-                }
+                $rekapHarian[$tgl] += $item->quantity;
             }
         }
 
-        // 4. Generate Heatmap buat kalender Flatpickr
+        $holidays = StoreHoliday::whereMonth('holiday_date', $bulan)
+            ->whereYear('holiday_date', $tahun)
+            ->pluck('holiday_date')->toArray();
+
         $heatmap = [];
         $daysInMonth = Carbon::create($tahun, $bulan)->daysInMonth;
-        $today = Carbon::today()->format('Y-m-d');
+
+        $besok = Carbon::tomorrow()->format('Y-m-d');
 
         for ($i = 1; $i <= $daysInMonth; $i++) {
             $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $i);
 
-            // Kalau tanggal udah lewat, langsung disable
-            if ($dateStr < $today) {
+            if ($dateStr < $besok) {
                 $heatmap[$dateStr] = 'past';
                 continue;
             }
 
-            $rekap = $rekapHarian[$dateStr] ?? ['total_qty' => 0, 'variants' => []];
-
-            $isFull = false;
-
-            // Cek Syarat 1: Kapasitas Qty (Total order + isi keranjang)
-            if (($rekap['total_qty'] + $cartQty) > $this->maxQtyPerDay) {
-                $isFull = true;
+            if (in_array($dateStr, $holidays)) {
+                $heatmap[$dateStr] = 'full';
+                continue;
             }
 
-            // Cek Syarat 2: Limit Varian
-            // Gabung varian pesanan hari itu + varian di keranjang user
-            $mergedVariants = array_unique(array_merge($rekap['variants'], $cartItems));
-            if (count($mergedVariants) > $this->maxVariantsPerDay) {
-                $isFull = true;
-            }
+            $totalQtyHariIni = $rekapHarian[$dateStr] ?? 0;
 
-            // Tentukan Class Warna
-            if ($isFull) {
-                $heatmap[$dateStr] = 'full'; // Nanti di frontend diwarnain Merah (Disable)
-            } elseif ($rekap['total_qty'] > ($this->maxQtyPerDay * 0.6)) {
-                $heatmap[$dateStr] = 'med';  // Kuning (Udah lumayan rame)
+            if (($totalQtyHariIni + $cartQty) > $maxQtyPerDay) {
+                $heatmap[$dateStr] = 'full';
+            } elseif ($totalQtyHariIni > ($maxQtyPerDay * 0.7)) {
+                $heatmap[$dateStr] = 'med';
             } else {
-                $heatmap[$dateStr] = 'low';  // Hijau (Masih kosong/santai)
+                $heatmap[$dateStr] = 'low';
             }
         }
 
@@ -103,21 +85,45 @@ class PreorderController extends Controller
 
     public function getAvailableTimes(Request $request)
     {
-        // Karena batasan adalah "Harian", jam ini murni buat preferensi
-        // user pengen pesanannya dikirim/diambil jam berapa.
-        // Kita kasih standar jam operasional aja: 08:00 sampe 17:00
-
         $tanggal = Carbon::parse($request->tanggal);
-        $jamOperasional = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+        $setting = StoreSetting::first();
+        $maxOrdersPerHour = $setting?->max_orders_per_hour ?? 5;
+
+        $startHourStr = $setting?->operational_time_start ?? '08:00:00';
+        $endHourStr = $setting?->operational_time_end ?? '17:00:00';
+
+        $startHour = (int) Carbon::parse($startHourStr)->format('H');
+        $endHour = (int) Carbon::parse($endHourStr)->format('H');
+
+        $jamOperasional = [];
+        for ($h = $startHour; $h <= $endHour; $h++) {
+            $jamOperasional[] = sprintf("%02d:00", $h);
+        }
+
+        $nowPlus24 = Carbon::now()->addHours(24);
+
+        $orders = Order::whereDate('delivery_date', $tanggal->format('Y-m-d'))
+            ->whereNotIn('status', ['dibatalkan', 'pending'])
+            ->get();
+
+        $rekapJam = [];
+        foreach ($orders as $order) {
+            $jam = Carbon::parse($order->delivery_time)->format('H:i');
+            if (!isset($rekapJam[$jam])) $rekapJam[$jam] = 0;
+            $rekapJam[$jam]++;
+        }
 
         $availableTimes = [];
-        $now = Carbon::now();
-
         foreach ($jamOperasional as $jam) {
             $jamLengkap = Carbon::parse($tanggal->format('Y-m-d') . ' ' . $jam);
 
-            // Kalau user milih hari ini, jam yang udah kelewat diilangin
-            if ($tanggal->isToday() && $now->greaterThanOrEqualTo($jamLengkap)) {
+            if ($jamLengkap->lessThan($nowPlus24)) {
+                continue;
+            }
+
+            $terisi = $rekapJam[$jam] ?? 0;
+            if ($terisi >= $maxOrdersPerHour) {
                 continue;
             }
 
