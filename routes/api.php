@@ -38,7 +38,6 @@ Route::prefix('pembeli')->group(function () {
 
 
 // Perlu login untuk akses route di bawah ini
-// Perlu login untuk akses route di bawah ini
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
     Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
@@ -58,6 +57,11 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     // Preorder
     Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
     Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
+
+    // Endpoint buat ngecek status bayar dari JS (Polling)
+    Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
+
+    Route::post('/checkout/cancel', [CheckoutController::class, 'cancelOrder']);
 });
 
 // ========================================================================================
