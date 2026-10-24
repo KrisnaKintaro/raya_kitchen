@@ -86,17 +86,27 @@
     </div>
 </div>
 <!-- Modal Wajib Login -->
-<div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl max-w-sm w-full p-8 text-center shadow-2xl transform scale-95 transition-transform duration-300 relative">
-        <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-            <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+<div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-buyer-textPrimary/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-buyer-bg border-2 border-white rounded-[2.5rem] max-w-sm w-full p-8 text-center shadow-[inset_0_-4px_8px_rgba(192,153,206,0.3),inset_0_4px_8px_rgba(255,255,255,1),0_20px_40px_-10px_rgba(192,153,206,0.4)] transform scale-95 transition-transform duration-300 relative mx-4">
+
+        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[inset_0_4px_10px_rgba(192,153,206,0.2),0_4px_10px_rgba(192,153,206,0.15)] border-4 border-buyer-bg">
+            <svg class="w-10 h-10 text-buyer-primary drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
         </div>
-        <h3 class="text-2xl font-black text-gray-900 mb-2">Opss! Belum Login</h3>
-        <p class="text-gray-500 font-medium text-sm mb-8">Lu harus masuk ke akun dulu cuy buat bisa pesen roti.</p>
+
+        <h3 class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Opss! Belum Login</h3>
+        <p class="text-buyer-textSecondary font-medium text-sm mb-8 leading-relaxed">Kamu harus login terlebih dahulu supaya bisa pesen roti.</p>
+
         <div class="flex gap-3">
-            <button type="button" onclick="$('#loginModal').addClass('opacity-0 scale-95'); setTimeout(() => $('#loginModal').addClass('hidden'), 300)" class="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">Batal</button>
-            <a href="/login" class="flex-1 py-3 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition shadow-md block">Login Dulu</a>
+            <button type="button" onclick="$('#loginModal').addClass('opacity-0 scale-95'); setTimeout(() => $('#loginModal').addClass('hidden'), 300)" class="flex-1 py-3.5 bg-white text-buyer-textSecondary font-black rounded-2xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.1),0_4px_10px_rgba(192,153,206,0.15)] border-2 border-gray-50 hover:-translate-y-1 hover:text-buyer-textPrimary transition-all">
+                Batal
+            </button>
+            <a href="/login" class="flex-1 py-3.5 bg-buyer-primary text-white font-black rounded-2xl shadow-[inset_0_-4px_6px_rgba(0,0,0,0.15),inset_0_4px_6px_rgba(255,255,255,0.4),0_8px_20px_rgba(192,153,206,0.4)] hover:-translate-y-1 active:translate-y-0.5 transition-all block">
+                Login Dulu
+            </a>
         </div>
+
     </div>
 </div>
 @endsection
@@ -106,6 +116,7 @@
 $(document).ready(function() {
     // Tangkap ID dari variabel yang dilempar controller web.php
     const productId = "{{ $id }}";
+    const isLoggedIn = "{{ auth()->check() }}" === "1";
 
     fetchDetailData();
 
@@ -148,7 +159,7 @@ $(document).ready(function() {
             error: function(xhr) {
                 $('#loading-spinner').hide();
                 alert('Gagal mengambil detail produk. Pastiin ID-nya bener cuy!');
-                window.location.href = '/'; 
+                window.location.href = '/';
             }
         });
     }
@@ -167,8 +178,14 @@ $(document).ready(function() {
         }
     });
 
-    // LOGIC BARU: Insert ke Cart via AJAX
     $('#btn-add-cart').click(function() {
+        if (!isLoggedIn) {
+            $('#loginModal').removeClass('hidden');
+            // Pake 10ms aja biar transisi Tailwind tetep jalan tapi kerasa instan
+            setTimeout(() => $('#loginModal').removeClass('opacity-0 scale-95'), 10);
+            return; // Stop kode di sini, gak usah lanjut nembak API
+        }
+
         let qty = inputQty.val();
         let btn = $(this);
         let originalText = btn.html();
@@ -185,13 +202,14 @@ $(document).ready(function() {
             },
             success: function(res) {
                 if(res.status === 'success') {
-                    window.location.href = '/keranjang'; // Langsung pindah ke keranjang
+                    window.location.href = '/keranjang';
                 }
             },
             error: function(xhr) {
+                // Error 401 tetep disimpen buat jaga-jaga kalo session mati pas di tengah jalan
                 if(xhr.status === 401) {
                     $('#loginModal').removeClass('hidden');
-                    setTimeout(() => $('#loginModal').removeClass('opacity-0 scale-95'), 50);
+                    setTimeout(() => $('#loginModal').removeClass('opacity-0 scale-95'), 10);
                 } else {
                     alert('Gagal memasukkan ke keranjang.');
                 }

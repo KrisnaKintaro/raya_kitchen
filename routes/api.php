@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
+use App\Http\Controllers\Api\Pembeli\PreorderController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
 use Illuminate\Http\Request;
@@ -41,18 +42,22 @@ Route::prefix('pembeli')->group(function () {
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
     Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
-    
+
     // ROUTE HAPUS ALAMAT DITAMBAHKAN DI SINI
     Route::delete('alamat/{id}', [ProfileController::class, 'hapusAlamat']);
-    
+
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-    
+
     // Tambahan Route AJAX Keranjang & Checkout (Protected inside buyer prefix)
     Route::get('/cart', [CartController::class, 'index']);
     Route::post('/cart/update', [CartController::class, 'update']);
     Route::post('/cart/delete', [CartController::class, 'destroy']);
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
     Route::post('/cart/store', [CartController::class, 'store']);
+
+    // Preorder
+    Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
+    Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
 });
 
 // ========================================================================================
