@@ -11,6 +11,7 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class CheckoutController extends Controller
 {
@@ -91,7 +92,7 @@ class CheckoutController extends Controller
                 'order_id' => $order->id,
                 'amount' => $amountToPay,
                 'payment_method' => $tipeTransaksi,
-                'payment_status' => 'unpaid' // Nanti kalo Duitku sukses, webhook lu tinggal ubah ini jadi 'paid_dp' atau 'paid_full' tergantung nominalnya
+                'payment_status' => 'unpaid'
             ]);
 
             // Kosongkan keranjang setelah order berhasil ke-create
@@ -100,19 +101,72 @@ class CheckoutController extends Controller
             DB::commit();
 
             // =========================================================
-            // TEMPAT INTEGRASI MIDTRANS / DUITKU NANTI DI SINI
+            // INTEGRASI DUITKU SANDBOX (VIA PACKAGE RESMI)
             // =========================================================
-            // $paymentUrl = Midtrans::getSnapUrl($transaction);
-            // Kalo udah dapet $paymentUrl, lempar url-nya di 'redirect_url'
+            if ($tipeTransaksi !== 'cod') {
+                $merchantCode = env('DUITKU_MERCHANT_CODE');
+                $merchantKey = env('DUITKU_MERCHANT_KEY');
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pesanan dibuat! Lanjut ke pembayaran...',
-                'data' => [
-                    'order_number' => $orderNumber,
-                    'redirect_url' => url('/pembayaran/' . $orderNumber)
-                ]
-            ], 200);
+                // Konfigurasi Duitku
+                $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
+                $duitkuConfig->setSandboxMode(true);
+                $duitkuConfig->setSanitizedMode(true);
+                $duitkuConfig->setDuitkuLogs(false);
+
+                // Kode pembayaran untuk QRIS (ShopeePay/QRIS Universal di Duitku biasanya 'SP' atau 'NQ')
+                // Kalau lu mau QRIS murni, kode metode pembayarannya "SP"
+                $paymentMethod = "SP";
+                $paymentAmount = (int) $amountToPay;
+
+                $params = [
+                    'paymentAmount'     => $paymentAmount,
+                    'paymentMethod'     => $paymentMethod,
+                    'merchantOrderId'   => $orderNumber,
+                    'productDetails'    => 'Pembayaran Pesanan ' . $orderNumber,
+                    'email'             => 'customer@rayakitchen.com',
+                    'phoneNumber'       => $request->input('phone'),
+                    'customerVaName'    => $request->input('name'),
+                    'callbackUrl'       => url('/api/duitku/callback'),
+                    'returnUrl'         => url('/riwayat-pesanan?success=true'),
+                    'expiryPeriod'      => 60 // 1 jam
+                ];
+
+                try {
+                    // Pake Duitku\Api buat bypass halaman Pop Duitku dan langsung dapet QRIS-nya
+                    $responseDuitkuApi = \Duitku\Api::createInvoice($params, $duitkuConfig);
+                    $result = json_decode($responseDuitkuApi, true);
+
+                    if ($result['statusCode'] == '00') {
+                        // Simpan qr_string dari Duitku ke database
+                        $transaction->update([
+                            'reference' => $result['reference'] ?? null,
+                            'qr_string' => $result['qrString'] ?? null
+                        ]);
+
+                        return response()->json([
+                            'status' => 'success',
+                            'message' => 'Pesanan dibuat! Lanjut scan QRIS...',
+                            'data' => [
+                                'order_number' => $orderNumber,
+                                // Paksa sistem tetap di halaman web lu (jangan pake paymentUrl Duitku)
+                                'redirect_url' => url('/pembayaran/' . $orderNumber)
+                            ]
+                        ], 200);
+                    } else {
+                        DB::rollBack();
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Gagal terhubung ke Duitku: ' . ($result['statusMessage'] ?? 'Unknown Error')
+                        ], 500);
+                    }
+                } catch (\Exception $e) {
+                    DB::rollBack();
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Exception Duitku: ' . $e->getMessage()
+                    ], 500);
+                }
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -211,7 +265,6 @@ class CheckoutController extends Controller
     }
 
     // Nampilin Halaman Staging QRIS
-    // Nampilin Halaman Staging QRIS
     public function showPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->firstOrFail();
@@ -301,6 +354,130 @@ class CheckoutController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal membatalkan pesanan: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function duitkuCallback(Request $request)
+    {
+        $merchantCode = env('DUITKU_MERCHANT_CODE');
+        $merchantKey = env('DUITKU_MERCHANT_KEY');
+
+        $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
+        $duitkuConfig->setSandboxMode(true);
+
+        try {
+            $callback = \Duitku\Api::callback($duitkuConfig);
+            $notif = json_decode($callback);
+
+            if ($notif->resultCode == "00") {
+                // Hapus tulisan "-LUNAS" kalau ada, biar dapet order_number aslinya
+                $cleanOrderId = str_replace('-LUNAS', '', $notif->merchantOrderId);
+
+                // Pembayaran Sukses
+                $order = Order::with('transaction')->where('order_number', $cleanOrderId)->first();
+                if ($order) {
+                    // Cek apakah bayar DP atau Lunas (baik lunas langsung atau lunas belakangan)
+                    if ($notif->amount >= $order->remaining_amount || $notif->amount == $order->total_amount) {
+                        $order->update(['remaining_amount' => 0]);
+                        $order->transaction->update(['payment_status' => 'paid_full']);
+                    } else {
+                        $order->transaction->update(['payment_status' => 'paid_dp']);
+                    }
+                }
+            } else if ($notif->resultCode == "01") {
+                $cleanOrderId = str_replace('-LUNAS', '', $notif->merchantOrderId);
+
+                // Pembayaran Gagal
+                $order = Order::with('transaction')->where('order_number', $cleanOrderId)->first();
+                if ($order) {
+                    $order->transaction->update(['payment_status' => 'failed']);
+                }
+            }
+
+            return response()->json(['message' => 'Callback Processed']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    public function payRemaining(Request $request)
+    {
+        $request->validate([
+            'order_number' => 'required|string'
+        ]);
+
+        $userId = Auth::id() ?? 1;
+
+        $order = Order::with('transaction')
+            ->where('order_number', $request->order_number)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        if ($order->remaining_amount <= 0 || $order->transaction->payment_status === 'paid_full') {
+            return response()->json(['status' => 'error', 'message' => 'Pesanan ini sudah lunas cuy.'], 400);
+        }
+
+        // =========================================================
+        // BIKIN INVOICE DUITKU BARU KHUSUS UNTUK PELUNASAN
+        // =========================================================
+        $merchantCode = env('DUITKU_MERCHANT_CODE');
+        $merchantKey = env('DUITKU_MERCHANT_KEY');
+
+        $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
+        $duitkuConfig->setSandboxMode(true);
+        $duitkuConfig->setSanitizedMode(true);
+        $duitkuConfig->setDuitkuLogs(false);
+
+        // Kasih suffix khusus biar order ID di Duitku ga bentrok sama ID pas DP
+        $pelunasanOrderId = $order->order_number . '-LUNAS';
+
+        $params = [
+            'paymentAmount'     => (int) $order->remaining_amount,
+            'paymentMethod'     => "SP", // QRIS
+            'merchantOrderId'   => $pelunasanOrderId,
+            'productDetails'    => 'Pelunasan Pesanan ' . $order->order_number,
+            'email'             => 'customer@rayakitchen.com',
+            'phoneNumber'       => $order->recipient_whatsapp,
+            'customerVaName'    => $order->recipient_name,
+            'callbackUrl'       => url('/api/duitku/callback'),
+            'returnUrl'         => url('/riwayat-pesanan?success=true'),
+            'expiryPeriod'      => 60 // 1 jam
+        ];
+
+        try {
+            $responseDuitkuApi = \Duitku\Api::createInvoice($params, $duitkuConfig);
+            $result = json_decode($responseDuitkuApi, true);
+
+            if ($result['statusCode'] == '00') {
+                // Update amount transaksi jadi total full, ganti qr_string pake yang baru
+                $order->transaction->update([
+                    'amount' => $order->total_amount, // Kembalikan ke nominal full
+                    'reference' => $result['reference'] ?? null,
+                    'qr_string' => $result['qrString'] ?? null
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'QRIS Pelunasan berhasil dibuat!',
+                    'data' => [
+                        'redirect_url' => url('/pembayaran/' . $order->order_number)
+                    ]
+                ], 200);
+            } else {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Gagal terhubung ke Duitku: ' . ($result['statusMessage'] ?? 'Unknown Error')
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Exception Duitku: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -39,11 +39,6 @@ Route::middleware(['auth'])->group(function () {
     // PERUBAHAN DI SINI UNTUK PESANAN & CHECKOUT
     // ==========================================
 
-    // 1. Route Tampilan Halaman (Hanya me-render file Blade HTML)
-    Route::get('/riwayat-pesanan', function () {
-        return view('pembeli.pages.riwayat_pesanan');
-    })->name('pesanan');
-
     // Halaman Staging Pembayaran
     Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran'])->name('pembayaran');
 
