@@ -11,12 +11,18 @@ class NotificationController extends Controller
     // Endpoint: Ambil data notifikasi untuk Navbar
     public function index()
     {
-        $userId = Auth::id() ?? 1;
+        $userId = Auth::id();
+
+        // Ambil data 24 jam terakhir
         $notifs = UserNotification::where('user_id', $userId)
+            ->where('created_at', '>=', now()->subDay())
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $unreadCount = $notifs->where('is_read', false)->count();
+        // Hitung total notifikasi belum dibaca secara keseluruhan
+        $unreadCount = UserNotification::where('user_id', $userId)
+            ->where('is_read', false)
+            ->count();
 
         return response()->json([
             'status' => 'success',

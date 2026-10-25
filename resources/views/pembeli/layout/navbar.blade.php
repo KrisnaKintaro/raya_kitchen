@@ -50,7 +50,7 @@
                             <h4 class="font-black text-buyer-textPrimary">Notifikasi</h4>
                             <button id="btn-read-all" class="text-xs text-buyer-primary font-bold hover:underline">Tandai dibaca</button>
                         </div>
-                        <div id="notif-list" class="max-h-80 overflow-y-auto hide-scrollbar flex flex-col p-2">
+                        <div id="notif-list" class="max-h-[340px] overflow-y-auto flex flex-col p-2 scroll-smooth">
                         </div>
                     </div>
                 </div>
@@ -186,6 +186,6 @@
         if(btnCloseMenu) btnCloseMenu.addEventListener('click', toggleMobileMenu);
         if(mobileOverlay) mobileOverlay.addEventListener('click', toggleMobileMenu);
     });
-    
+
 </script>
 @endpush

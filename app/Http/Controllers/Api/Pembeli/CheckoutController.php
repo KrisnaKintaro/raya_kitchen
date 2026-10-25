@@ -191,6 +191,7 @@ class CheckoutController extends Controller
             if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
                 $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis (60 menit).']);
                 $order->transaction->update(['payment_status' => 'failed']);
+                NotificationController::send($order, 'batal_otomatis');
             }
         }
 
@@ -283,6 +284,7 @@ class CheckoutController extends Controller
         if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
             $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis.']);
             $order->transaction->update(['payment_status' => 'failed']);
+            NotificationController::send($order, 'batal_otomatis');
         }
 
         return response()->json([
