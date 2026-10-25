@@ -103,4 +103,8 @@ Route::prefix('admin')->middleware(['auth'])->group(function () {
     Route::get('/ringkasan_finansial', function () {
         return view('admin.pages.finansial.ringkasan_finansial');
     })->name('admin.ringkasan-finansial');
+
+    Route::get('/riwayat_penjualan', function () {
+        return view('admin.pages.finansial.riwayat_penjualan');
+    })->name('admin.riwayat-penjualan');
 });
