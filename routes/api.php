@@ -40,28 +40,30 @@ Route::prefix('pembeli')->group(function () {
 
 // Perlu login untuk akses route di bawah ini
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
+    // --- PROFIL & ALAMAT ---
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
-    Route::post('profil-data', [ProfileController::class, 'update'])->name('profil.update'); // Untuk simpan alamat baru/edit
-
-    // ROUTE HAPUS ALAMAT DITAMBAHKAN DI SINI
+    Route::post('update-profil-pribadi', [ProfileController::class, 'update']); // Disinkronkan dengan AJAX di profil.blade.php
     Route::delete('alamat/{id}', [ProfileController::class, 'hapusAlamat']);
+    Route::post('/checkout/alamat-ajax', [CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax'); // Untuk form modal alamat di Checkout
 
+    // --- TRANSAKSI & PESANAN ---
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
+    Route::get('/nota', [CheckoutController::class, 'showNota']); // Rute API untuk data Nota
+    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']); // Rute API untuk data Pembayaran
 
-    // Tambahan Route AJAX Keranjang & Checkout (Protected inside buyer prefix)
+    // --- CART (KERANJANG) ---
     Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart/store', [CartController::class, 'store']);
     Route::post('/cart/update', [CartController::class, 'update']);
     Route::post('/cart/delete', [CartController::class, 'destroy']);
-    Route::post('/checkout/process', [CheckoutController::class, 'store']);
-    Route::post('/cart/store', [CartController::class, 'store']);
 
-    // Preorder
+    // --- CHECKOUT & PREORDER ---
+    Route::post('/checkout/process', [CheckoutController::class, 'store']);
     Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
     Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
 
-    // Endpoint buat ngecek status bayar dari JS (Polling)
+    // --- PAYMENT POLLING & ACTIONS ---
     Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
-
     Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
     Route::post('/checkout/cancel', [CheckoutController::class, 'cancelOrder']);
 });

@@ -180,33 +180,37 @@ class CheckoutController extends Controller
     public function index(Request $request)
     {
         $userId = Auth::id() ?? 1;
-
         $orders = Order::with('transaction')->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($order) {
-                // Biar Frontend tau dia bayar lunas atau DP dari amount transaksinya
-                $isDP = $order->transaction->amount < $order->total_amount;
+            ->get();
 
-                return [
-                    'order_number' => $order->order_number,
-                    'status' => strtoupper(str_replace('_', ' ', $order->status)),
-                    'payment_method' => $order->transaction->payment_method ?? '-',
-                    'payment_status' => $order->transaction->payment_status ?? 'unpaid',
-                    'tipe_bayar' => $isDP ? 'DP 30%' : 'Lunas',
-                    'date' => $order->created_at->format('d M Y, H:i'),
-                    'recipient_name' => $order->recipient_name,
-                    'recipient_whatsapp' => $order->recipient_whatsapp,
-                    'shipping_address' => $order->shipping_address,
-                    'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
-                    'tagihan_sekarang' => 'Rp ' . number_format($order->transaction->amount, 0, ',', '.'),
-                ];
-            });
+        // Lazy Evaluation: Cek dan batalkan yang expired sebelum dikirim ke frontend
+        foreach ($orders as $order) {
+            $expiredAt = $order->created_at->addMinutes(60);
+            if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
+                $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis (60 menit).']);
+                $order->transaction->update(['payment_status' => 'failed']);
+            }
+        }
 
-        return response()->json([
-            'status' => 'success',
-            'data' => $orders
-        ]);
+        $mappedOrders = $orders->map(function ($order) {
+            $isDP = $order->transaction->amount < $order->total_amount;
+            return [
+                'order_number' => $order->order_number,
+                'status' => strtoupper(str_replace('_', ' ', $order->status)),
+                'payment_method' => $order->transaction->payment_method ?? '-',
+                'payment_status' => $order->transaction->payment_status ?? 'unpaid',
+                'tipe_bayar' => $isDP ? 'DP 30%' : 'Lunas',
+                'date' => $order->created_at->format('d M Y, H:i'),
+                'recipient_name' => $order->recipient_name,
+                'recipient_whatsapp' => $order->recipient_whatsapp,
+                'shipping_address' => $order->shipping_address,
+                'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
+                'tagihan_sekarang' => 'Rp ' . number_format($order->transaction->amount, 0, ',', '.'),
+            ];
+        });
+
+        return response()->json(['status' => 'success', 'data' => $mappedOrders]);
     }
 
     public function showNota(Request $request)
@@ -218,17 +222,22 @@ class CheckoutController extends Controller
             ->first();
 
         if (!$order) {
-            return redirect()->route('katalog')->with('error', 'Nota tidak ditemukan.');
+            return response()->json(['status' => 'error', 'message' => 'Nota tidak ditemukan.'], 404);
         }
 
         $company = CompanyProfile::first();
 
-        return view('pembeli.pages.nota', compact('order', 'company'));
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'order' => $order,
+                'company' => $company
+            ]
+        ]);
     }
 
     public function storeAddressAjax(Request $request)
     {
-        // 1. Tampung hasil validasi ke variabel
         $validated = $request->validate([
             'label'          => 'required|string|max:50',
             'province'       => 'required|string',
@@ -238,20 +247,15 @@ class CheckoutController extends Controller
             'street_address' => 'required|string',
         ]);
 
-        // 2. Ambil user dari object request (lebih clean dari auth()->user())
         $user = $request->user();
-
-        // 3. Pake doesntExist() lebih kenceng dari count() === 0 buat ngecek DB
         $isPrimary = $user->addresses()->doesntExist();
 
-        // 4. Gabungin data yang divalidasi sama data tambahan bawaan user
         $address = $user->addresses()->create(array_merge($validated, [
             'recipient_name'     => $user->name,
             'recipient_whatsapp' => $user->whatsapp_number,
             'is_primary'         => $isPrimary,
         ]));
 
-        // 5. Pake string interpolation biar ngebacanya gampang (nggak pusing liat titik)
         $prefix = $isPrimary ? '[Utama] ' : '';
         $teksLengkap = "{$prefix}{$address->label} - {$address->street_address}, {$address->district}, {$address->city}, {$address->province} {$address->postal_code}";
 
@@ -264,35 +268,48 @@ class CheckoutController extends Controller
         ]);
     }
 
-    // Nampilin Halaman Staging QRIS
+    // Nampilin Halaman Staging QRIS (Dirobah jadi full JSON)
     public function showPembayaran($orderNumber)
     {
-        $order = Order::with('transaction')->where('order_number', $orderNumber)->firstOrFail();
+        $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
 
-        // Kalau ternyata udah lunas FULL (misal user iseng buka linknya lagi), langsung lempar ke nota
-        if ($order->transaction->payment_status === 'paid_full') {
-            return redirect()->route('nota', ['order_number' => $orderNumber]);
+        if (!$order) {
+            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
         }
 
-        // Catatan: Kalo statusnya paid_dp, tetep biarin dia masuk ke view pembayaran.blade.php
-        // Biar dia bisa ngeliat QRIS buat ngelunasin sisa tagihannya (remaining_amount)
+        $expiredAt = $order->created_at->addMinutes(60);
 
-        return view('pembeli.pages.pembayaran', compact('order'));
+        if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
+            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis.']);
+            $order->transaction->update(['payment_status' => 'failed']);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'order' => $order,
+                'expired_at' => $expiredAt->toIso8601String()
+            ]
+        ]);
     }
 
     // Endpoint buat Polling AJAX tiap 3 detik
     public function cekStatusPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
-
         if (!$order) {
             return response()->json(['status' => 'error', 'message' => 'Order tidak ditemukan'], 404);
         }
 
-        return response()->json([
-            'status' => 'success',
-            'payment_status' => $order->transaction->payment_status // unpaid, paid, atau failed
-        ]);
+        // Cek kedaluwarsa secara real-time saat polling
+        $expiredAt = $order->created_at->addMinutes(60);
+        if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
+            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis.']);
+            $order->transaction->update(['payment_status' => 'failed']);
+            return response()->json(['status' => 'success', 'payment_status' => 'failed']);
+        }
+
+        return response()->json(['status' => 'success', 'payment_status' => $order->transaction->payment_status]);
     }
 
     public function cancelOrder(Request $request)

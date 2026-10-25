@@ -9,7 +9,6 @@
     .flatpickr-day.is-med { background-color: #fef08a !important; border-color: #fef08a !important; color: #854d0e !important; font-weight: bold; }
     .flatpickr-day.is-full { background-color: #fee2e2 !important; border-color: #fee2e2 !important; color: #991b1b !important; text-decoration: line-through; opacity: 0.6; }
     .flatpickr-day.is-low:hover, .flatpickr-day.is-med:hover { filter: brightness(0.95); }
-
     /* Legend Box */
     .legend-box { width: 14px; height: 14px; display: inline-block; border-radius: 4px; }
 </style>
@@ -34,11 +33,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penerima</label>
-                                <input type="text" id="penerima_name" value="{{ auth()->user()->name }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm">
+                                <input type="text" id="penerima_name" value="" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-gray-50" readonly>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
-                                <input type="text" id="penerima_phone" value="{{ auth()->user()->whatsapp_number }}" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm">
+                                <input type="text" id="penerima_phone" value="" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-gray-50" readonly>
                             </div>
                         </div>
 
@@ -48,35 +47,25 @@
                                 <label class="block text-sm font-bold text-gray-700">Pilih Alamat Pengiriman</label>
                             </div>
 
-                            @php $addresses = auth()->user()->addresses()->orderByDesc('is_primary')->get(); @endphp
+                            <!-- Loading State Alamat -->
+                            <div id="loading-address" class="p-4 text-center text-sm font-bold text-gray-400 animate-pulse border-2 border-gray-100 border-dashed rounded-2xl">
+                                Memuat daftar alamat...
+                            </div>
 
-                            @if($addresses->isEmpty())
-                                <div id="no-address-alert" class="p-6 border-2 border-dashed border-red-200 bg-red-50/50 rounded-2xl text-center">
-                                    <p class="text-sm text-red-600 font-bold mb-3">Kamu belum memiliki alamat pengiriman.</p>
-                                    <button type="button" onclick="openAddressModal()" class="py-2.5 px-6 bg-purple-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-purple-700 transition">
-                                        + Tambah Alamat Sekarang
-                                    </button>
-                                </div>
-                                <select id="alamat_select" class="hidden w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700" required></select>
-                                <button type="button" id="btn-tambah-alamat-tambahan" onclick="openAddressModal()" class="hidden mt-2 text-xs font-bold text-purple-600 hover:underline">+ Tambah Alamat Lain</button>
-                            @else
-                                <select id="alamat_select" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700" required>
-                                    @foreach($addresses as $addr)
-                                        @php
-                                            $teksLengkap = ($addr->is_primary ? '[Utama] ' : '') . ($addr->label ? $addr->label . ' - ' : '') . $addr->street_address . ', ' . $addr->district . ', ' . $addr->city . ', ' . $addr->province . ' ' . $addr->postal_code;
-                                        @endphp
-                                        <option value="{{ $teksLengkap }}" {{ $addr->is_primary ? 'selected' : '' }}>{{ $teksLengkap }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" onclick="openAddressModal()" class="mt-2 text-xs font-bold text-purple-600 hover:underline">+ Tambah Alamat Lain</button>
-                            @endif
+                            <div id="no-address-alert" class="hidden p-6 border-2 border-dashed border-red-200 bg-red-50/50 rounded-2xl text-center">
+                                <p class="text-sm text-red-600 font-bold mb-3">Kamu belum memiliki alamat pengiriman.</p>
+                                <button type="button" onclick="openAddressModal()" class="py-2.5 px-6 bg-purple-600 text-white font-bold rounded-xl text-sm shadow-md hover:bg-purple-700 transition">
+                                    + Tambah Alamat Sekarang
+                                </button>
+                            </div>
+                            <select id="alamat_select" class="hidden w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white font-medium text-gray-700" required></select>
+                            <button type="button" id="btn-tambah-alamat-tambahan" onclick="openAddressModal()" class="hidden mt-2 text-xs font-bold text-purple-600 hover:underline">+ Tambah Alamat Lain</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- BAGIAN JADWAL PENGIRIMAN (PRE-ORDER) -->
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100 relative">
-                    <!-- Loading Kalender -->
                     <div id="loading-jadwal" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
                         <div class="animate-spin w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full mb-2"></div>
                         <span class="text-sm font-bold text-purple-600">Mengecek Jadwal Dapur...</span>
@@ -98,7 +87,6 @@
                         </div>
                     </div>
 
-                    <!-- Keterangan Warna Kalender (Legend) -->
                     <div class="mt-4 flex gap-4 text-xs font-semibold text-gray-600 border-t border-gray-100 pt-3">
                         <div class="flex items-center gap-1.5"><span class="legend-box bg-green-200"></span> Kuota Aman</div>
                         <div class="flex items-center gap-1.5"><span class="legend-box bg-yellow-200"></span> Hampir Penuh</div>
@@ -141,7 +129,6 @@
                         </label>
                     </div>
                 </div>
-
             </div>
 
             <!-- Ringkasan Pesanan -->
@@ -172,9 +159,9 @@
     </div>
 </div>
 
+<!-- Modal Tambah Alamat -->
 <div id="addressModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 hidden opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl max-w-lg w-full max-h-[95vh] overflow-y-auto p-6 md:p-7 shadow-2xl relative transform scale-95 transition-transform duration-300 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-xl font-black text-gray-800">Tambah Alamat Baru</h3>
             <button type="button" onclick="closeAddressModal()" class="text-gray-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
@@ -230,17 +217,13 @@
 <!-- Modal Custom Alert -->
 <div id="customAlertModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-buyer-textPrimary/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
     <div class="bg-buyer-bg border-2 border-white rounded-[2.5rem] max-w-sm w-full p-8 text-center shadow-[inset_0_-4px_8px_rgba(192,153,206,0.3),inset_0_4px_8px_rgba(255,255,255,1),0_20px_40px_-10px_rgba(192,153,206,0.4)] transform scale-95 transition-transform duration-300 relative mx-4">
-
         <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[inset_0_4px_10px_rgba(192,153,206,0.2),0_4px_10px_rgba(192,153,206,0.15)] border-4 border-buyer-bg">
-            <!-- Icon Warning (Tanda Seru Kuning/Merah) -->
             <svg class="w-10 h-10 text-amber-500 drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
         </div>
-
         <h3 id="alertModalTitle" class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Peringatan</h3>
         <p id="alertModalMessage" class="text-buyer-textSecondary font-medium text-sm mb-8 leading-relaxed">Pesan error di sini.</p>
-
         <button type="button" onclick="closeCustomAlert()" class="w-full py-3.5 bg-buyer-primary text-white font-black rounded-2xl shadow-[inset_0_-4px_6px_rgba(0,0,0,0.15),inset_0_4px_6px_rgba(255,255,255,0.4),0_8px_20px_rgba(192,153,206,0.4)] hover:-translate-y-1 active:translate-y-0.5 transition-all">
             Oke, Paham
         </button>
@@ -249,14 +232,10 @@
 @endsection
 
 @push('script')
-    <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
     <script>
-    // ==========================================
-    // 1. FUNGSI GLOBAL BUAT MODAL ALAMAT
-    // ==========================================
     let provincesData = [];
     let citiesData = [];
     let districtsData = [];
@@ -268,7 +247,6 @@
             $('#addressModal > div').removeClass('scale-95');
         }, 10);
 
-        // Tarik data provinsi dari API pas modal dibuka
         if(provincesData.length === 0) {
             fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
                 .then(res => res.json())
@@ -287,17 +265,48 @@
         setTimeout(() => { $('#addressModal').addClass('hidden'); }, 300);
     }
 
-    // ==========================================
-    // 2. LOGIC HALAMAN (CHECKOUT & ALAMAT)
-    // ==========================================
     $(document).ready(function() {
         function formatRupiah(number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); }
 
         let totalKeseluruhan = 0;
         let totalDP = 0;
-        let heatmapData = {}; // Cache data dari API
+        let heatmapData = {};
 
-        // --- A. STYLING OPSI PEMBAYARAN ---
+        // --- FETCH PROFIL DAN ALAMAT ---
+        $.ajax({
+            url: '/api/pembeli/profil-data',
+            type: 'GET',
+            success: function(res) {
+                if(res.status === 'success') {
+                    $('#penerima_name').val(res.data.user.name);
+                    $('#penerima_phone').val(res.data.user.whatsapp_number);
+
+                    let addresses = res.data.all_addresses || [];
+                    $('#loading-address').addClass('hidden');
+
+                    if(addresses.length === 0) {
+                        $('#no-address-alert').removeClass('hidden');
+                    } else {
+                        let select = $('#alamat_select');
+                        select.empty();
+                        addresses.forEach(addr => {
+                            let prefix = addr.is_primary == 1 ? '[Utama] ' : '';
+                            let label = addr.label ? addr.label + ' - ' : '';
+                            let textLengkap = `${prefix}${label}${addr.street_address}, ${addr.district}, ${addr.city}, ${addr.province} ${addr.postal_code}`;
+                            let isSelected = addr.is_primary == 1 ? 'selected' : '';
+                            select.append(`<option value="${textLengkap}" ${isSelected}>${textLengkap}</option>`);
+                        });
+                        select.removeClass('hidden');
+                        $('#btn-tambah-alamat-tambahan').removeClass('hidden');
+                    }
+                }
+            },
+            error: function() {
+                showCustomAlert('Error', 'Gagal memuat data profil. Silakan muat ulang halaman.');
+            }
+        });
+
+        // --- STYLING OPSI PEMBAYARAN ---
         $('input[name="payment_method"]').change(function() {
             $('.payment-lbl').removeClass('border-purple-500 bg-purple-50 text-purple-700').addClass('border-gray-200 bg-white text-gray-700');
             $(this).closest('label').removeClass('border-gray-200 bg-white text-gray-700').addClass('border-purple-500 bg-purple-50 text-purple-700');
@@ -315,7 +324,7 @@
             }
         });
 
-        // --- B. FETCH CART ---
+        // --- FETCH CART ---
         $.get('/api/pembeli/cart', function(res) {
             if(res.status === 'success') {
                 let itemsHTML = '';
@@ -335,13 +344,12 @@
                 $('#co-subtotal').text(formatRupiah(totalKeseluruhan));
                 $('#co-tagihan-sekarang').text(formatRupiah(totalKeseluruhan));
 
-                // Tarik data bulan ini pas halaman dibuka
                 let now = new Date();
                 fetchHeatmap(now.getMonth() + 1, now.getFullYear());
             }
         });
 
-        // --- C. LOGIC KALENDER PRE-ORDER ---
+        // --- LOGIC KALENDER PRE-ORDER ---
         function fetchHeatmap(month, year, fpInstance = null) {
             $.ajax({
                 url: "/api/pembeli/checkout/heatmap",
@@ -429,7 +437,7 @@
             });
         }
 
-        // --- D. LOGIC AUTOCOMPLETE ALAMAT BARU ---
+        // --- LOGIC AUTOCOMPLETE ALAMAT BARU ---
         $('#provinsi').on('input', function() {
             let selectedVal = $(this).val();
             let selectedProv = provincesData.find(p => p.name === selectedVal);
@@ -513,7 +521,7 @@
             });
         });
 
-        // --- E. SUBMIT PROSES CHECKOUT ---
+        // --- SUBMIT PROSES CHECKOUT ---
         $('#btn-konfirmasi').click(function() {
             let addressVal = $('#alamat_select').val();
             let tglKirim = $('#tanggal_kirim').val();
@@ -557,9 +565,6 @@
         });
     });
 
-    // ==========================================
-    // FUNGSI CUSTOM ALERT MODAL
-    // ==========================================
     function showCustomAlert(title, message) {
         $('#alertModalTitle').text(title);
         $('#alertModalMessage').text(message);
@@ -577,5 +582,5 @@
         setTimeout(() => { $('#customAlertModal').addClass('hidden'); }, 300);
     }
 
-</script>
+    </script>
 @endpush

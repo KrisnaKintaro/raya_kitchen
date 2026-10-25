@@ -1,8 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\Pembeli\ProfileController;
 
 // ==========================================
 // PUBLIC ROUTES (Bisa diakses siapa aja)
@@ -17,6 +15,7 @@ Route::get('/katalogProduk', function(){
 });
 
 Route::get('/produk/{id}', function ($id) {
+    // Controller web.php hanya kirim ID ke view, AJAX yang ngurus datanya
     return view('pembeli.pages.produk.detail_produk', compact('id'));
 })->name('produk.detail');
 
@@ -27,7 +26,6 @@ Route::get('/tentang-kami', function () {
 
 // ==========================================
 // PROTECTED ROUTES (Hanya buat user yang udah Login)
-// taruh semua route tampilan yang baru bisa diakses jika sudah login disini
 // ==========================================
 Route::middleware(['auth'])->group(function () {
 
@@ -35,19 +33,12 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.keranjang');
     })->name('keranjang');
 
-    // ==========================================
-    // PERUBAHAN DI SINI UNTUK PESANAN & CHECKOUT
-    // ==========================================
+    // Halaman Staging Pembayaran (Full AJAX)
+    Route::get('/pembayaran/{order_number}', function ($order_number) {
+        return view('pembeli.pages.pembayaran');
+    })->name('pembayaran');
 
-    // Halaman Staging Pembayaran
-    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran'])->name('pembayaran');
-
-    // ==========================================
-    // PERUBAHAN DI SINI UNTUK PROFIL
-    // ==========================================
-
-    // Route HANYA untuk menampilkan file Blade (Halaman visual)
-    // Halaman Profil Utama (Hanya Informasi Akun)
+    // Halaman Profil Utama
     Route::get('/profil', function () {
         return view('pembeli.pages.profil');
     })->name('profil');
@@ -57,16 +48,17 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.alamat');
     })->name('alamat');
 
-    // 2. Route untuk mengambil dan menyimpan DATA berformat JSON ke ProfileController
-
-    // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
+    // Halaman Checkout
     Route::get('/checkout', function () {
         return view('pembeli.pages.checkout');
     })->name('checkout');
 
-    // Nota diubah mengarah ke CheckoutController agar data dari database tampil secara dinamis
-    Route::get('/nota', [CheckoutController::class, 'showNota'])->name('nota');
+    // Halaman Nota (Full AJAX, ambil order_number dari URL query parameter via JS)
+    Route::get('/nota', function () {
+        return view('pembeli.pages.nota');
+    })->name('nota');
 
+    // Halaman Riwayat Pesanan
     Route::get('/riwayat-pesanan', function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('riwayat-pesanan');
@@ -75,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// AUTH ROUTES (Login, Register, dll). Nanti saja untuk ini
+// AUTH ROUTES (Login, Register, dll)
 // ==========================================
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
@@ -97,9 +89,9 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/reset-password', function () {
         return view('auth.pembeli.reset_password');
     })->name('password.reset');
-
-    Route::post('/logout', function () {
-        return redirect('/');
-    })->name('logout');
 });
-Route::post('/checkout/alamat-ajax', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax');
+
+// Logout harus pakai POST demi keamanan, arahin ke halaman utama setelahnya
+Route::post('/logout', function () {
+    return redirect('/');
+})->name('logout')->middleware('auth');
