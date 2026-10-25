@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
+use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Api\Pembeli\PreorderController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
@@ -66,6 +67,10 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
     Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
     Route::post('/checkout/cancel', [CheckoutController::class, 'cancelOrder']);
+
+    // --- NOTIFIKASI ---
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/read', [NotificationController::class, 'markAsRead']);
 });
 
 // ========================================================================================
