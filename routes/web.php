@@ -95,3 +95,12 @@ Route::middleware(['guest'])->group(function () {
 Route::post('/logout', function () {
     return redirect('/');
 })->name('logout')->middleware('auth');
+
+// ==========================================
+// ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
+// ==========================================
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    Route::get('/ringkasan_finansial', function () {
+        return view('admin.pages.finansial.ringkasan_finansial');
+    })->name('admin.ringkasan-finansial');
+});
