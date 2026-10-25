@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Pembeli\PreorderController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 // ===========================
@@ -61,6 +62,7 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     // Endpoint buat ngecek status bayar dari JS (Polling)
     Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
 
+    Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
     Route::post('/checkout/cancel', [CheckoutController::class, 'cancelOrder']);
 });
 
@@ -69,4 +71,35 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
 // ========================================================================================
 Route::prefix('admin')->group(function () {
     // Tambahkan route admin di sini
+});
+
+// ========================================================================================
+// ROUTE WEBHOOK DUITKU (HARUS BISA DIAKSES PUBLIK)
+// ========================================================================================
+Route::post('/duitku/callback', [CheckoutController::class, 'duitkuCallback']);
+
+// ROUTE BUAT NGETES WEBHOOK LOKAL
+Route::get('/test-webhook/{orderNumber}/{amount}', function($orderNumber, $amount) {
+    $merchantCode = env('DUITKU_MERCHANT_CODE');
+    $merchantKey = env('DUITKU_MERCHANT_KEY');
+
+    // Bikin signature valid otomatis pake rumus Duitku
+    $signature = md5($merchantCode . $amount . $orderNumber . $merchantKey);
+    $urlCallback = url('/api/duitku/callback');
+
+    // Bikin form HTML yang langsung auto-submit nge-POST ke webhook
+    return "
+        <html>
+        <body onload=\"document.getElementById('formWebhook').submit();\" style=\"font-family: sans-serif; padding: 2rem;\">
+            <h3>Tunggu bentar, lagi nembak webhook... 🚀</h3>
+            <form id=\"formWebhook\" action=\"{$urlCallback}\" method=\"POST\" style=\"display: none;\">
+                <input type=\"text\" name=\"merchantOrderId\" value=\"{$orderNumber}\">
+                <input type=\"text\" name=\"amount\" value=\"{$amount}\">
+                <input type=\"text\" name=\"merchantCode\" value=\"{$merchantCode}\">
+                <input type=\"text\" name=\"resultCode\" value=\"00\">
+                <input type=\"text\" name=\"signature\" value=\"{$signature}\">
+            </form>
+        </body>
+        </html>
+    ";
 });

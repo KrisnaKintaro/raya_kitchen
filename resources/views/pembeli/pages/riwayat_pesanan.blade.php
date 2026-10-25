@@ -202,6 +202,7 @@ $(document).ready(function() {
             let statusColor = 'bg-gray-100 text-gray-600';
             let pStatus = order.payment_status ? order.payment_status.toLowerCase() : '';
             let oStatus = order.status ? order.status.toLowerCase() : '';
+            let pMethod = order.payment_method ? order.payment_method.toLowerCase() : '';
 
             let displayStatus = 'Status Tidak Diketahui';
 
@@ -225,6 +226,11 @@ $(document).ready(function() {
                 displayStatus = 'SELESAI';
             }
 
+            // Tag Metode Pembayaran (Border radius 12px)
+            let methodText = pMethod === 'cod' ? 'COD' : 'TRANSFER';
+            let methodColor = pMethod === 'cod' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+            let methodTag = `<span class="px-2.5 py-1 text-[10px] font-black rounded-[12px] border ${methodColor} uppercase tracking-wider">${methodText}</span>`;
+
             let actionButtons = '';
 
             if (oStatus === 'dibatalkan') {
@@ -235,7 +241,11 @@ $(document).ready(function() {
                 }
 
                 if (pStatus === 'unpaid' || pStatus === 'failed') {
-                    actionButtons += `<a href="/pembayaran/${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-amber-600 transition-all">Bayar Sekarang</a>`;
+                    if (pMethod === 'cod') {
+                        actionButtons += `<button disabled class="flex-1 md:flex-none text-center py-2.5 px-4 bg-gray-200 text-gray-500 font-extrabold text-xs rounded-xl shadow-sm cursor-not-allowed border border-gray-300">Silahkan menunggu pesananmu sampai</button>`;
+                    } else {
+                        actionButtons += `<a href="/pembayaran/${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-amber-600 transition-all">Bayar Sekarang</a>`;
+                    }
                 }
 
                 // HANYA MUNCUL JIKA STATUS PENDING
@@ -252,9 +262,12 @@ $(document).ready(function() {
                 <div class="space-y-2 w-full md:w-auto">
                     <div class="flex items-center justify-between md:justify-start gap-3 w-full">
                         <span class="text-xs font-bold text-gray-400">${order.date}</span>
-                        <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider ${statusColor}">
-                            ${displayStatus}
-                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="px-3 py-1 text-[10px] font-black rounded-full uppercase tracking-wider ${statusColor}">
+                                ${displayStatus}
+                            </span>
+                            ${methodTag}
+                        </div>
                     </div>
 
                     <h3 class="font-extrabold text-gray-800 text-base md:text-lg">
@@ -338,7 +351,7 @@ $(document).ready(function() {
         btn.html('<span class="animate-pulse">Memproses...</span>').prop('disabled', true);
 
         $.ajax({
-            url: "/api/pembeli/checkout/cancel", // Nembak route API lu
+            url: "/api/pembeli/checkout/cancel",
             type: "POST",
             data: {
                 order_number: $('#cancel_order_number').val(),

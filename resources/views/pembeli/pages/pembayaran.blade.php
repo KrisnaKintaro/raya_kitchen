@@ -26,7 +26,13 @@
 
         <!-- Gambar QRIS -->
         <div class="relative w-72 h-72 mx-auto bg-white rounded-3xl p-3 shadow-[0_10px_20px_rgba(192,153,206,0.2)] border border-purple-100 mb-6 cursor-pointer hover:scale-105 transition-transform" onclick="openZoomModal()">
-            <img src="{{ asset('asset/qris_raya_kitchen.jpeg') }}" alt="QRIS Raya Kitchen" class="w-full h-full object-contain rounded-2xl">
+            @if(!empty($order->transaction->qr_string))
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data={{ urlencode($order->transaction->qr_string) }}" alt="QRIS Duitku" class="w-full h-full object-contain rounded-2xl">
+            @else
+                <div class="w-full h-full flex flex-col items-center justify-center bg-gray-100 rounded-2xl border-2 border-dashed border-red-300">
+                    <p class="text-sm font-bold text-red-500">QRIS Gagal Dimuat</p>
+                </div>
+            @endif
 
             <div class="absolute inset-0 bg-black/5 opacity-0 hover:opacity-100 rounded-3xl flex flex-col items-center justify-center transition-opacity">
                 <div class="bg-white p-2 rounded-full shadow-md text-buyer-primary">
@@ -58,7 +64,9 @@
         <button type="button" onclick="closeZoomModal()" class="absolute -top-4 -right-4 w-10 h-10 bg-red-500 text-white rounded-full flex items-center justify-center shadow-lg font-bold hover:scale-105 active:scale-95 transition-transform">
             &times;
         </button>
-        <img src="{{ asset('asset/qris_raya_kitchen.jpeg') }}" alt="QRIS Raya Kitchen Besar" class="w-full h-full object-contain max-h-[80vh] rounded-2xl">
+        @if(!empty($order->transaction->qr_string))
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data={{ urlencode($order->transaction->qr_string) }}" alt="QRIS Raya Kitchen Besar" class="w-full h-full object-contain max-h-[80vh] rounded-2xl">
+        @endif
     </div>
 </div>
 

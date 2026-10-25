@@ -18,6 +18,8 @@ return new class extends Migration
             $table->enum('payment_method', ['transfer', 'cod']);
             $table->enum('payment_status', ['unpaid', 'paid_dp', 'paid_full', 'failed'])->default('unpaid');
             $table->timestamp('paid_at')->nullable();
+            $table->string('reference', 255)->nullable();
+            $table->text('qr_string')->nullable();
             $table->timestamps();
         });
     }

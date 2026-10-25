@@ -12,6 +12,8 @@ class Transaction extends Model
         'payment_method',
         'payment_status',
         'paid_at',
+        'reference',
+        'qr_string'    
     ];
 
     protected $casts = [

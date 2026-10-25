@@ -212,17 +212,33 @@
                 </div>
             @elseif($order->remaining_amount > 0)
                 <div class="mt-8 pt-6 border-t border-gray-100 print:hidden">
-                    <div class="p-4 bg-red-50 rounded-2xl border border-red-100 mb-4 flex gap-3 items-start">
-                        <svg class="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <div>
-                            <p class="font-bold text-red-800 text-sm mb-1">Tagihan Belum Lunas</p>
-                            <p class="text-xs text-red-600 font-medium">Pesananmu baru dibayar DP. Silakan lunasi sisa tagihan sebelum pesanan diambil/dikirim.</p>
-                        </div>
-                    </div>
 
-                    <a href="{{ url('/pembayaran/'.$order->order_number) }}" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-center text-sm transition shadow-[0_4px_10px_rgba(239,68,68,0.3)]">
-                        Bayar Sisa Tagihan Sekarang
-                    </a>
+                    {{-- CEK APAKAH DIA METODE COD ATAU TRANSFER --}}
+                    @if($order->transaction && $order->transaction->payment_method === 'cod')
+                        {{-- Tampilan Box Kuning Untuk COD --}}
+                        <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-4 flex gap-3 items-start">
+                            <svg class="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div>
+                                <p class="font-bold text-amber-800 text-sm mb-1">Tagihan Belum Lunas (COD)</p>
+                                <p class="text-xs text-amber-700 font-medium">Pesananmu baru dibayar DP. Silakan bayar sisa tagihan pesananmu ketika barang sudah sampai ya.</p>
+                            </div>
+                        </div>
+                        {{-- Tombol bayar dihilangkan khusus untuk COD --}}
+
+                    @else
+                        {{-- Tampilan Box Merah Untuk TRANSFER / QRIS --}}
+                        <div class="p-4 bg-red-50 rounded-2xl border border-red-100 mb-4 flex gap-3 items-start">
+                            <svg class="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div>
+                                <p class="font-bold text-red-800 text-sm mb-1">Tagihan Belum Lunas</p>
+                                <p class="text-xs text-red-600 font-medium">Pesananmu baru dibayar DP. Silakan lunasi sisa tagihan sebelum pesanan dapat diambil/dikirim.</p>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="lunasiTagihan('{{ $order->order_number }}')" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-center text-sm transition shadow-[0_4px_10px_rgba(239,68,68,0.3)]" id="btn-lunasi">
+                            Bayar Sisa Tagihan Sekarang
+                        </button>
+                    @endif
                 </div>
             @else
                 <div class="mt-8 pt-6 border-t border-gray-100 print:hidden text-center">
@@ -250,6 +266,30 @@
         $('#refundZoomModal').addClass('opacity-0');
         $('#refundZoomModal > div').addClass('scale-95');
         setTimeout(() => { $('#refundZoomModal').addClass('hidden'); }, 300);
+    }
+
+    function lunasiTagihan(orderNumber) {
+        let btn = $('#btn-lunasi');
+        let originalText = btn.html();
+        btn.html('<span class="animate-pulse">Menyiapkan QRIS...</span>').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/checkout/pay-remaining",
+            type: "POST",
+            data: {
+                order_number: orderNumber,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.href = res.data.redirect_url;
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || 'Gagal memproses pelunasan.');
+                btn.html(originalText).prop('disabled', false);
+            }
+        });
     }
 </script>
 @endpush
