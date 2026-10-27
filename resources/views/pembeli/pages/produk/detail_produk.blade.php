@@ -26,7 +26,6 @@
 
         <div class="flex flex-col md:flex-row gap-8 lg:gap-12">
             <!-- Kolom Kiri: Gambar Produk -->
-            <!-- Dibatasi lebarnya md:w-5/12 biar proporsional dan ga menuhin layar -->
             <div class="w-full md:w-5/12 shrink-0">
                 <div class="relative w-full aspect-square rounded-[2rem] overflow-hidden shadow-[inset_0_4px_10px_rgba(0,0,0,0.08)] bg-white border-4 border-white group">
                     <img id="pd-gambar" src="" alt="Gambar Produk" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -39,7 +38,6 @@
             </div>
 
             <!-- Kolom Kanan: Detail & Form Add to Cart -->
-            <!-- Lebar md:w-7/12 -->
             <div class="w-full md:w-7/12 flex flex-col py-2">
 
                 <h1 id="pd-nama" class="text-3xl lg:text-4xl font-black text-buyer-textPrimary drop-shadow-sm mb-3 leading-tight">
@@ -50,7 +48,7 @@
                     <!-- Harga -->
                 </p>
 
-                <!-- Box Deskripsi (Efek Tenggelam/Inset) -->
+                <!-- Box Deskripsi -->
                 <div class="bg-buyer-primary/5 p-5 rounded-2xl shadow-[inset_0_2px_5px_rgba(192,153,206,0.15),0_1px_1px_rgba(255,255,255,1)] border border-white mb-8">
                     <h3 class="font-extrabold text-buyer-textPrimary mb-2 text-sm uppercase tracking-wider">Deskripsi Produk</h3>
                     <p id="pd-deskripsi" class="text-buyer-textSecondary font-medium text-sm leading-relaxed">
@@ -58,14 +56,14 @@
                     </p>
                 </div>
 
-                <!-- Spacer biar tombol selalu di bawah kalau teks deskripsi pendek -->
+                <!-- Spacer biar tombol selalu di bawah -->
                 <div class="mt-auto"></div>
 
                 <!-- Kontrol Kuantitas & Tombol Beli -->
                 <h3 class="font-extrabold text-buyer-textPrimary mb-3 text-sm">Jumlah Pembelian</h3>
                 <div class="flex flex-col sm:flex-row gap-4 items-center">
 
-                    <!-- Kontrol Jumlah (Padat & Proporsional) -->
+                    <!-- Kontrol Jumlah -->
                     <div class="flex items-center justify-between bg-white rounded-2xl p-1.5 shadow-[inset_0_2px_5px_rgba(192,153,206,0.15)] border border-gray-50 w-full sm:w-36 shrink-0 h-14">
                         <button id="btn-min" class="w-10 h-10 flex items-center justify-center bg-buyer-bg text-buyer-primary font-black rounded-xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.2),inset_0_2px_4px_rgba(255,255,255,1)] hover:bg-white active:scale-95 transition-all text-lg">
                             −
@@ -87,6 +85,30 @@
         </div>
     </div>
 </div>
+<!-- Modal Wajib Login -->
+<div id="loginModal" class="fixed inset-0 z-50 flex items-center justify-center bg-buyer-textPrimary/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-buyer-bg border-2 border-white rounded-[2.5rem] max-w-sm w-full p-8 text-center shadow-[inset_0_-4px_8px_rgba(192,153,206,0.3),inset_0_4px_8px_rgba(255,255,255,1),0_20px_40px_-10px_rgba(192,153,206,0.4)] transform scale-95 transition-transform duration-300 relative mx-4">
+
+        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-[inset_0_4px_10px_rgba(192,153,206,0.2),0_4px_10px_rgba(192,153,206,0.15)] border-4 border-buyer-bg">
+            <svg class="w-10 h-10 text-buyer-primary drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+        </div>
+
+        <h3 class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Opss! Belum Login</h3>
+        <p class="text-buyer-textSecondary font-medium text-sm mb-8 leading-relaxed">Kamu harus login terlebih dahulu supaya bisa pesen roti.</p>
+
+        <div class="flex gap-3">
+            <button type="button" onclick="$('#loginModal').addClass('opacity-0 scale-95'); setTimeout(() => $('#loginModal').addClass('hidden'), 300)" class="flex-1 py-3.5 bg-white text-buyer-textSecondary font-black rounded-2xl shadow-[inset_0_-2px_4px_rgba(192,153,206,0.1),0_4px_10px_rgba(192,153,206,0.15)] border-2 border-gray-50 hover:-translate-y-1 hover:text-buyer-textPrimary transition-all">
+                Batal
+            </button>
+            <a href="/login" class="flex-1 py-3.5 bg-buyer-primary text-white font-black rounded-2xl shadow-[inset_0_-4px_6px_rgba(0,0,0,0.15),inset_0_4px_6px_rgba(255,255,255,0.4),0_8px_20px_rgba(192,153,206,0.4)] hover:-translate-y-1 active:translate-y-0.5 transition-all block">
+                Login Dulu
+            </a>
+        </div>
+
+    </div>
+</div>
 @endsection
 
 @push('script')
@@ -94,6 +116,7 @@
 $(document).ready(function() {
     // Tangkap ID dari variabel yang dilempar controller web.php
     const productId = "{{ $id }}";
+    const isLoggedIn = "{{ auth()->check() }}" === "1";
 
     fetchDetailData();
 
@@ -116,23 +139,18 @@ $(document).ready(function() {
                         style: 'currency', currency: 'IDR', minimumFractionDigits: 0
                     }).format(data.harga);
 
-                    // 🔥 LOGIC BARU: Mengatur Path Gambar Storage / URL External
                     let finalImageUrl = data.gambar;
                     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                        // Menghilangkan slash '/' di awal biar nggak nabrak sama fungsi asset()
-                        finalImageUrl = "{{ asset('') }}" + finalImageUrl.replace(/^\//, '');
+                        finalImageUrl = "{{ asset('storage/produk') }}/" + finalImageUrl.replace(/^\//, '');
                     }
 
-                    // Isi data ke elemen HTML
                     $('#pd-gambar').attr('src', finalImageUrl);
                     $('#pd-kategori').text(data.kategori);
                     $('#pd-nama').text(data.nama);
                     $('#pd-harga').text(hargaFormatted);
                     $('#pd-deskripsi').text(data.deskripsi);
 
-                    // Tampilkan container detail dengan efek fade-in
                     $('#detail-container').removeClass('hidden');
-                    // Pakai setTimeout kecil biar transisi CSS opacity jalannya mulus
                     setTimeout(() => {
                         $('#detail-container').addClass('opacity-100');
                     }, 50);
@@ -141,14 +159,11 @@ $(document).ready(function() {
             error: function(xhr) {
                 $('#loading-spinner').hide();
                 alert('Gagal mengambil detail produk. Pastiin ID-nya bener cuy!');
-                window.location.href = '/'; // Balikin ke katalog kalau error
+                window.location.href = '/';
             }
         });
     }
 
-    // ==========================================
-    // LOGIC KONTROL JUMLAH (PLUS / MINUS)
-    // ==========================================
     const inputQty = $('#input-qty');
 
     $('#btn-plus').click(function() {
@@ -163,13 +178,44 @@ $(document).ready(function() {
         }
     });
 
-    // Simulasi klik masuk keranjang
     $('#btn-add-cart').click(function() {
-        let qty = inputQty.val();
-        let namaRoti = $('#pd-nama').text().trim();
+        if (!isLoggedIn) {
+            $('#loginModal').removeClass('hidden');
+            // Pake 10ms aja biar transisi Tailwind tetep jalan tapi kerasa instan
+            setTimeout(() => $('#loginModal').removeClass('opacity-0 scale-95'), 10);
+            return; // Stop kode di sini, gak usah lanjut nembak API
+        }
 
-        // Nanti diganti sama AJAX POST ke cart
-        alert(`Siaapp! ${qty} porsi ${namaRoti} berhasil dimasukin ke keranjang bjir! 🛒`);
+        let qty = inputQty.val();
+        let btn = $(this);
+        let originalText = btn.html();
+
+        btn.html('<span class="animate-pulse">Memproses...</span>').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/cart/store",
+            type: "POST",
+            data: {
+                product_variant_id: productId,
+                quantity: qty,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.href = '/keranjang';
+                }
+            },
+            error: function(xhr) {
+                // Error 401 tetep disimpen buat jaga-jaga kalo session mati pas di tengah jalan
+                if(xhr.status === 401) {
+                    $('#loginModal').removeClass('hidden');
+                    setTimeout(() => $('#loginModal').removeClass('opacity-0 scale-95'), 10);
+                } else {
+                    alert('Gagal memasukkan ke keranjang.');
+                }
+                btn.html(originalText).prop('disabled', false);
+            }
+        });
     });
 });
 </script>

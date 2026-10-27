@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "duitkupg/duitku-php": "dev-master",
         "kstmostofa/laravel-whatsapp": "^1.0",
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.0",

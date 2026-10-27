@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\URL;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\CompanyProfile;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 
@@ -21,5 +23,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Model::preventLazyLoading(! app()->isProduction());
+
+        // Membagikan data company profile ke semua view yang butuh
+        View::composer('*', function ($view) {
+            $view->with('globalCompanyProfile', CompanyProfile::first());
+        });
     }
 }

@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
             $table->decimal('amount', 12, 2);
             $table->enum('payment_method', ['transfer', 'cod']);
-            $table->enum('payment_status', ['unpaid', 'pending', 'paid', 'failed'])->default('unpaid');
-            $table->string('payment_proof')->nullable();
+            $table->enum('payment_status', ['unpaid', 'paid_dp', 'paid_full', 'failed'])->default('unpaid');
             $table->timestamp('paid_at')->nullable();
+            $table->string('reference', 255)->nullable();
+            $table->text('qr_string')->nullable();
             $table->timestamps();
         });
     }

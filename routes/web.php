@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
@@ -16,6 +15,7 @@ Route::get('/katalogProduk', function(){
 });
 
 Route::get('/produk/{id}', function ($id) {
+    // Controller web.php hanya kirim ID ke view, AJAX yang ngurus datanya
     return view('pembeli.pages.produk.detail_produk', compact('id'));
 })->name('produk.detail');
 
@@ -26,7 +26,6 @@ Route::get('/tentang-kami', function () {
 
 // ==========================================
 // PROTECTED ROUTES (Hanya buat user yang udah Login)
-// taruh semua route tampilan yang baru bisa diakses jika sudah login disini
 // ==========================================
 Route::middleware(['auth'])->group(function () {
 
@@ -34,22 +33,32 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.keranjang');
     })->name('keranjang');
 
-    Route::get('/pesanan', function () {
-        return view('pembeli.pages.pesanan');
-    })->name('pesanan');
+    // Halaman Staging Pembayaran (Full AJAX)
+    Route::get('/pembayaran/{order_number}', function ($order_number) {
+        return view('pembeli.pages.pembayaran');
+    })->name('pembayaran');
 
+    // Halaman Profil Utama
     Route::get('/profil', function () {
         return view('pembeli.pages.profil');
     })->name('profil');
 
-    // Halaman Transaksi Pembeli (Checkout, Nota, Riwayat)
+    // Halaman Kelola Alamat Terpisah
+    Route::get('/alamat', function () {
+        return view('pembeli.pages.alamat');
+    })->name('alamat');
+
+    // Halaman Checkout
     Route::get('/checkout', function () {
         return view('pembeli.pages.checkout');
     })->name('checkout');
 
-    // Nota diubah mengarah ke CheckoutController agar data dari database tampil secara dinamis
-    Route::get('/nota', [CheckoutController::class, 'showNota'])->name('nota');
+    // Halaman Nota (Full AJAX, ambil order_number dari URL query parameter via JS)
+    Route::get('/nota', function () {
+        return view('pembeli.pages.nota');
+    })->name('nota');
 
+    // Halaman Riwayat Pesanan
     Route::get('/riwayat-pesanan', function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('riwayat-pesanan');
@@ -58,10 +67,8 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// AUTH ROUTES (Login, Register, dll). Nanti saja untuk ini
+// AUTH ROUTES (Login, Register, dll)
 // ==========================================
-// Nanti ini bakal diisi pakai Controller khusus Auth lu.
-
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
         return view('auth.pembeli.login');
@@ -82,6 +89,12 @@ Route::middleware(['guest'])->group(function () {
     Route::get('/reset-password', function () {
         return view('auth.pembeli.reset_password');
     })->name('password.reset');
+});
+
+// Logout harus pakai POST demi keamanan, arahin ke halaman utama setelahnya
+Route::post('/logout', function () {
+    return redirect('/');
+})->name('logout')->middleware('auth');
 
     Route::post('/logout', function () {
         return redirect('/');
@@ -104,4 +117,16 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.kelola_akun.pelanggan');
     })->name('admin.pelanggan');
 
+});
+// ==========================================
+// ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
+// ==========================================
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+    Route::get('/ringkasan_finansial', function () {
+        return view('admin.pages.finansial.ringkasan_finansial');
+    })->name('admin.ringkasan-finansial');
+
+    Route::get('/riwayat_penjualan', function () {
+        return view('admin.pages.finansial.riwayat_penjualan');
+    })->name('admin.riwayat-penjualan');
 });
