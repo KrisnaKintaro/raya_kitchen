@@ -39,14 +39,13 @@
                 extend: {
                     colors: {
                         admin: {
-                            // Palet Sidebar (Soft Amethyst - Ungu Kalem)
                             sideBg: '#9368B7',
                             sideHover: '#A57BCB',
                             sideActive: '#B38CDA',
 
                             // Palet Navbar & Background
-                            navBg: '#E8D5F6', // <-- BERUBAH: Ungu Lavender Soft buat Navbar
-                            bg: '#F5F2F8',    // Off-white keunguan buat background luar
+                            navBg: '#E8D5F6',
+                            bg: '#F5F2F8',    
 
                             // Aksen & Teks
                             accent: '#E4CCFF',

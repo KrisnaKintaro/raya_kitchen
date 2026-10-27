@@ -73,12 +73,6 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead']);
 });
 
-// ========================================================================================
-// ROUTE TAMPILAN ADMIN
-// ========================================================================================
-Route::prefix('admin')->group(function () {
-    // Tambahkan route admin di sini
-});
 
 // ========================================================================================
 // ROUTE WEBHOOK DUITKU (HARUS BISA DIAKSES PUBLIK)

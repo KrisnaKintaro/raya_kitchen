@@ -91,22 +91,11 @@ Route::middleware(['guest'])->group(function () {
     })->name('password.reset');
 });
 
-// Logout harus pakai POST demi keamanan, arahin ke halaman utama setelahnya
-Route::post('/logout', function () {
-    return redirect('/');
-})->name('logout')->middleware('auth');
-
-    Route::post('/logout', function () {
-        return redirect('/');
-    })->name('logout');
-});
-
-
 // ==========================================
-// ADMIN ROUTES - KELOLA AKUN (Tugas Kamu)
+// ADMIN ROUTES - KELOLA AKUN (tugas kamu)
 // ==========================================
 Route::prefix('admin')->group(function () {
-    
+
     // Halaman Kelola Akses (Admin & Staf)
     Route::get('/kelola-akses', function () {
         return view('admin.pages.kelola_akun.akses');
