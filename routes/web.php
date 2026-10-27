@@ -58,9 +58,9 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// AUTH ROUTES (Login, Register, dll). Nani saja untuk ini
+// AUTH ROUTES (Login, Register, dll). Nanti saja untuk ini
 // ==========================================
-// Nanti ini bakal fiisi pakai Controller khusus Auth lu.
+// Nanti ini bakal diisi pakai Controller khusus Auth lu.
 
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
@@ -86,4 +86,22 @@ Route::middleware(['guest'])->group(function () {
     Route::post('/logout', function () {
         return redirect('/');
     })->name('logout');
+});
+
+
+// ==========================================
+// ADMIN ROUTES - KELOLA AKUN (Tugas Kamu)
+// ==========================================
+Route::prefix('admin')->group(function () {
+    
+    // Halaman Kelola Akses (Admin & Staf)
+    Route::get('/kelola-akses', function () {
+        return view('admin.pages.kelola_akun.akses');
+    })->name('admin.kelola-akses');
+
+    // Halaman Daftar Pelanggan yang Registrasi
+    Route::get('/pelanggan', function () {
+        return view('admin.pages.kelola_akun.pelanggan');
+    })->name('admin.pelanggan');
+
 });
