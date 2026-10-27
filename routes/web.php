@@ -63,6 +63,11 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('riwayat-pesanan');
 
+    // Logout harus pakai POST demi keamanan
+    Route::post('/logout', function () {
+        return redirect('/');
+    })->name('logout');
+
 });
 
 
@@ -91,11 +96,24 @@ Route::middleware(['guest'])->group(function () {
     })->name('password.reset');
 });
 
+
 // ==========================================
-// ADMIN ROUTES - KELOLA AKUN (tugas kamu)
+// ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
 // ==========================================
 Route::prefix('admin')->group(function () {
+    
+    Route::get('/ringkasan_finansial', function () {
+        return view('admin.pages.finansial.ringkasan_finansial');
+    })->name('admin.ringkasan-finansial');
 
+    Route::get('/riwayat_penjualan', function () {
+        return view('admin.pages.finansial.riwayat_penjualan');
+    })->name('admin.riwayat-penjualan');
+
+    // ==========================================
+    // ADMIN ROUTES - KELOLA AKUN (Tugas Kamu)
+    // ==========================================
+    
     // Halaman Kelola Akses (Admin & Staf)
     Route::get('/kelola-akses', function () {
         return view('admin.pages.kelola_akun.akses');
@@ -106,16 +124,4 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.kelola_akun.pelanggan');
     })->name('admin.pelanggan');
 
-});
-// ==========================================
-// ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
-// ==========================================
-Route::prefix('admin')->middleware(['auth'])->group(function () {
-    Route::get('/ringkasan_finansial', function () {
-        return view('admin.pages.finansial.ringkasan_finansial');
-    })->name('admin.ringkasan-finansial');
-
-    Route::get('/riwayat_penjualan', function () {
-        return view('admin.pages.finansial.riwayat_penjualan');
-    })->name('admin.riwayat-penjualan');
 });
