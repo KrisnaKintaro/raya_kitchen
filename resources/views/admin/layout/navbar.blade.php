@@ -47,7 +47,7 @@
                     <span class="block text-xs font-bold text-admin-textMuted mt-1 uppercase tracking-wider">Superadmin</span>
                 </div>
 
-                <form action="{{ route('logout') }}" method="POST" class="m-0 px-3">
+                <form action="{{ url('api/auth/logout') }}" method="GET" class="m-0 px-3">
                     @csrf
                     <button type="submit" class="w-full text-left px-5 py-3.5 rounded-2xl text-base font-black text-red-500 hover:text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border border-transparent hover:border-red-100 shadow-sm">
                         <i class="ph ph-sign-out text-xl"></i>
