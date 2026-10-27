@@ -96,6 +96,28 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout')->middleware('auth');
 
+    Route::post('/logout', function () {
+        return redirect('/');
+    })->name('logout');
+});
+
+
+// ==========================================
+// ADMIN ROUTES - KELOLA AKUN (Tugas Kamu)
+// ==========================================
+Route::prefix('admin')->group(function () {
+    
+    // Halaman Kelola Akses (Admin & Staf)
+    Route::get('/kelola-akses', function () {
+        return view('admin.pages.kelola_akun.akses');
+    })->name('admin.kelola-akses');
+
+    // Halaman Daftar Pelanggan yang Registrasi
+    Route::get('/pelanggan', function () {
+        return view('admin.pages.kelola_akun.pelanggan');
+    })->name('admin.pelanggan');
+
+});
 // ==========================================
 // ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
 // ==========================================
