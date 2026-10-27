@@ -152,9 +152,15 @@
             <div class="submenu-container overflow-hidden transition-all duration-300 max-h-0">
                 <ul class="mt-1 space-y-1 p-1.5 bg-black/10 rounded-[1.25rem] border border-black/5 shadow-inner">
                     <li>
-                        <a href="/admin/kelola_akses" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/kelola_akses') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-users text-xl {{ request()->is('admin/kelola_akses') ? 'text-white' : '' }}"></i>
+                        <a href="/admin/kelola-akses" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/kelola-akses*') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                            <i class="ph ph-shield-check text-xl {{ request()->is('admin/kelola-akses*') ? 'text-white' : '' }}"></i>
                             Kelola Akses
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/pelanggan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/pelanggan*') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                            <i class="ph ph-users text-xl {{ request()->is('admin/pelanggan*') ? 'text-white' : '' }}"></i>
+                            Daftar Pelanggan
                         </a>
                     </li>
                 </ul>
