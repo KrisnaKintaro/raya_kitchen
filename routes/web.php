@@ -101,7 +101,7 @@ Route::middleware(['guest'])->group(function () {
 // ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
 // ==========================================
 Route::prefix('admin')->group(function () {
-    
+
     Route::get('/ringkasan_finansial', function () {
         return view('admin.pages.finansial.ringkasan_finansial');
     })->name('admin.ringkasan-finansial');
@@ -113,7 +113,7 @@ Route::prefix('admin')->group(function () {
     // ==========================================
     // ADMIN ROUTES - KELOLA AKUN (Tugas Kamu)
     // ==========================================
-    
+
     // Halaman Kelola Akses (Admin & Staf)
     Route::get('/kelola-akses', function () {
         return view('admin.pages.kelola_akun.akses');
@@ -124,4 +124,49 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.kelola_akun.pelanggan');
     })->name('admin.pelanggan');
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    Route::get('/template_pesan', function () {
+        return view('admin.pages.whatsapp_bot.template_pesan');
+    })->name('admin.template-pesan');
 });
