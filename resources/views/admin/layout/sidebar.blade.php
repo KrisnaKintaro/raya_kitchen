@@ -133,12 +133,6 @@
                             Template Pesan
                         </a>
                     </li>
-                    <li>
-                        <a href="/admin/log_interaksi" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/log_interaksi') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-activity text-xl {{ request()->is('admin/log_interaksi') ? 'text-white' : '' }}"></i>
-                            Log Interaksi WA
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
