@@ -143,10 +143,10 @@
             </div>
         </div>
 
-        <!-- MODULE: PENGGUNA -->
+        <!-- MODULE: KELOLA AKUN -->
         <div class="menu-group pb-4">
             <button class="btn-toggle-menu w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all interactive-element focus-visible:outline-none text-white/90 hover:bg-white/10" aria-expanded="false">
-                <span class="text-xs font-black text-admin-accent uppercase tracking-[0.15em] drop-shadow-sm">Pengguna</span>
+                <span class="text-xs font-black text-admin-accent uppercase tracking-[0.15em] drop-shadow-sm">Kelola Akun</span>
                 <i class="ph ph-caret-down text-sm transition-transform duration-300 icon-caret"></i>
             </button>
             <div class="submenu-container overflow-hidden transition-all duration-300 max-h-0">
