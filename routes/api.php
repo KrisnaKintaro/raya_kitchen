@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Api\Pembeli\PreorderController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
+use App\Http\Controllers\Api\WhatsAppBotController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -104,3 +105,8 @@ Route::get('/test-webhook/{orderNumber}/{amount}', function($orderNumber, $amoun
         </html>
     ";
 });
+
+// ========================
+// ROUTE FONNTE
+// ========================
+Route::post('/fonnte/webhook', [WhatsAppBotController::class, 'webhook']);
