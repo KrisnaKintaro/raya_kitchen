@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\Admin\SystemStoreController;
 use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
@@ -38,7 +39,20 @@ Route::prefix('pembeli')->group(function () {
     Route::get('/tentang-kami', [TentangKamiController::class, 'index']);
 });
 
-
+    //BUAT TAMPILAN ADMIN
+Route::prefix('admin')->group(function () {
+    // Profil Perusahaan
+    Route::get('/profil', [SystemStoreController::class, 'getProfil']);
+    Route::post('/profil', [SystemStoreController::class, 'updateProfil']);
+    
+    // Operasional & Libur
+    Route::get('/operasional', [SystemStoreController::class, 'getOperasional']);
+    Route::post('/operasional', [SystemStoreController::class, 'updateOperasional']);
+    Route::get('/libur', [SystemStoreController::class, 'getLibur']);
+    Route::post('/libur', [SystemStoreController::class, 'addLibur']);
+    Route::delete('/libur/{id}', [SystemStoreController::class, 'deleteLibur']);
+    Route::post('/libur/generate', [SystemStoreController::class, 'generateLiburOtomatis']);
+});
 
 // Perlu login untuk akses route di bawah ini
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
