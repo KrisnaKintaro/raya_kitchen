@@ -103,9 +103,13 @@
 
             <!-- Form Rekening (Hanya muncul jika sudah ada pembayaran) -->
             <div id="refund_info_box" class="hidden bg-amber-50 border-2 border-amber-200 p-4 rounded-xl mt-2 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
-                <p class="text-xs font-bold text-amber-800 mb-2">Dana Sudah Masuk. Form Pengembalian (Refund):</p>
-                <input type="text" name="refund_account_number" id="refund_account_input" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Contoh: BCA 123456789 a.n Budi">
-                <p class="text-[10px] text-amber-700 mt-1.5 font-medium leading-tight">*Admin akan mengecek dan mentransfer balik danamu dalam 1x24 jam.</p>
+                <p class="text-xs font-bold text-amber-800 mb-3">Dana Sudah Masuk. Form Pengembalian (Refund):</p>
+                <div class="space-y-3">
+                    <input type="text" name="refund_bank" id="refund_bank" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Nama Bank / E-Wallet (Cth: BCA, GoPay)">
+                    <input type="number" name="refund_norek" id="refund_norek" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Nomor Rekening / No. HP">
+                    <input type="text" name="refund_nama" id="refund_nama" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Atas Nama (A.N)">
+                </div>
+                <p class="text-[10px] text-amber-700 mt-2 font-medium leading-tight">*Admin akan mengecek dan mentransfer balik danamu dalam 1x24 jam.</p>
             </div>
 
             <div class="pt-4 flex gap-3">
@@ -305,10 +309,10 @@ $(document).ready(function() {
         // Atur kemunculan form rekening
         if(isPaid) {
             $('#refund_info_box').removeClass('hidden');
-            $('#refund_account_input').prop('required', true);
+            $('#refund_bank, #refund_norek, #refund_nama').prop('required', true);
         } else {
             $('#refund_info_box').addClass('hidden');
-            $('#refund_account_input').prop('required', false);
+            $('#refund_bank, #refund_norek, #refund_nama').prop('required', false);
         }
 
         $('#cancelModal').removeClass('hidden');
@@ -356,7 +360,9 @@ $(document).ready(function() {
             data: {
                 order_number: $('#cancel_order_number').val(),
                 cancellation_reason: reason,
-                refund_account_number: $('#refund_account_input').val() || null,
+                refund_bank: $('#refund_bank').val() || null,
+                refund_norek: $('#refund_norek').val() || null,
+                refund_nama: $('#refund_nama').val() || null,
             },
             headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function(res) {

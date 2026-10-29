@@ -152,4 +152,16 @@ Route::prefix('admin')->group(function () {
     Route::get('/resep_digital', function () {
         return view('admin.pages.produk_resep.resep_digital');
     })->name('admin.resep-digital');
+
+    Route::get('/pantauan_dapur', function () {
+        return view('admin.pages.operasional.pantauan_dapur');
+    })->name('admin.pantauan-dapur');
+
+    Route::get('daftar_transaksi', function() {
+        return view('admin.pages.operasional.daftar_transaksi');
+    })->name('admin.daftar-transaksi');
+
+    Route::get('/refund_pembatalan', function() {
+        return view('admin.pages.operasional.batal_refund');
+    })->name('admin.refund_pembatalan');
 });

@@ -22,6 +22,7 @@ class Order extends Model
         'cancellation_reason',
         'refund_account_number',
         'refund_proof',
+        'refund_status',
     ];
 
     public function user()

@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->string('refund_proof')->nullable()->after('refund_account_number');
+            $table->enum('refund_status', ['none', 'pending', 'refunded'])->default('none')->after('refund_account_number');
         });
     }
 
@@ -17,6 +18,7 @@ return new class extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->dropColumn('refund_proof');
+            $table->dropColumn('refund_status');
         });
     }
 };
