@@ -321,42 +321,40 @@ class CheckoutController extends Controller
         $request->validate([
             'order_number' => 'required|string',
             'cancellation_reason' => 'required|string',
-            // refund_account_number opsional, cuma diisi kalo user udah terlanjur bayar DP/Full
+            'refund_bank' => 'nullable|string',
+            'refund_norek' => 'nullable|string',
+            'refund_nama' => 'nullable|string',
         ]);
 
         $userId = Auth::id() ?? 1;
 
-        // Cari pesanan milik user yang lagi login
         $order = Order::with('transaction')
             ->where('order_number', $request->order_number)
             ->where('user_id', $userId)
             ->first();
 
         if (!$order) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Pesanan tidak ditemukan.'
-            ], 404);
+            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan.'], 404);
         }
 
-        // ATURAN PENTING: Cuma bisa dibatalin kalo statusnya masih pending
         if ($order->status !== 'pending') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Pesanan sudah diproses dan tidak bisa dibatalkan.'
-            ], 400);
+            return response()->json(['status' => 'error', 'message' => 'Pesanan sudah diproses dan tidak bisa dibatalkan.'], 400);
+        }
+
+        $refundAccountString = null;
+        if ($request->refund_bank && $request->refund_norek && $request->refund_nama) {
+            $refundAccountString = $request->refund_bank . ' - ' . $request->refund_norek . ' - ' . $request->refund_nama;
         }
 
         DB::beginTransaction();
         try {
-            // 1. Update tabel orders
             $order->update([
                 'status' => 'dibatalkan',
                 'cancellation_reason' => $request->cancellation_reason,
-                'refund_account_number' => $request->refund_account_number,
+                'refund_account_number' => $refundAccountString, // Masukin string yang udah digabung
+                'refund_status' => $refundAccountString ? 'pending' : 'none' // Set otomatis pending kalo butuh refund
             ]);
 
-            // 2. Update tabel transactions jadi failed
             if ($order->transaction) {
                 $order->transaction->update([
                     'payment_status' => 'failed'
@@ -364,18 +362,11 @@ class CheckoutController extends Controller
             }
 
             DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Pesanan berhasil dibatalkan.'
-            ]);
+            return response()->json(['status' => 'success', 'message' => 'Pesanan berhasil dibatalkan.']);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal membatalkan pesanan: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan pesanan: ' . $e->getMessage()], 500);
         }
     }
 

@@ -56,13 +56,13 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/kelola_pesanan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/kelola_pesanan') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-clipboard-text text-xl {{ request()->is('admin/kelola_pesanan') ? 'text-white' : '' }}"></i>
-                            Kelola Pesanan
+                        <a href="/admin/daftar_transaksi" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/daftar_transaksi') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                            <i class="ph ph-clipboard-text text-xl {{ request()->is('admin/daftar_transaksi') ? 'text-white' : '' }}"></i>
+                            Daftar Transaksi
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/pembatalan_refund" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/pembatalan_refund') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                        <a href="/admin/refund_pembatalan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/pembatalan_refund') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
                             <i class="ph ph-arrow-u-up-left text-xl {{ request()->is('admin/pembatalan_refund') ? 'text-white' : '' }}"></i>
                             Batal & Refund
                         </a>

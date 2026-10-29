@@ -12,6 +12,9 @@ class OrderItem extends Model
         'quantity',
         'price_at_order',
         'subtotal',
+        'is_staged',
+        'kitchen_priority',
+        'item_status',
     ];
 
     public function order()
