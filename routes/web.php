@@ -142,4 +142,14 @@ Route::prefix('admin')->group(function () {
     Route::get('/template_pesan', function () {
         return view('admin.pages.whatsapp_bot.template_pesan');
     })->name('admin.template-pesan');
+
+
+    // ADMIN ROUTES - PRODUK & RESEP (UI dummy, tanpa controller/API)
+    Route::get('/katalog_varian', function () {
+        return view('admin.pages.produk_resep.katalog_varian');
+    })->name('admin.katalog-varian');
+
+    Route::get('/resep_digital', function () {
+        return view('admin.pages.produk_resep.resep_digital');
+    })->name('admin.resep-digital');
 });
