@@ -111,6 +111,24 @@ Route::middleware(['guest'])->group(function () {
 // ==========================================
 Route::prefix('admin')->group(function () {
 
+    // ==========================================
+    // AUTH ADMIN (Login & Lupa Password Admin)
+    // ==========================================
+    Route::get('/login', function () {
+        return view('auth.admin.login');
+    })->name('admin.login');
+
+    Route::get('/lupa-password', function () {
+        return view('auth.admin.forget_password');
+    })->name('admin.password.request');
+
+    Route::get('/reset-password', function () {
+        return view('auth.admin.reset_password');
+    })->name('admin.password.reset');
+
+    // ==========================================
+    // HALAMAN DASHBOARD & KELOLA ADMIN LAINNYA
+    // ==========================================
     Route::get('/ringkasan_finansial', function () {
         return view('admin.pages.finansial.ringkasan_finansial');
     })->name('admin.ringkasan-finansial');

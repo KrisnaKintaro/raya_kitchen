@@ -1,7 +1,7 @@
 @extends('admin.admin_master')
 
-@section('title', 'Katalog & Varian - Admin Raya Kitchen')
-@section('header_title', 'Katalog & Varian')
+@section('title', 'Produk & Varian - Admin Raya Kitchen')
+@section('header_title', 'Produk & Varian')
 
 @section('content')
 @php
@@ -38,14 +38,17 @@ $products = [
 ];
 @endphp
 
-<!-- Baris Tombol Aksi & Informasi -->
-<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+<!-- Header Aksi & Informasi yang Dirapikan Menjadi Satu Card Sejajar -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6 bg-white border border-admin-border rounded-3xl p-5 shadow-sm">
     <div>
-        <p class="text-sm text-admin-textMuted">Atur produk utama, kelola varian, harga, dan status penjualan.</p>
+        <p class="text-sm font-bold text-slate-800">Manajemen Katalog Produk & Varian</p>
+        <p class="text-xs text-admin-textMuted mt-0.5">Atur produk utama, kelola varian, harga, file foto, dan status penjualan produk.</p>
     </div>
-    <button type="button" onclick="openProductModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover text-white font-bold text-sm shadow-lg transition-all">
-        <i class="ph ph-plus text-lg"></i> Tambah Produk
-    </button>
+    <div class="shrink-0">
+        <button type="button" onclick="openProductModal()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-admin-sideBg hover:bg-admin-sideHover text-white font-bold text-xs shadow-md transition-all">
+            <i class="ph ph-plus text-base"></i> Tambah Produk
+        </button>
+    </div>
 </div>
 
 <!-- Statistik Ringkas -->
