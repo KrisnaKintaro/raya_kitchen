@@ -37,9 +37,11 @@ Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
     Route::get('/tentang-kami', [TentangKamiController::class, 'index']);
+    Route::get('/checkout/heatmap', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'getHeatmap']);
+    Route::get('/checkout/times', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'getAvailableTimes']);
 });
 
-    //BUAT TAMPILAN ADMIN
+// BUAT TAMPILAN ADMIN
 Route::prefix('admin')->group(function () {
     // Profil Perusahaan
     Route::get('/profil', [SystemStoreController::class, 'getProfil']);
@@ -58,14 +60,15 @@ Route::prefix('admin')->group(function () {
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     // --- PROFIL & ALAMAT ---
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
-    Route::post('update-profil-pribadi', [ProfileController::class, 'update']); // Disinkronkan dengan AJAX di profil.blade.php
+    Route::post('profil-data', [ProfileController::class, 'update']); // <-- INI YANG TADI BIKIN ERROR 405 UDAH DIBALIKIN
+    Route::post('update-profil-pribadi', [ProfileController::class, 'update']); 
     Route::delete('alamat/{id}', [ProfileController::class, 'hapusAlamat']);
-    Route::post('/checkout/alamat-ajax', [CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax'); // Untuk form modal alamat di Checkout
+    Route::post('/checkout/alamat-ajax', [CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax'); 
 
     // --- TRANSAKSI & PESANAN ---
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-    Route::get('/nota', [CheckoutController::class, 'showNota']); // Rute API untuk data Nota
-    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']); // Rute API untuk data Pembayaran
+    Route::get('/nota', [CheckoutController::class, 'showNota']); 
+    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']); 
 
     // --- CART (KERANJANG) ---
     Route::get('/cart', [CartController::class, 'index']);
@@ -75,8 +78,9 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
 
     // --- CHECKOUT & PREORDER ---
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
-    Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
-    Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
+    //Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
+    //Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
+    Route::post('/checkout/cek-ongkir', [CheckoutController::class, 'cekOngkir'])->name('checkout.cek_ongkir'); // <-- INI FIX CLASS NOT FOUND
 
     // --- PAYMENT POLLING & ACTIONS ---
     Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
@@ -87,7 +91,6 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead']);
 });
-
 
 // ========================================================================================
 // ROUTE WEBHOOK DUITKU (HARUS BISA DIAKSES PUBLIK)
@@ -103,7 +106,6 @@ Route::get('/test-webhook/{orderNumber}/{amount}', function($orderNumber, $amoun
     $signature = md5($merchantCode . $amount . $orderNumber . $merchantKey);
     $urlCallback = url('/api/duitku/callback');
 
-    // Bikin form HTML yang langsung auto-submit nge-POST ke webhook
     return "
         <html>
         <body onload=\"document.getElementById('formWebhook').submit();\" style=\"font-family: sans-serif; padding: 2rem;\">
@@ -124,3 +126,7 @@ Route::get('/test-webhook/{orderNumber}/{amount}', function($orderNumber, $amoun
 // ROUTE FONNTE
 // ========================
 Route::post('/fonnte/webhook', [WhatsAppBotController::class, 'webhook']);
+
+// Rute API Kelola Pengiriman
+Route::get('/pengiriman', [SystemStoreController::class, 'getPengiriman']);
+Route::post('/pengiriman/{id}/kirim', [SystemStoreController::class, 'prosesKirim']);

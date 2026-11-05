@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Pembeli;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\UserAddress;
+use App\Models\CompanyProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -59,6 +60,9 @@ class ProfileController extends Controller
                     'street_address' => $primaryAddress->street_address,
                     'landmark' => $primaryAddress->landmark,
                     'is_primary' => $primaryAddress->is_primary,
+                    'latitude' => $primaryAddress->latitude,
+                    'longitude' => $primaryAddress->longitude,
+                    'distance_to_store' => $primaryAddress->distance_to_store,
                 ] : null,
                 'all_addresses' => $allAddresses
             ]
@@ -106,6 +110,14 @@ class ProfileController extends Controller
                 $isPrimary = 1;
             }
 
+            // Hitung Jarak ke Toko (Raya Kitchen) menggunakan Haversine
+            $dapur = CompanyProfile::first();
+            $jarak = 0;
+
+            if ($dapur && $dapur->latitude && $dapur->longitude && $request->filled('latitude') && $request->filled('longitude')) {
+                $jarak = $this->hitungJarak($dapur->latitude, $dapur->longitude, $request->input('latitude'), $request->input('longitude'));
+            }
+
             $addressData = [
                 'user_id' => $user->id,
                 'label' => $request->input('label') ?? 'Rumah',
@@ -118,9 +130,12 @@ class ProfileController extends Controller
                 'street_address' => $request->input('street_address'),
                 'landmark' => $request->input('landmark'),
                 'is_primary' => $isPrimary,
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude'),
+                'distance_to_store' => $jarak,
             ];
 
-            // Cek apakah ini proses update (jika address_id ada dan berupa angka) atau tambah baru (insert)
+            // Cek apakah ini proses update atau tambah baru (insert)
             if (!empty($addressId) && is_numeric($addressId)) {
                 $address = UserAddress::where('id', $addressId)->where('user_id', $user->id)->first();
                 if ($address) {
@@ -147,5 +162,25 @@ class ProfileController extends Controller
                 'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Rumus Haversine untuk hitung jarak lurus (KM) antara 2 titik koordinat
+     */
+    private function hitungJarak($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Jari-jari bumi dalam kilometer
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+            
+        $c = 2 * asin(sqrt($a));
+        $distance = $earthRadius * $c;
+
+        return round($distance, 2); // Dibulatkan 2 angka di belakang koma
     }
 }

@@ -22,10 +22,6 @@
                     <span>Total Item (<span id="summary-qty">0</span>)</span>
                     <span class="font-bold text-buyer-textPrimary" id="summary-subtotal">Rp 0</span>
                 </div>
-                <div class="flex justify-between">
-                    <span>Biaya Pengiriman</span>
-                    <span class="font-bold text-buyer-textPrimary">Rp 10.000</span>
-                </div>
             </div>
             <div class="flex justify-between items-center mb-6">
                 <span class="font-extrabold text-buyer-textPrimary text-base">Total Harga</span>
@@ -107,7 +103,7 @@ $(document).ready(function() {
 
         $('#summary-qty').text(totalQty);
         $('#summary-subtotal').text(formatRupiah(subtotal));
-        $('#summary-total').text(formatRupiah(subtotal + 10000));
+        $('#summary-total').text(formatRupiah(subtotal)); // Total harga di keranjang murni subtotal produk saja
     }
 
     $(document).on('click', '.btn-qty', function() {

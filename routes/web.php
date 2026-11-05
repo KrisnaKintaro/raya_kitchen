@@ -1,36 +1,22 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\CheckStoreOpen; // Wajib di-import biar middleware jalan
 
 // ==========================================
-// HALAMAN TOKO TUTUP (Tanpa Middleware biar gak looping)
+// PUBLIC ROUTES (Langsung ke Index/Katalog)
 // ==========================================
-Route::get('/toko-tutup', function () {
-    return view('pembeli.pages.toko_tutup');
-})->name('toko.tutup');
+Route::get('/', function () {
+    return view('pembeli.pages.produk.katalog');
+})->name('katalog');
 
-
-// ==========================================
-// PUBLIC ROUTES (Bisa diakses siapa aja)
-// ==========================================
-
-// BUNGKUS PAKAI MIDDLEWARE: Rute yang diblokir kalau toko tutup
-Route::middleware([CheckStoreOpen::class])->group(function () {
-    Route::get('/', function () {
-        return view('pembeli.pages.produk.katalog');
-    })->name('katalog');
-
-    Route::get('/katalogProduk', function(){
-        return view('pembeli.pages.produk.katalog');
-    });
-
-    Route::get('/produk/{id}', function ($id) {
-        return view('pembeli.pages.produk.detail_produk', compact('id'));
-    })->name('produk.detail');
+Route::get('/katalogProduk', function(){
+    return view('pembeli.pages.produk.katalog');
 });
 
-// TIDAK DIBUNGKUS: Tetap bisa diakses 24 jam
+Route::get('/produk/{id}', function ($id) {
+    return view('pembeli.pages.produk.detail_produk', compact('id'));
+})->name('produk.detail');
+
 Route::get('/tentang-kami', function () {
     return view('pembeli.pages.tentang_kami');
 })->name('tentang-kami');
@@ -40,43 +26,27 @@ Route::get('/tentang-kami', function () {
 // PROTECTED ROUTES (Hanya buat user yang udah Login)
 // ==========================================
 Route::middleware(['auth'])->group(function () {
+    
+    Route::get('/keranjang', function () {
+        return view('pembeli.pages.keranjang'); 
+    })->name('keranjang');
 
-    // BUNGKUS PAKAI MIDDLEWARE: Transaksi diblokir kalau toko tutup
-    Route::middleware([CheckStoreOpen::class])->group(function () {
-        Route::get('/keranjang', function () {
-            return view('pembeli.pages.keranjang');
-        })->name('keranjang');
+    Route::get('/checkout', function () {
+        return view('pembeli.pages.checkout');
+    })->name('checkout');
 
-        Route::get('/checkout', function () {
-            return view('pembeli.pages.checkout');
-        })->name('checkout');
-
-        Route::get('/pembayaran/{order_number}', function ($order_number) {
-            return view('pembeli.pages.pembayaran');
-        })->name('pembayaran');
-    });
-
-    // TIDAK DIBUNGKUS: Fitur profil tetap jalan 24 jam
     Route::get('/profil', function () {
         return view('pembeli.pages.profil');
     })->name('profil');
 
+    // Tambahkan rute alamat di sini dan beri name('alamat')
     Route::get('/alamat', function () {
         return view('pembeli.pages.alamat');
     })->name('alamat');
 
-    Route::get('/nota', function () {
-        return view('pembeli.pages.nota');
-    })->name('nota');
-
-    Route::get('/riwayat-pesanan', function () {
-        return view('pembeli.pages.riwayat_pesanan');
-    })->name('riwayat-pesanan');
-
-    Route::post('/logout', function () {
-        return redirect('/');
-    })->name('logout');
-
+    Route::get('/pembayaran/{order_number}', function ($order_number) {
+        return view('pembeli.pages.pembayaran');
+    })->name('pembayaran');
 });
 
 
@@ -107,13 +77,11 @@ Route::middleware(['guest'])->group(function () {
 
 
 // ==========================================
-// ROUTES UNTUK ADMIN (Hanya bisa diakses user dengan role admin)
+// ROUTES UNTUK ADMIN
 // ==========================================
 Route::prefix('admin')->group(function () {
 
-    // ==========================================
-    // AUTH ADMIN (Login & Lupa Password Admin)
-    // ==========================================
+    // Auth Admin
     Route::get('/login', function () {
         return view('auth.admin.login');
     })->name('admin.login');
@@ -126,9 +94,7 @@ Route::prefix('admin')->group(function () {
         return view('auth.admin.reset_password');
     })->name('admin.password.reset');
 
-    // ==========================================
-    // HALAMAN DASHBOARD & KELOLA ADMIN LAINNYA
-    // ==========================================
+    // Halaman Admin
     Route::get('/ringkasan_finansial', function () {
         return view('admin.pages.finansial.ringkasan_finansial');
     })->name('admin.ringkasan-finansial');
@@ -145,10 +111,10 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.operasional_libur');
     })->name('admin.operasional');
 
+    Route::get('/pengiriman', function () {
+        return view('admin.pages.kelola_pengiriman');
+    })->name('admin.pengiriman');
 
-    // ==========================================
-    // ADMIN ROUTES - KELOLA AKUN
-    // ==========================================
     Route::get('/kelola-akses', function () {
         return view('admin.pages.kelola_akun.akses');
     })->name('admin.kelola-akses');
@@ -161,8 +127,6 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.whatsapp_bot.template_pesan');
     })->name('admin.template-pesan');
 
-
-    // ADMIN ROUTES - PRODUK & RESEP (UI dummy, tanpa controller/API)
     Route::get('/katalog_varian', function () {
         return view('admin.pages.produk_resep.katalog_varian');
     })->name('admin.katalog-varian');
@@ -175,7 +139,7 @@ Route::prefix('admin')->group(function () {
         return view('admin.pages.operasional.pantauan_dapur');
     })->name('admin.pantauan-dapur');
 
-    Route::get('daftar_transaksi', function() {
+    Route::get('/daftar_transaksi', function() {
         return view('admin.pages.operasional.daftar_transaksi');
     })->name('admin.daftar-transaksi');
 
