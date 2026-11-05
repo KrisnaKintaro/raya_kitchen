@@ -18,6 +18,9 @@ class UserAddress extends Model
         'street_address',
         'landmark',
         'is_primary',
+        'latitude',          
+        'longitude',         
+        'distance_to_store', 
     ];
 
     public function user()

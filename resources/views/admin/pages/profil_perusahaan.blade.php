@@ -72,7 +72,7 @@
             <div class="absolute top-0 left-0 w-2 h-full bg-pink-400"></div>
             <h3 class="text-lg font-black text-admin-textMain mb-6 flex items-center gap-2">
                 <i class="ph ph-map-pin-line text-2xl text-pink-500"></i> 
-                Deskripsi & Lokasi
+                Deskripsi & Pengaturan Lokasi Ongkir
             </h3>
             
             <div class="space-y-6">
@@ -99,6 +99,25 @@
                     <div>
                         <label class="block text-sm font-bold text-gray-700 mb-1.5">Link External Maps</label>
                         <input type="text" name="map_external_url" id="map_external_url" class="w-full p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-admin-sideBg focus:ring-2 focus:ring-admin-sideBg/20 outline-none transition-all text-sm">
+                    </div>
+                </div>
+
+                <!-- TAMBAHAN BARU: Input Koordinat Dapur & Setting Ongkir -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-gray-100">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">Latitude Dapur (Garis Lintang)</label>
+                        <input type="text" name="latitude" id="latitude" placeholder="Contoh: -7.983908" required class="w-full p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-admin-sideBg focus:ring-2 focus:ring-admin-sideBg/20 outline-none transition-all text-sm font-mono text-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">Longitude Dapur (Garis Bujur)</label>
+                        <input type="text" name="longitude" id="longitude" placeholder="Contoh: 112.621391" required class="w-full p-3.5 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-admin-sideBg focus:ring-2 focus:ring-admin-sideBg/20 outline-none transition-all text-sm font-mono text-gray-600">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1.5">Batas Jarak Gratis Ongkir</label>
+                        <div class="relative">
+                            <input type="number" name="free_delivery_max_distance" id="free_delivery_max_distance" placeholder="10" required class="w-full p-3.5 pr-12 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:border-admin-sideBg focus:ring-2 focus:ring-admin-sideBg/20 outline-none transition-all text-sm font-black text-purple-600">
+                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">KM</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -130,6 +149,11 @@ $(document).ready(function() {
             $('#address').val(res.data.address);
             $('#map_embed_url').val(res.data.map_embed_url);
             $('#map_external_url').val(res.data.map_external_url);
+            
+            // Masukin data koordinat dan batas ongkir dari database
+            $('#latitude').val(res.data.latitude);
+            $('#longitude').val(res.data.longitude);
+            $('#free_delivery_max_distance').val(res.data.free_delivery_max_distance);
         }
     });
 

@@ -19,5 +19,7 @@ protected $fillable = [
         'map_external_url',  
         'instagram_handle',
         'image_url',
+        'latitude',
+        'longitude',
     ];
 }

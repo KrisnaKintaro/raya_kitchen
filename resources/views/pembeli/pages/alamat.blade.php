@@ -147,14 +147,12 @@ $(document).ready(function() {
     let marker = null;
 
     function setMarker(lat, lng) {
-        // Hapus SEMUA marker yang ada di map agar dijamin hanya sisa 1 marker
         map.eachLayer(function (layer) {
             if (layer instanceof L.Marker) {
                 map.removeLayer(layer);
             }
         });
 
-        // Buat marker baru yang tunggal dan bisa digeser
         marker = L.marker([lat, lng], {draggable: true}).addTo(map);
         
         marker.on('dragend', function (e) {
@@ -169,15 +167,13 @@ $(document).ready(function() {
         $('#longitude').val(lng);
     }
 
-    // Set posisi awal default
     setMarker(defaultLat, defaultLng);
 
-    // Kalau map diklik manual
     map.on('click', function(e) {
         setMarker(e.latlng.lat, e.latlng.lng);
     });
 
-    // --- PENCARIAN JALAN SELURUH INDONESIA (DENGAN 1 MARKER TUNGGAL) ---
+    // --- PENCARIAN JALAN SELURUH INDONESIA ---
     L.Control.geocoder({
         defaultMarkGeocoder: false, 
         placeholder: 'Cari jalan atau lokasi di Indonesia...',
@@ -192,13 +188,13 @@ $(document).ready(function() {
     }).on('markgeocode', function(e) {
         let center = e.geocode.center;
         map.setView(center, 16); 
-        setMarker(center.lat, center.lng); // Otomatis bersihkan pin lain dan pindahkan pin tunggal
+        setMarker(center.lat, center.lng);
     }).addTo(map);
 
     // --- LOGIKA AUTOCOMPLETE WILAYAH ---
     function loadProvinces() {
-        if(provincesData.length > 0) return;
-        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
+        if(provincesData.length > 0) return Promise.resolve();
+        return fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
             .then(res => res.json())
             .then(data => {
                 provincesData = data;
@@ -391,6 +387,7 @@ $(document).ready(function() {
         if(addr) submitAjax({...addr, address_id: addr.id, is_primary: 1}, 'Mengatur utama...');
     });
 
+    // --- SINKRONISASI OTOMATIS WILAYAH SAAT EDIT ALAMAT ---
     $(document).on('click', '.btn-edit-alamat', function() {
         let addr = globalAddresses.find(item => item.id == $(this).data('id'));
         if(addr) {
@@ -405,14 +402,38 @@ $(document).ready(function() {
             $('#form-address-title').text('Edit Alamat: ' + (addr.label || ''));
             $('#form-alamat-section').slideDown();
 
-            loadProvinces();
-            $('#provinsi').val(addr.province);
-            $('#kota').prop('disabled', false).val(addr.city);
-            $('#kecamatan').prop('disabled', false).val(addr.district);
-            
-            setTimeout(() => { $('#provinsi').trigger('input'); }, 500);
-            setTimeout(() => { $('#kota').val(addr.city).trigger('input'); }, 1500);
-            setTimeout(() => { $('#kecamatan').val(addr.district); }, 2500);
+            // Load Provinsi, Kota, dan Kecamatan secara berurutan agar datalist-nya valid
+            loadProvinces().then(() => {
+                $('#provinsi').val(addr.province);
+                let selectedProv = provincesData.find(p => p.name === addr.province);
+
+                if (selectedProv) {
+                    $('#kota').prop('disabled', false).attr('placeholder', 'Memuat kota...');
+                    fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProv.id}.json`)
+                        .then(res => res.json())
+                        .then(cities => {
+                            citiesData = cities;
+                            let options = '';
+                            cities.forEach(c => options += `<option value="${c.name}">`);
+                            $('#list-kota').html(options);
+                            $('#kota').val(addr.city).prop('disabled', false);
+
+                            let selectedCity = cities.find(c => c.name === addr.city);
+                            if (selectedCity) {
+                                $('#kecamatan').prop('disabled', false).attr('placeholder', 'Memuat kecamatan...');
+                                fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selectedCity.id}.json`)
+                                    .then(res => res.json())
+                                    .then(districts => {
+                                        districtsData = districts;
+                                        let distOptions = '';
+                                        districts.forEach(d => distOptions += `<option value="${d.name}">`);
+                                        $('#list-kecamatan').html(distOptions);
+                                        $('#kecamatan').val(addr.district).prop('disabled', false);
+                                    });
+                            }
+                        });
+                }
+            });
             
             if(addr.latitude && addr.longitude) {
                 setMarker(addr.latitude, addr.longitude);

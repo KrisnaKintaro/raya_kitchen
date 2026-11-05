@@ -3,6 +3,9 @@
 @section('css')
 <!-- Flatpickr CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<!-- Leaflet & Geocoder CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <style>
     /* Styling Custom buat Heatmap Kalender */
     .flatpickr-day.is-low { background-color: #dcfce7 !important; border-color: #dcfce7 !important; color: #166534 !important; font-weight: bold; }
@@ -65,7 +68,8 @@
                 </div>
 
                 <!-- BAGIAN JADWAL PENGIRIMAN (PRE-ORDER) -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100 relative">
+                <!-- Diberi ID section-jadwal-pengiriman agar bisa disembunyikan jika pakai ekspedisi -->
+                <div id="section-jadwal-pengiriman" class="bg-white p-6 rounded-2xl shadow-sm border border-purple-100 relative">
                     <div id="loading-jadwal" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-2xl">
                         <div class="animate-spin w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full mb-2"></div>
                         <span class="text-sm font-bold text-purple-600">Mengecek Jadwal Dapur...</span>
@@ -77,7 +81,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Tanggal</label>
-                            <input type="text" id="tanggal_kirim" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white cursor-pointer" placeholder="Pilih tanggal di kalender" readonly>
+                            <input type="text" id="tanggal_kirim" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-purple-400 text-sm bg-white cursor-pointer" placeholder="Pilih tanggal di kalender" readonly required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Jam</label>
@@ -155,7 +159,6 @@
                     <!-- Grand Total -->
                     <div class="flex justify-between items-center mt-4">
                         <p class="text-base font-black text-gray-900">Total Pembayaran</p>
-                        <!-- Pastikan subtotal lu simpan di atribut data-value biar gampang dihitung JS -->
                         <p id="teks-grand-total" data-subtotal="150000" class="text-xl font-black text-purple-600">Rp 150,000</p>
                     </div>
 
@@ -228,6 +231,14 @@
                 <textarea name="street_address" required rows="2" class="w-full p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white resize-none"></textarea>
             </div>
 
+            <!-- PETA MODAL DI HALAMAN CHECKOUT -->
+            <div class="mt-3">
+                <label class="text-xs font-bold text-gray-700 block mb-1">Tandai Lokasi di Peta (Wajib untuk hitung ongkir)</label>
+                <div id="map-modal" class="w-full h-[180px] rounded-xl border-2 border-gray-200 z-[10]"></div>
+                <input type="hidden" name="latitude" id="modal_latitude" required>
+                <input type="hidden" name="longitude" id="modal_longitude" required>
+            </div>
+
             <button type="submit" id="btn-simpan-alamat" class="w-full py-3 mt-2 bg-purple-600 text-white font-bold rounded-xl shadow-md hover:bg-purple-700 transition">
                 Simpan & Gunakan Alamat
             </button>
@@ -255,6 +266,9 @@
 @push('script')
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
+    <!-- Leaflet & Geocoder JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <script>
     // Deklarasi Variabel Global
@@ -265,18 +279,65 @@
     window.ongkirSaatIni = 0;
     let heatmapData = {};
 
+    let modalMap = null;
+    let modalMarker = null;
+
+    function initModalMap() {
+        if(modalMap !== null) {
+            modalMap.invalidateSize();
+            return;
+        }
+
+        let defaultLat = -6.3473242; 
+        let defaultLng = 106.9481003;
+
+        modalMap = L.map('map-modal').setView([defaultLat, defaultLng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(modalMap);
+
+        modalMarker = L.marker([defaultLat, defaultLng], {draggable: true}).addTo(modalMap);
+
+        function updateModalLokasi(lat, lng) {
+            $('#modal_latitude').val(lat);
+            $('#modal_longitude').val(lng);
+        }
+
+        updateModalLokasi(defaultLat, defaultLng);
+
+        modalMarker.on('dragend', function (e) {
+            updateModalLokasi(modalMarker.getLatLng().lat, modalMarker.getLatLng().lng);
+        });
+
+        modalMap.on('click', function(e) {
+            modalMarker.setLatLng(e.latlng);
+            updateModalLokasi(e.latlng.lat, e.latlng.lng);
+        });
+
+        L.Control.geocoder({
+            defaultMarkGeocoder: false, 
+            placeholder: 'Cari kota/jalan...',
+            geocoder: L.Control.Geocoder.nominatim({
+                geocodingQueryParams: { countrycodes: 'id', addressdetails: 1, limit: 5 }
+            })
+        }).on('markgeocode', function(e) {
+            let center = e.geocode.center;
+            modalMap.setView(center, 16); 
+            modalMarker.setLatLng(center);
+            updateModalLokasi(center.lat, center.lng);
+        }).addTo(modalMap);
+    }
+
     function formatRupiah(number) { 
         return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); 
     }
 
-    // ==========================================
-    // LOGIKA MODAL TAMBAH ALAMAT
-    // ==========================================
     function openAddressModal() {
         $('#addressModal').removeClass('hidden');
         setTimeout(() => {
             $('#addressModal').removeClass('opacity-0');
             $('#addressModal > div').removeClass('scale-95');
+            
+            initModalMap();
+            setTimeout(() => { modalMap.invalidateSize(); }, 200);
         }, 10);
 
         if(provincesData.length === 0) {
@@ -315,9 +376,6 @@
 
     $(document).ready(function() {
         
-        // ==========================================
-        // FUNGSI UPDATE GRAND TOTAL (BELANJA + ONGKIR)
-        // ==========================================
         window.updateGrandTotal = function() {
             let grandTotal = window.subtotalBelanja + window.ongkirSaatIni;
             $('#teks-grand-total').text(formatRupiah(grandTotal));
@@ -329,14 +387,12 @@
                 $('#co-tagihan-sekarang').text(formatRupiah(grandTotal));
                 $('#btn-text-bayar').text('Bayar Lunas Sekarang');
             } else {
-                // Skema DP 30% (Untuk opsi DP dan COD)
                 $('#label-tagihan').text('Wajib Bayar (DP 30%)');
                 $('#co-tagihan-sekarang').text(formatRupiah(grandTotal * 0.3));
                 $('#btn-text-bayar').text('Bayar DP Sekarang');
             }
         };
 
-        // Jika opsi pembayaran diubah, hitung ulang grand total
         $('input[name="payment_method"]').change(function() {
             $('.payment-lbl').removeClass('border-purple-500 bg-purple-50 text-purple-700').addClass('border-gray-200 bg-white text-gray-700');
             $(this).closest('label').removeClass('border-gray-200 bg-white text-gray-700').addClass('border-purple-500 bg-purple-50 text-purple-700');
@@ -344,9 +400,7 @@
             updateGrandTotal();
         });
 
-        // ==========================================
-        // FETCH CART (KERANJANG)
-        // ==========================================
+        // FETCH CART
         $.get('/api/pembeli/cart', function(res) {
             if(res.status === 'success') {
                 let itemsHTML = '';
@@ -363,7 +417,6 @@
                 $('#checkout-items').html(itemsHTML);
                 $('#co-subtotal').text(formatRupiah(totalKeseluruhan));
                 
-                // Simpan subtotal ke memori & perbarui total UI
                 window.subtotalBelanja = totalKeseluruhan;
                 updateGrandTotal();
 
@@ -372,9 +425,7 @@
             }
         });
 
-        // ==========================================
-        // FETCH PROFIL DAN ALAMAT
-        // ==========================================
+        // FETCH PROFIL & ALAMAT
         $.ajax({
             url: '/api/pembeli/profil-data',
             type: 'GET',
@@ -401,7 +452,6 @@
                         select.removeClass('hidden');
                         $('#btn-tambah-alamat-tambahan').removeClass('hidden');
                         
-                        // Hitung ongkir otomatis saat load pertama kali
                         cekOngkir($('#alamat_select').find(':selected').data('id'));
                     }
                 }
@@ -409,9 +459,7 @@
             error: function() { showCustomAlert('Error', 'Gagal memuat data profil.'); }
         });
 
-        // ==========================================
-        // LOGIKA ONGKOS KIRIM
-        // ==========================================
+        // CEK ONGKIR & KONTROL TAMPILAN JADWAL
         function cekOngkir(addressId) {
             if (!addressId) return;
 
@@ -419,11 +467,11 @@
             $('#teks-ongkir').text('...');
 
             $.ajax({
-                url: '/checkout/cek-ongkir', 
+                url: '/api/pembeli/checkout/cek-ongkir',
                 type: 'POST',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    address_id: addressId
+                data: { 
+                    address_id: addressId,
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(res) {
                     if(res.status === 'success') {
@@ -435,25 +483,41 @@
                         $('#input-shipping-service').val(res.shipping_service);
 
                         window.ongkirSaatIni = res.shipping_cost;
-                        updateGrandTotal(); // Perbarui Harga
+                        updateGrandTotal();
+
+                        // =========================================================
+                        // LOGIKA DINAMIS: SEMBUNYIKAN/TAMPILKAN JADWAL PENGIRIMAN
+                        // =========================================================
+                        if (res.is_internal) {
+                            // Jika kurir internal (dekat): Tampilkan kalender & wajib diisi
+                            $('#section-jadwal-pengiriman').slideDown();
+                            $('#tanggal_kirim').prop('required', true);
+                            $('#jam_kirim').prop('required', true);
+                            
+                            // Panggil ulang inisialisasi kalender supaya popup kalendernya muncul saat diklik
+                            setTimeout(() => { initFlatpickr(); }, 200);
+                        } else {
+                            // Jika kurir ekspedisi (jauh/luar kota): Sembunyikan kalender
+                            $('#section-jadwal-pengiriman').slideUp();
+                            $('#tanggal_kirim').prop('required', false).val('');
+                            $('#jam_kirim').prop('required', false).val('');
+                        }
                     }
                 },
                 error: function(xhr) {
                     showCustomAlert('Ongkir Error', xhr.responseJSON?.message || 'Gagal menghitung ongkir.');
+                    $('#teks-kurir').text('Gagal memuat kurir');
+                    $('#teks-ongkir').text('Rp 0');
                 }
             });
         }
 
-        // Kalau alamat diganti oleh user
         $('#alamat_select').change(function() {
             let addressId = $(this).find(':selected').data('id');
             cekOngkir(addressId);
         });
 
-
-        // ==========================================
-        // LOGIC KALENDER PRE-ORDER (TIDAK BERUBAH)
-        // ==========================================
+        // KALENDER HEATMAP
         function fetchHeatmap(month, year, fpInstance = null) {
             $.ajax({
                 url: "/api/pembeli/checkout/heatmap",
@@ -470,46 +534,77 @@
             });
         }
 
-        function initFlatpickr() {
-            flatpickr("#tanggal_kirim", {
-                locale: "id",
-                minDate: new Date().fp_incr(1),
-                dateFormat: "Y-m-d",
-                disable: [ function(date) { return heatmapData[flatpickr.formatDate(date, "Y-m-d")] === 'full' || heatmapData[flatpickr.formatDate(date, "Y-m-d")] === 'past'; } ],
-                onDayCreate: function(dObj, dStr, fp, dayElem) {
-                    let d = flatpickr.formatDate(dayElem.dateObj, "Y-m-d");
-                    if (heatmapData[d] === 'med') dayElem.classList.add('is-med');
-                    else if (heatmapData[d] === 'low') dayElem.classList.add('is-low');
-                    else if (heatmapData[d] === 'full') dayElem.classList.add('is-full');
-                },
-                onMonthChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
-                onYearChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
-                onChange: function(s, dateStr) { fetchJamTersedia(dateStr); }
-            });
+        // Deklarasikan variabel instance Flatpickr secara global di atas
+    let fpCalendar = null;
+
+    function initFlatpickr() {
+        if (fpCalendar) {
+            fpCalendar.destroy();
         }
 
-        function fetchJamTersedia(tanggal) {
+        fpCalendar = flatpickr("#tanggal_kirim", {
+            locale: "id",
+            minDate: new Date().fp_incr(1), // <-- Mengatur minimal tanggal pengiriman adalah H+1 (besok)
+            dateFormat: "Y-m-d",
+            disable: [
+                function(date) {
+                    let dateStr = flatpickr.formatDate(date, "Y-m-d");
+                    let tomorrowStr = flatpickr.formatDate(new Date().fp_incr(1), "Y-m-d");
+                    
+                    // Matikan jika tanggalnya kurang dari besok (hari ini / masa lalu) ATAU kuotanya penuh
+                    return dateStr < tomorrowStr || heatmapData[dateStr] === 'full';
+                }
+            ],
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                let d = flatpickr.formatDate(dayElem.dateObj, "Y-m-d");
+                let tomorrowStr = flatpickr.formatDate(new Date().fp_incr(1), "Y-m-d");
+                
+                // Berikan style nonaktif jika tanggal hari ini atau sebelumnya
+                if (d < tomorrowStr) {
+                    dayElem.classList.add('flatpickr-disabled');
+                } else if (heatmapData[d] === 'med') {
+                    dayElem.classList.add('is-med');
+                } else if (heatmapData[d] === 'low') {
+                    dayElem.classList.add('is-low');
+                } else if (heatmapData[d] === 'full') {
+                    dayElem.classList.add('is-full');
+                }
+            },
+            onMonthChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
+            onYearChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
+            onChange: function(s, dateStr) { fetchJamTersedia(dateStr); }
+        });
+    }
+
+    function fetchJamTersedia(tanggal) {
             let jamSelect = $('#jam_kirim');
             jamSelect.html('<option value="">Memuat jam...</option>').prop('disabled', true);
             $.ajax({
-                url: "/api/pembeli/checkout/times", type: "GET", data: { tanggal: tanggal },
+                url: "/api/pembeli/checkout/times", // <-- Pastikan ada '/pembeli/' di sini!
+                type: "GET", 
+                data: { tanggal: tanggal },
                 success: function(res) {
                     if(res.status === 'success') {
                         jamSelect.empty();
-                        if(res.data.length === 0) { jamSelect.append('<option value="">Jam Operasional Penuh/Habis</option>'); } 
-                        else {
+                        if(res.data.length === 0) { 
+                            jamSelect.append('<option value="">Jam Operasional Penuh/Habis</option>'); 
+                        } else {
                             jamSelect.append('<option value="">-- Pilih Jam --</option>');
-                            res.data.forEach(jam => { jamSelect.append(`<option value="${jam}">${jam} WIB</option>`); });
+                            res.data.forEach(jam => { 
+                                jamSelect.append(`<option value="${jam}">${jam} WIB</option>`); 
+                            });
                             jamSelect.prop('disabled', false);
                         }
                     }
+                },
+                error: function(xhr) {
+                    console.error(xhr.responseText); // Cek apakah ada error di console F12
+                    jamSelect.html('<option value="">Gagal memuat jam</option>');
                 }
             });
         }
 
-        // ==========================================
         // AUTOCOMPLETE ALAMAT BARU & SUBMIT
-        // ==========================================
         $('#provinsi').on('input', function() {
             let selectedProv = provincesData.find(p => p.name === $(this).val());
             $('#kota, #kecamatan').val('').prop('disabled', true); $('#list-kota, #list-kecamatan').empty();
@@ -553,10 +648,8 @@
                         $('#btn-tambah-alamat-tambahan').removeClass('hidden');
                         let select = $('#alamat_select');
                         
-                        // Tambahkan ke dropdown dan pilih otomatis
                         select.removeClass('hidden').append(`<option value="${res.data.text}" data-id="${res.data.id}" selected>${res.data.text}</option>`);
                         
-                        // Hitung ongkir untuk alamat yang baru diinput
                         cekOngkir(res.data.id);
                         
                         closeAddressModal();
@@ -569,16 +662,17 @@
             });
         });
 
-        // ==========================================
-        // SUBMIT PROSES CHECKOUT
-        // ==========================================
+        // SUBMIT CHECKOUT
         $('#btn-konfirmasi').click(function() {
-            let addressVal = $('#alamat_select').val(); // Mengandung text alamat
-            let tglKirim = $('#tanggal_kirim').val();
-            let jamKirim = $('#jam_kirim').val();
+            let addressVal = $('#alamat_select').val();
+            let isInternal = ($('#input-shipping-cost').val() == 0);
+            
+            // Validasi tanggal hanya jika pakai kurir internal
+            let tglKirim = isInternal ? $('#tanggal_kirim').val() : 'auto';
+            let jamKirim = isInternal ? $('#jam_kirim').val() : '10:00:00';
 
             if(!addressVal) { showCustomAlert('Alamat Kosong', 'Alamat pengiriman belum diatur cuy!'); return; }
-            if(!tglKirim || !jamKirim) { showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim wajib diisi cuy!'); return; }
+            if(isInternal && (!tglKirim || !jamKirim)) { showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim wajib diisi cuy!'); return; }
             if($('#teks-ongkir').text() === '...') { showCustomAlert('Ongkir Diproses', 'Tunggu ongkir selesai dihitung dulu ya!'); return; }
 
             let btn = $(this); let originalText = btn.html();
@@ -593,12 +687,9 @@
                     delivery_date: tglKirim,
                     delivery_time: jamKirim,
                     payment_method: $('input[name="payment_method"]:checked').val(),
-                    
-                    // Kita kirim ongkir yang udah dihitung ke backend juga
                     shipping_cost: $('#input-shipping-cost').val(),
                     courier_name: $('#input-courier-name').val(),
                     shipping_service: $('#input-shipping-service').val(),
-                    
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(res) {
