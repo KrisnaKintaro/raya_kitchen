@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\NotificationController;
-use App\Http\Controllers\Api\Pembeli\PreorderController;
+
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
 use App\Http\Controllers\Api\WhatsAppBotController;
@@ -37,8 +37,6 @@ Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
     Route::get('/tentang-kami', [TentangKamiController::class, 'index']);
-    Route::get('/checkout/heatmap', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'getHeatmap']);
-    Route::get('/checkout/times', [\App\Http\Controllers\Api\Pembeli\CheckoutController::class, 'getAvailableTimes']);
 });
 
 // BUAT TAMPILAN ADMIN
@@ -46,7 +44,7 @@ Route::prefix('admin')->group(function () {
     // Profil Perusahaan
     Route::get('/profil', [SystemStoreController::class, 'getProfil']);
     Route::post('/profil', [SystemStoreController::class, 'updateProfil']);
-    
+
     // Operasional & Libur
     Route::get('/operasional', [SystemStoreController::class, 'getOperasional']);
     Route::post('/operasional', [SystemStoreController::class, 'updateOperasional']);
@@ -60,15 +58,15 @@ Route::prefix('admin')->group(function () {
 Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     // --- PROFIL & ALAMAT ---
     Route::get('profil-data', [ProfileController::class, 'edit'])->name('profil.data');
-    Route::post('profil-data', [ProfileController::class, 'update']); // <-- INI YANG TADI BIKIN ERROR 405 UDAH DIBALIKIN
-    Route::post('update-profil-pribadi', [ProfileController::class, 'update']); 
+    Route::post('profil-data', [ProfileController::class, 'update']);
+    Route::post('update-profil-pribadi', [ProfileController::class, 'updateProfilePribadi']);
     Route::delete('alamat/{id}', [ProfileController::class, 'hapusAlamat']);
-    Route::post('/checkout/alamat-ajax', [CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax'); 
+    Route::post('/checkout/alamat-ajax', [CheckoutController::class, 'storeAddressAjax'])->name('alamat.ajax');
 
     // --- TRANSAKSI & PESANAN ---
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-    Route::get('/nota', [CheckoutController::class, 'showNota']); 
-    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']); 
+    Route::get('/nota', [CheckoutController::class, 'showNota']);
+    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']);
 
     // --- CART (KERANJANG) ---
     Route::get('/cart', [CartController::class, 'index']);
@@ -76,10 +74,12 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::post('/cart/update', [CartController::class, 'update']);
     Route::post('/cart/delete', [CartController::class, 'destroy']);
 
+    // Heatmap
+    Route::get('/checkout/heatmap', [CheckoutController::class, 'getHeatmap']);
+    Route::get('/checkout/times',   [CheckoutController::class, 'getAvailableTimes']);
+
     // --- CHECKOUT & PREORDER ---
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
-    //Route::get('/checkout/heatmap', [PreorderController::class, 'getHeatmap']);
-    //Route::get('/checkout/times', [PreorderController::class, 'getAvailableTimes']);
     Route::post('/checkout/cek-ongkir', [CheckoutController::class, 'cekOngkir'])->name('checkout.cek_ongkir'); // <-- INI FIX CLASS NOT FOUND
 
     // --- PAYMENT POLLING & ACTIONS ---

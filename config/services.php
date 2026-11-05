@@ -14,6 +14,10 @@ return [
     |
     */
 
+    'biteship' => [
+        'token' => env('BITESHIP_TOKEN'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

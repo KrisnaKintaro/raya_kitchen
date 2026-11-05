@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\Pembeli;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\UserAddress;
 use App\Models\CompanyProfile;
+use App\Models\UserAddress;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -15,7 +18,7 @@ class ProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -31,7 +34,7 @@ class ProfileController extends Controller
         $primaryAddress = UserAddress::where('user_id', $user->id)
             ->where('is_primary', 1)
             ->first() ?? UserAddress::where('user_id', $user->id)->first();
-        
+
         $allAddresses = UserAddress::where('user_id', $user->id)->orderBy('is_primary', 'desc')->get();
 
         $allAddresses->transform(function ($address) {
@@ -71,8 +74,8 @@ class ProfileController extends Controller
 
     public function hapusAlamat($id)
     {
-        $address = auth()->user()->addresses()->find($id);
-        
+        $address = UserAddress::where('user_id', Auth::id())->find($id);
+
         if (!$address) {
             return response()->json(['status' => 'error', 'message' => 'Alamat tidak ditemukan.'], 404);
         }
@@ -89,7 +92,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
@@ -98,7 +101,7 @@ class ProfileController extends Controller
         }
 
         try {
-            $addressId = $request->input('address_id'); 
+            $addressId = $request->input('address_id');
             $isPrimary = $request->has('is_primary') ? (int)$request->input('is_primary') : 0;
 
             if ($isPrimary == 1) {
@@ -118,6 +121,14 @@ class ProfileController extends Controller
                 $jarak = $this->hitungJarak($dapur->latitude, $dapur->longitude, $request->input('latitude'), $request->input('longitude'));
             }
 
+            // ==========================================
+            // AUTO-MATCH RAJAONGKIR ID
+            // ==========================================
+            $roId = null;
+            if ($request->filled('district') && $request->filled('city')) {
+                $roId = $this->getRajaOngkirId($request->input('district'), $request->input('city'));
+            }
+
             $addressData = [
                 'user_id' => $user->id,
                 'label' => $request->input('label') ?? 'Rumah',
@@ -133,6 +144,7 @@ class ProfileController extends Controller
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'distance_to_store' => $jarak,
+                'rajaongkir_destination_id' => $roId, // <-- Simpan ID RajaOngkir ke DB
             ];
 
             // Cek apakah ini proses update atau tambah baru (insert)
@@ -165,6 +177,38 @@ class ProfileController extends Controller
     }
 
     /**
+     * Fungsi Helper untuk Auto-Match ID Destinasi RajaOngkir (Komerce)
+     */
+    private function getRajaOngkirId($district, $city)
+    {
+        try {
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY')
+            ])->get('https://rajaongkir.komerce.id/api/v1/destination/domestic-destination', [
+                'search' => $district
+            ]);
+
+            if ($response->successful() && isset($response->json()['data'])) {
+                // Bersihkan kata "Kota" atau "Kabupaten" dari input frontend biar match
+                $cityClean = strtolower(str_replace(['kota ', 'kabupaten ', 'kab. '], '', $city));
+
+                foreach ($response->json()['data'] as $dest) {
+                    // Pastikan kotanya cocok, karena nama kecamatan bisa kembar di beda provinsi/kota
+                    if (str_contains(strtolower($dest['city_name']), $cityClean)) {
+                        return $dest['id'];
+                    }
+                }
+                // Fallback: Ambil hasil pertama kalau gagal match kota persis (tapi kecamatannya ketemu)
+                return $response->json()['data'][0]['id'] ?? null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal fetch RajaOngkir ID: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Rumus Haversine untuk hitung jarak lurus (KM) antara 2 titik koordinat
      */
     private function hitungJarak($lat1, $lon1, $lat2, $lon2)
@@ -177,10 +221,50 @@ class ProfileController extends Controller
         $a = sin($dLat / 2) * sin($dLat / 2) +
             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
             sin($dLon / 2) * sin($dLon / 2);
-            
+
         $c = 2 * asin(sqrt($a));
         $distance = $earthRadius * $c;
 
         return round($distance, 2); // Dibulatkan 2 angka di belakang koma
+    }
+
+    public function updateProfilePribadi(Request $request)
+    {
+        $user = $request->user();
+
+        // 1. Normalisasi nomor WA terlebih dahulu dan masukkan kembali ke dalam Request
+        $waNumber = preg_replace('/[^0-9]/', '', $request->whatsapp_number);
+        if (str_starts_with($waNumber, '0')) {
+            $waNumber = '62' . substr($waNumber, 1);
+        } elseif (!str_starts_with($waNumber, '62')) {
+            $waNumber = '62' . $waNumber;
+        }
+
+        $request->merge(['whatsapp_number' => $waNumber]);
+
+        // 2. Validasi dengan Rule::unique bawaan Laravel untuk mengecek duplikasi
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'whatsapp_number' => ['required', 'string', Rule::unique('users')->ignore($user->id)],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ], [
+            'whatsapp_number.unique' => 'Nomor WhatsApp sudah digunakan oleh akun lain.'
+        ]);
+
+        // 3. Hash password hanya jika diisi oleh user
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            // Hapus key password dari array agar tidak meng-update field dengan nilai kosong
+            unset($validated['password']);
+        }
+
+        // 4. Update data secara langsung menggunakan Eloquent Mass Assignment
+        $user->update($validated);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Profil berhasil diperbarui!'
+        ]);
     }
 }

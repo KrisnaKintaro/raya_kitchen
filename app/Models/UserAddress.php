@@ -18,9 +18,10 @@ class UserAddress extends Model
         'street_address',
         'landmark',
         'is_primary',
-        'latitude',          
-        'longitude',         
-        'distance_to_store', 
+        'latitude',
+        'longitude',
+        'distance_to_store',
+        'rajaongkir_destination_id',
     ];
 
     public function user()

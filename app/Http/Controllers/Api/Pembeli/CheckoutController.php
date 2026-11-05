@@ -8,95 +8,228 @@ use App\Models\Cart;
 use App\Models\CompanyProfile;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\StoreHoliday;
+use App\Models\StoreSetting;
 use App\Models\Transaction;
+use App\Models\UserAddress;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
+    private function getValidProductionDate($totalRotiCheckout)
+    {
+        $setting = StoreSetting::first();
+        $batasMaksimalDapur = $setting->max_qty_per_day ?? 60;
+        $tanggalOtomatis = now()->addDay(); // Mulai dari H+1 (Besok)
+
+        while (true) {
+            $tglStr = $tanggalOtomatis->format('Y-m-d');
+
+            // 1. Cek apakah tanggal ini libur
+            $isLibur = StoreHoliday::whereDate('holiday_date', $tglStr)->exists();
+
+            if (!$isLibur) {
+                // 2. Cek apakah kuota oven masih muat
+                $totalRotiDipesan = OrderItem::whereHas('order', function($q) use ($tglStr) {
+                    $q->whereDate('delivery_date', $tglStr)->where('status', '!=', 'dibatalkan');
+                })->sum('quantity');
+
+                if (($totalRotiDipesan + $totalRotiCheckout) <= $batasMaksimalDapur) {
+                    return $tanggalOtomatis; // Ketemu tanggal yang valid!
+                }
+            }
+            $tanggalOtomatis->addDay();
+        }
+    }
+
+    // Fungsi Helper untuk Auto-Match ID Destinasi RajaOngkir
+    private function getRajaOngkirId($district, $city)
+    {
+        try {
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY')
+            ])->get('https://rajaongkir.komerce.id/api/v1/destination/domestic-destination', [
+                'search' => $district
+            ]);
+
+            if ($response->successful() && isset($response->json()['data'])) {
+                $cityClean = strtolower(str_replace(['kota ', 'kabupaten ', 'kab. '], '', $city));
+
+                foreach ($response->json()['data'] as $dest) {
+                    if (str_contains(strtolower($dest['city_name']), $cityClean)) {
+                        return $dest['id'];
+                    }
+                }
+                return $response->json()['data'][0]['id'] ?? null;
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal fetch RajaOngkir ID: ' . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    public function cekOngkir(Request $request)
+    {
+        $alamat = UserAddress::find($request->address_id);
+        $dapur = CompanyProfile::first();
+        $setting = StoreSetting::first();
+        $max_jarak = $setting->free_delivery_max_distance ?? 10;
+
+        // Baca data kurir aktif dari admin
+        $activeCouriers = $setting->active_couriers ?? 'jne,sicepat,jnt';
+
+        if (!$alamat || !$alamat->rajaongkir_destination_id || !$dapur->rajaongkir_destination_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'ID Tujuan wilayah Anda atau Dapur belum diset untuk RajaOngkir. Silakan edit dan simpan ulang alamat Anda.'
+            ], 400);
+        }
+
+        // 1. JIKA JARAK DEKAT (Kurir Internal Toko / Gratis Ongkir)
+        if ($alamat->distance_to_store !== null && $alamat->distance_to_store <= $max_jarak) {
+            return response()->json([
+                'status' => 'success',
+                'is_internal' => true,
+                'courier_name' => 'Kurir Internal Raya Kitchen',
+                'shipping_service' => 'Gratis Ongkir (' . $alamat->distance_to_store . ' KM)',
+                'shipping_cost' => 0
+            ]);
+        }
+
+        // 2. JIKA JARAK JAUH (Hitung via API RajaOngkir Komerce)
+        $userId = $request->user()->id;
+        $cartItems = Cart::with('productVariant')->where('user_id', $userId)->get();
+
+        $totalBeratGram = 0;
+        $totalRotiCheckout = 0;
+
+        foreach($cartItems as $item) {
+            $beratSatuan = $item->productVariant->weight ?? 500;
+            $totalBeratGram += ($beratSatuan * $item->quantity);
+            $totalRotiCheckout += $item->quantity;
+        }
+
+        if ($totalBeratGram < 1000) $totalBeratGram = 1000; // Minimal 1 KG
+
+        try {
+            $validCouriers = ['jne','sicepat','ide','sap','jnt','ninja','tiki','lion','anteraja','pos','ncs','rex','rpx','sentral','star','wahana','spx'];
+
+            $apiCouriers = collect(explode(',', $activeCouriers))
+                ->map(fn($c) => trim(strtolower($c)))
+                ->filter(fn($c) => in_array($c, $validCouriers))
+                ->unique()
+                ->implode(':'); // <-- titik dua
+
+            // Jika setelah difilter ternyata kosong (misal cuma 'pemilik_toko' doang isinya)
+            if (empty($apiCouriers)) {
+                return response()->json(['status' => 'error', 'message' => 'Layanan kurir ekspedisi tidak tersedia saat ini.'], 400);
+            }
+
+            // Hitung ongkir pakai RajaOngkir (menggunakan kurir yang sudah difilter)
+            $response = Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY'),
+                'Content-Type' => 'application/x-www-form-urlencoded'
+            ])->asForm()->post('https://rajaongkir.komerce.id/api/v1/calculate/domestic-cost', [
+                'origin' => $dapur->rajaongkir_destination_id,
+                'destination' => $alamat->rajaongkir_destination_id,
+                'weight' => $totalBeratGram,
+                'courier' => $apiCouriers // <-- Pake variable yang udah dibersihkan
+            ]);
+
+            Log::info('RajaOngkir Response: ' . $response->body());
+
+            if ($response->successful() && isset($response->json()['data'])) {
+
+                $rates = collect($response->json()['data'])->flatMap(function ($item) {
+                // Format flat (Komerce)
+                    if (isset($item['service'])) {
+                        return [[
+                            'company'  => strtoupper($item['code']),
+                            'type'     => $item['service'],
+                            'price'    => $item['cost'],
+                            'duration' => $item['etd'] ?? '2-3',
+                        ]];
+                    }
+
+                    // Format nested (RajaOngkir lama)
+                    return collect($item['costs'] ?? [])->map(fn($cost) => [
+                        'company'  => strtoupper($item['code']),
+                        'type'     => $cost['service'],
+                        'price'    => $cost['cost'][0]['value'],
+                        'duration' => $cost['cost'][0]['etd'] ?? '2-3',
+                    ]);
+                    })->filter(fn($r) => is_numeric($r['price']) && strtolower($r['company']) !== 'pemilik_toko');
+
+                if ($rates->isEmpty()) {
+                    return response()->json(['status' => 'error', 'message' => 'Layanan kurir tidak tersedia untuk tujuan ini.'], 400);
+                }
+
+                // Jangan ambil yang termurah lagi, tapi kembalikan SEMUA list kurir buat frontend
+                return response()->json([
+                    'status' => 'success',
+                    'is_internal' => false,
+                    'rates' => $rates->values()->all()
+                ]);
+            }
+
+            $errorMessage = $response->json()['meta']['message'] ?? 'API RajaOngkir gagal mengembalikan tarif.';
+            return response()->json(['status' => 'error', 'message' => $errorMessage], 400);
+
+        } catch (\Exception $e) {
+            Log::error('RajaOngkir Exception: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke RajaOngkir: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function store(Request $request)
     {
-        // Validasi input dari frontend
         $request->validate([
             'name' => 'required',
             'phone' => 'required',
             'address' => 'required',
-            'delivery_date' => 'required',
-            'delivery_time' => 'required',
             'payment_method' => 'required|in:transfer_full,transfer_dp,cod'
         ]);
 
-        $userId = Auth::id() ?? 1;
+        $userId = $request->user()->id;
         $cartItems = Cart::with('productVariant')->where('user_id', $userId)->get();
 
         if ($cartItems->isEmpty()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Keranjang belanja masih kosong!'
-            ], 400);
+            return response()->json(['status' => 'error', 'message' => 'Keranjang kosong!'], 400);
         }
 
         DB::beginTransaction();
         try {
             $totalAmount = 0;
+            $totalRotiCheckout = 0;
             foreach ($cartItems as $item) {
                 $totalAmount += $item->productVariant->price * $item->quantity;
+                $totalRotiCheckout += $item->quantity;
             }
 
-            // Ambil ongkos kirim dari request form
             $shippingCost = (float) $request->input('shipping_cost', 0);
             $grandTotal = $totalAmount + $shippingCost;
-
-            // Hitung DP 30% dari Grand Total
             $dpAmount = $grandTotal * 0.3;
-
             $pilihanBayar = $request->input('payment_method');
             $remainingAmount = ($pilihanBayar === 'transfer_full') ? 0 : ($grandTotal - $dpAmount);
-
             $orderNumber = 'RK-' . date('Ymd') . '-' . rand(1000, 9999);
 
-            // =========================================================================
-            // LOGIKA PENENTUAN JADWAL PENGIRIMAN (ANTI-TABRAKAN DAPUR) - [DI SINI LETAKNYA]
-            // =========================================================================
             $isInternal = ($shippingCost == 0);
 
             if ($request->input('delivery_date') === 'auto' || (!$isInternal && $shippingCost > 0)) {
-                // JIKA EKSPEDISI: Cari tanggal kosong secara otomatis mulai H+1
-                $tanggalOtomatis = now()->addDay();
-                
-                while (true) {
-                    $tglStr = $tanggalOtomatis->format('Y-m-d');
-                    
-                    // Hitung total roti yang sudah dipesan di tanggal tersebut
-                    $totalRotiDipesan = OrderItem::whereHas('order', function($q) use ($tglStr) {
-                        $q->where('delivery_date', $tglStr)->where('status', '!=', 'dibatalkan');
-                    })->sum('quantity');
-
-                    $batasMaksimalDapur = 50; // Kapasitas maksimal harian dapur
-
-                    $totalRotiCheckout = 0;
-                    foreach($cartItems as $item) {
-                        $totalRotiCheckout += $item->quantity;
-                    }
-
-                    // Jika masih muat, tetapkan tanggal ini
-                    if (($totalRotiDipesan + $totalRotiCheckout) <= $batasMaksimalDapur) {
-                        $deliveryDate = $tglStr;
-                        $deliveryTime = '10:00:00'; // Jam standar ekspedisi
-                        break;
-                    }
-
-                    $tanggalOtomatis->addDay();
-                }
+                $tglDapurKosong = $this->getValidProductionDate($totalRotiCheckout);
+                $deliveryDate = $tglDapurKosong->format('Y-m-d');
+                $deliveryTime = '15:00:00';
             } else {
-                // JIKA KURIR INTERNAL: Ambil tanggal & jam pilihan pembeli dari kalender
                 $deliveryDate = $request->input('delivery_date');
                 $deliveryTime = $request->input('delivery_time');
             }
 
-            // Simpan ke tabel orders
             $order = Order::create([
                 'user_id' => $userId,
                 'order_number' => $orderNumber,
@@ -115,7 +248,6 @@ class CheckoutController extends Controller
                 'order_source' => 'web',
             ]);
 
-            // Simpan ke tabel order_items
             foreach ($cartItems as $item) {
                 $price = $item->productVariant->price;
                 OrderItem::create([
@@ -130,7 +262,6 @@ class CheckoutController extends Controller
             $amountToPay = ($pilihanBayar === 'transfer_full') ? $grandTotal : $dpAmount;
             $tipeTransaksi = ($pilihanBayar === 'cod') ? 'cod' : 'transfer';
 
-            // Insert Transaction
             $transaction = Transaction::create([
                 'order_id' => $order->id,
                 'amount' => $amountToPay,
@@ -138,14 +269,10 @@ class CheckoutController extends Controller
                 'payment_status' => 'unpaid'
             ]);
 
-            // Kosongkan keranjang setelah order berhasil ke-create
             Cart::where('user_id', $userId)->delete();
 
-            DB::commit();
+            // HAPUS DB::commit(); DARI SINI!
 
-            // =========================================================
-            // INTEGRASI DUITKU SANDBOX (VIA PACKAGE RESMI)
-            // =========================================================
             if ($tipeTransaksi !== 'cod') {
                 $merchantCode = env('DUITKU_MERCHANT_CODE');
                 $merchantKey = env('DUITKU_MERCHANT_KEY');
@@ -155,12 +282,9 @@ class CheckoutController extends Controller
                 $duitkuConfig->setSanitizedMode(true);
                 $duitkuConfig->setDuitkuLogs(false);
 
-                $paymentMethod = "SP"; // QRIS
-                $paymentAmount = (int) $amountToPay;
-
                 $params = [
-                    'paymentAmount'     => $paymentAmount,
-                    'paymentMethod'     => $paymentMethod,
+                    'paymentAmount'     => (int) $amountToPay,
+                    'paymentMethod'     => "SP",
                     'merchantOrderId'   => $orderNumber,
                     'productDetails'    => 'Pembayaran Pesanan ' . $orderNumber,
                     'email'             => 'customer@rayakitchen.com',
@@ -168,7 +292,7 @@ class CheckoutController extends Controller
                     'customerVaName'    => $request->input('name'),
                     'callbackUrl'       => url('/api/duitku/callback'),
                     'returnUrl'         => url('/riwayat-pesanan?success=true'),
-                    'expiryPeriod'      => 60 // 1 jam
+                    'expiryPeriod'      => 60
                 ];
 
                 try {
@@ -181,42 +305,47 @@ class CheckoutController extends Controller
                             'qr_string' => $result['qrString'] ?? null
                         ]);
 
+                        // 1. PINDAH KESINI: Commit HANYA jika Duitku berhasil mengembalikan sukses (00)
+                        DB::commit();
+
                         return response()->json([
                             'status' => 'success',
-                            'message' => 'Pesanan dibuat! Lanjut scan QRIS...',
                             'data' => [
                                 'order_number' => $orderNumber,
                                 'redirect_url' => url('/pembayaran/' . $orderNumber)
                             ]
                         ], 200);
                     } else {
+                        // Jika Duitku gagal memproses, data akan di-rollback dengan sempurna
                         DB::rollBack();
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Gagal terhubung ke Duitku: ' . ($result['statusMessage'] ?? 'Unknown Error')
-                        ], 500);
+                        return response()->json(['status' => 'error', 'message' => 'Duitku Error: ' . ($result['statusMessage'] ?? '')], 500);
                     }
                 } catch (\Exception $e) {
+                    // Jika API Duitku timeout atau error jaringan, rollback juga dieksekusi
                     DB::rollBack();
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Exception Duitku: ' . $e->getMessage()
-                    ], 500);
+                    return response()->json(['status' => 'error', 'message' => 'Exception Duitku: ' . $e->getMessage()], 500);
                 }
             }
 
+            // 2. TAMBAH KESINI: Commit jika metode pembayarannya COD (langsung sukses tanpa Duitku)
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'redirect_url' => url('/riwayat-pesanan?success=true')
+                ]
+            ]);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal memproses pesanan: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['status' => 'error', 'message' => 'Gagal memproses pesanan: ' . $e->getMessage()], 500);
         }
     }
 
     public function index(Request $request)
     {
-        $userId = Auth::id() ?? 1;
+        $userId = Auth::id();
         $orders = Order::with('transaction')->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -282,15 +411,30 @@ class CheckoutController extends Controller
             'district'       => 'required|string',
             'postal_code'    => 'required|string|max:10',
             'street_address' => 'required|string',
+            'landmark'       => 'nullable|string',
+            'latitude'       => 'nullable|numeric',
+            'longitude'      => 'nullable|numeric',
         ]);
 
         $user = $request->user();
         $isPrimary = $user->addresses()->doesntExist();
 
+        $roId = $this->getRajaOngkirId($request->district, $request->city);
+
+        // Hitung Jarak ke Toko menggunakan rumus Haversine
+        $dapur = CompanyProfile::first();
+        $jarak = 0;
+
+        if ($dapur && $dapur->latitude && $dapur->longitude && $request->filled('latitude') && $request->filled('longitude')) {
+            $jarak = $this->hitungJarak($dapur->latitude, $dapur->longitude, $request->input('latitude'), $request->input('longitude'));
+        }
+
         $address = $user->addresses()->create(array_merge($validated, [
             'recipient_name'     => $user->name,
             'recipient_whatsapp' => $user->whatsapp_number,
             'is_primary'         => $isPrimary,
+            'rajaongkir_destination_id' => $roId,
+            'distance_to_store'  => $jarak,
         ]));
 
         $prefix = $isPrimary ? '[Utama] ' : '';
@@ -300,9 +444,26 @@ class CheckoutController extends Controller
             'status' => 'success',
             'data'   => [
                 'value' => $teksLengkap,
-                'text'  => $teksLengkap
+                'text'  => $teksLengkap,
+                'id'    => $address->id
             ]
         ]);
+    }
+
+    private function hitungJarak($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Jari-jari bumi dalam kilometer
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * asin(sqrt($a));
+        $distance = $earthRadius * $c;
+
+        return round($distance, 2);
     }
 
     public function showPembayaran($orderNumber)
@@ -441,69 +602,6 @@ class CheckoutController extends Controller
         }
     }
 
-    public function cekOngkir(Request $request)
-    {
-        $alamat = \App\Models\UserAddress::find($request->address_id);
-        $setting = \App\Models\StoreSetting::first();
-        
-        $max_jarak = $setting->free_delivery_max_distance ?? 10;
-
-        if (!$alamat || $alamat->distance_to_store === null) {
-            return response()->json([
-                'status' => 'error', 
-                'message' => 'Titik peta alamat belum diset. Silakan edit alamat Anda dan tandai di peta.'
-            ], 400);
-        }
-
-        // 1. JIKA JARAK DEKAT (Kurir Internal Toko / Gratis Ongkir)
-        if ($alamat->distance_to_store <= $max_jarak) {
-            return response()->json([
-                'status' => 'success',
-                'is_internal' => true,
-                'courier_name' => 'Kurir Internal Raya Kitchen',
-                'shipping_service' => 'Gratis Ongkir (' . $alamat->distance_to_store . ' KM)',
-                'shipping_cost' => 0
-            ]);
-        }
-
-        // 2. JIKA JARAK JAUH / LUAR KOTA / LUAR PROVINSI (Menggunakan Rumus Umum Logistik)
-        $userId = $request->user()->id ?? Auth::id();
-        $cartItems = Cart::with('productVariant')->where('user_id', $userId)->get();
-        
-        $totalBeratGram = 0;
-        foreach($cartItems as $item) {
-            $beratSatuan = $item->productVariant->weight ?? 500; 
-            $totalBeratGram += ($beratSatuan * $item->quantity);
-        }
-
-        if ($totalBeratGram < 100) {
-            $totalBeratGram = 1000; 
-        }
-
-        $beratKg = $totalBeratGram / 1000;
-        $jarakKm = $alamat->distance_to_store;
-
-        $tarifDasar = 10000;              
-        $biayaPerKm = 150;                
-        $biayaPerKg = 4000;               
-
-        $estimasiOngkir = $tarifDasar + ($jarakKm * $biayaPerKm) + ($beratKg * $biayaPerKg);
-
-        if ($jarakKm > 100 && $estimasiOngkir < 18000) {
-            $estimasiOngkir = 18000;
-        }
-
-        $shippingCost = round($estimasiOngkir, -3); 
-
-        return response()->json([
-            'status' => 'success',
-            'is_internal' => false,
-            'courier_name' => 'JNE REG / SiCepat',
-            'shipping_service' => 'Estimasi 2-3 Hari (' . $beratKg . ' kg / ' . $jarakKm . ' KM)',
-            'shipping_cost' => $shippingCost
-        ]);
-    }
-
     public function payRemaining(Request $request)
     {
         $request->validate([
@@ -537,7 +635,7 @@ class CheckoutController extends Controller
 
         $params = [
             'paymentAmount'     => (int) $order->remaining_amount,
-            'paymentMethod'     => "SP", 
+            'paymentMethod'     => "SP",
             'merchantOrderId'   => $pelunasanOrderId,
             'productDetails'    => 'Pelunasan Pesanan ' . $order->order_number,
             'email'             => 'customer@rayakitchen.com',
@@ -545,7 +643,7 @@ class CheckoutController extends Controller
             'customerVaName'    => $order->recipient_name,
             'callbackUrl'       => url('/api/duitku/callback'),
             'returnUrl'         => url('/riwayat-pesanan?success=true'),
-            'expiryPeriod'      => 60 
+            'expiryPeriod'      => 60
         ];
 
         try {
@@ -554,7 +652,7 @@ class CheckoutController extends Controller
 
             if ($result['statusCode'] == '00') {
                 $order->transaction->update([
-                    'amount' => $order->total_amount, 
+                    'amount' => $order->total_amount,
                     'reference' => $result['reference'] ?? null,
                     'qr_string' => $result['qrString'] ?? null
                 ]);
@@ -585,12 +683,66 @@ class CheckoutController extends Controller
         $bulan = $request->query('bulan', now()->month);
         $tahun = $request->query('tahun', now()->year);
 
-        $heatmap = [];
-        $daysInMonth = \Carbon\Carbon::create($tahun, $bulan)->daysInMonth;
+        // Pengecekan sesi untuk menghindari error jika belum login
+        $userId = Auth::id();
+        if (!$userId) {
+            return response()->json(['status' => 'error', 'message' => 'Silakan login terlebih dahulu.']);
+        }
 
-        for ($day = 1; $day <= $daysInMonth; $day++) {
-            $dateStr = sprintf('%04d-%02d-%02d', $tahun, $bulan, $day);
-            $heatmap[$dateStr] = 'low'; 
+        $setting = StoreSetting::first();
+        $maxQtyPerDay = $setting->max_qty_per_day ?? 60;
+
+        $cartQty = Cart::where('user_id', $userId)->sum('quantity');
+
+        if ($cartQty == 0) {
+            return response()->json(['status' => 'error', 'message' => 'Keranjang kosong.']);
+        }
+
+        $orders = Order::with('items')
+            ->whereMonth('delivery_date', $bulan)
+            ->whereYear('delivery_date', $tahun)
+            ->where('status', '!=', 'dibatalkan')
+            ->get();
+
+        $rekapHarian = [];
+        foreach ($orders as $order) {
+            $tgl = $order->delivery_date;
+            if (!isset($rekapHarian[$tgl])) $rekapHarian[$tgl] = 0;
+            foreach ($order->items as $item) {
+                $rekapHarian[$tgl] += $item->quantity;
+            }
+        }
+
+        $holidays = StoreHoliday::whereMonth('holiday_date', $bulan)
+            ->whereYear('holiday_date', $tahun)
+            ->pluck('holiday_date')->toArray();
+
+        $heatmap = [];
+        $daysInMonth = Carbon::create($tahun, $bulan)->daysInMonth;
+        $besok = Carbon::tomorrow()->format('Y-m-d');
+
+        for ($i = 1; $i <= $daysInMonth; $i++) {
+            $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $i);
+
+            if ($dateStr < $besok) {
+                $heatmap[$dateStr] = 'past';
+                continue;
+            }
+
+            if (in_array($dateStr, $holidays)) {
+                $heatmap[$dateStr] = 'full';
+                continue;
+            }
+
+            $totalQtyHariIni = $rekapHarian[$dateStr] ?? 0;
+
+            if (($totalQtyHariIni + $cartQty) > $maxQtyPerDay) {
+                $heatmap[$dateStr] = 'full';
+            } elseif ($totalQtyHariIni > ($maxQtyPerDay * 0.7)) {
+                $heatmap[$dateStr] = 'med';
+            } else {
+                $heatmap[$dateStr] = 'low';
+            }
         }
 
         return response()->json([
@@ -601,15 +753,58 @@ class CheckoutController extends Controller
 
     public function getAvailableTimes(Request $request)
     {
+        $tanggalStr = $request->query('tanggal');
+        if (!$tanggalStr) {
+            return response()->json(['status' => 'error', 'data' => []]);
+        }
+
+        $tanggal = Carbon::parse($tanggalStr);
+
+        $setting = StoreSetting::first();
+        $maxOrdersPerHour = $setting->max_orders_per_hour ?? 5;
+        $startHourStr = $setting->operational_time_start ?? '08:00:00';
+        $endHourStr = $setting->operational_time_end ?? '17:00:00';
+
+        $startHour = (int) Carbon::parse($startHourStr)->format('H');
+        $endHour = (int) Carbon::parse($endHourStr)->format('H');
+
+        $jamOperasional = [];
+        for ($h = $startHour; $h <= $endHour; $h++) {
+            $jamOperasional[] = sprintf("%02d:00", $h);
+        }
+
+        $nowPlus24 = Carbon::now()->addHours(24);
+
+        $orders = Order::whereDate('delivery_date', $tanggal->format('Y-m-d'))
+            ->where('status', '!=', 'dibatalkan')
+            ->get();
+
+        $rekapJam = [];
+        foreach ($orders as $order) {
+            $jam = Carbon::parse($order->delivery_time)->format('H:i');
+            if (!isset($rekapJam[$jam])) $rekapJam[$jam] = 0;
+            $rekapJam[$jam]++;
+        }
+
+        $availableTimes = [];
+        foreach ($jamOperasional as $jam) {
+            $jamLengkap = Carbon::parse($tanggal->format('Y-m-d') . ' ' . $jam);
+
+            if ($jamLengkap->lessThan($nowPlus24)) {
+                continue;
+            }
+
+            $terisi = $rekapJam[$jam] ?? 0;
+            if ($terisi >= $maxOrdersPerHour) {
+                continue;
+            }
+
+            $availableTimes[] = $jam;
+        }
+
         return response()->json([
             'status' => 'success',
-            'data' => [
-                '09:00',
-                '11:00',
-                '14:00',
-                '16:00'
-            ]
+            'data' => $availableTimes
         ]);
     }
-    
 }

@@ -20,12 +20,41 @@ class SystemStoreController extends Controller
     {
         $profil = CompanyProfile::first();
         $setting = StoreSetting::first();
-        
+
         // Gabungkan data profil perusahaan dengan setting batas ongkir
         $data = $profil ? $profil->toArray() : [];
         $data['free_delivery_max_distance'] = $setting ? $setting->free_delivery_max_distance : 10;
 
         return response()->json(['status' => 'success', 'data' => $data]);
+    }
+
+    /**
+     * Fungsi Helper untuk Auto-Match ID Destinasi RajaOngkir (Komerce)
+     */
+    private function getRajaOngkirId($district, $city)
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'key' => env('RAJAONGKIR_API_KEY')
+            ])->get('https://rajaongkir.komerce.id/api/v1/destination/domestic-destination', [
+                'search' => $district
+            ]);
+
+            if ($response->successful() && isset($response->json()['data'])) {
+                // Bersihkan kata "Kota" atau "Kabupaten" dari input admin (jika ada) biar match
+                $cityClean = strtolower(str_replace(['kota ', 'kabupaten ', 'kab. '], '', $city));
+
+                foreach ($response->json()['data'] as $dest) {
+                    if (str_contains(strtolower($dest['city_name']), $cityClean)) {
+                        return $dest['id'];
+                    }
+                }
+                // Fallback: Ambil hasil pertama kalau gagal match kota
+                return $response->json()['data'][0]['id'] ?? null;
+            }
+        } catch (\Exception $e) {}
+
+        return null;
     }
 
     public function updateProfil(Request $request)
@@ -45,6 +74,16 @@ class SystemStoreController extends Controller
             $fileName = time() . '_' . $request->file('image_url')->getClientOriginalName();
             $request->file('image_url')->storeAs('profil', $fileName, 'public');
             $data['image_url'] = $fileName;
+        }
+
+        // ==========================================
+        // AUTO-MATCH RAJAONGKIR ID UNTUK ADMIN
+        // Pastikan input form admin mengirimkan 'district' dan 'city'
+        // Jika tidak, Anda perlu men-set ID ini manual di DB atau via route khusus
+        // ==========================================
+        if ($request->filled('district') && $request->filled('city')) {
+            $roId = $this->getRajaOngkirId($request->input('district'), $request->input('city'));
+            $data['rajaongkir_destination_id'] = $roId;
         }
 
         $profil->fill($data);
@@ -69,7 +108,7 @@ class SystemStoreController extends Controller
     public function getOperasional()
     {
         $setting = StoreSetting::first();
-        
+
         if (!$setting) {
             $setting = StoreSetting::create([
                 'max_qty_per_day' => 60,
@@ -141,7 +180,7 @@ class SystemStoreController extends Controller
 
         try {
             $response = Http::timeout(5)->get("https://api-harilibur.vercel.app/api?year={$year}");
-            
+
             if ($response->successful()) {
                 $holidays = $response->json();
                 foreach ($holidays as $holiday) {
@@ -157,7 +196,7 @@ class SystemStoreController extends Controller
         } catch (\Exception $e) {}
 
         return response()->json([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => "$insertedCount hari libur berhasil ditambahkan otomatis untuk tahun $year!"
         ]);
     }
@@ -188,24 +227,24 @@ class SystemStoreController extends Controller
         ]);
     }
 
-    public function prosesKirim(Request $request, $id)
-    {
-        $order = \App\Models\Order::find($id);
-        if (!$order) return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+    // public function prosesKirim(Request $request, $id)
+    // {
+    //     $order = \App\Models\Order::find($id);
+    //     if (!$order) return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
 
-        $order->status = 'Dikirim';
-        if ($request->has('tracking_number')) {
-            $order->tracking_number = $request->tracking_number;
-        }
-        $order->save();
+    //     $order->status = 'Dikirim';
+    //     if ($request->has('tracking_number')) {
+    //         $order->tracking_number = $request->tracking_number;
+    //     }
+    //     $order->save();
 
-        \App\Models\OrderTracking::create([
-            'order_id' => $order->id,
-            'status' => 'Pesanan sedang dalam perjalanan',
-            'latitude' => \App\Models\CompanyProfile::first()->latitude ?? null,
-            'longitude' => \App\Models\CompanyProfile::first()->longitude ?? null,
-        ]);
+    //     OrderTracking::create([
+    //         'order_id' => $order->id,
+    //         'status' => 'Pesanan sedang dalam perjalanan',
+    //         'latitude' => \App\Models\CompanyProfile::first()->latitude ?? null,
+    //         'longitude' => \App\Models\CompanyProfile::first()->longitude ?? null,
+    //     ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Status pesanan berhasil diubah menjadi Dikirim!']);
-    }
+    //     return response()->json(['status' => 'success', 'message' => 'Status pesanan berhasil diubah menjadi Dikirim!']);
+    // }
 }

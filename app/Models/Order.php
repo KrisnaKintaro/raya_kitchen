@@ -12,6 +12,9 @@ class Order extends Model
         'recipient_name',
         'recipient_whatsapp',
         'shipping_address',
+        'shipping_cost',
+        'courier_name',
+        'shipping_service',
         'delivery_date',
         'delivery_time',
         'total_amount',
@@ -23,6 +26,7 @@ class Order extends Model
         'refund_account_number',
         'refund_proof',
         'refund_status',
+        'delivery_proof',
     ];
 
     public function user()

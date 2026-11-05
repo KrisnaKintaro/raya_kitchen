@@ -26,9 +26,9 @@ Route::get('/tentang-kami', function () {
 // PROTECTED ROUTES (Hanya buat user yang udah Login)
 // ==========================================
 Route::middleware(['auth'])->group(function () {
-    
+
     Route::get('/keranjang', function () {
-        return view('pembeli.pages.keranjang'); 
+        return view('pembeli.pages.keranjang');
     })->name('keranjang');
 
     Route::get('/checkout', function () {
@@ -47,6 +47,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pembayaran/{order_number}', function ($order_number) {
         return view('pembeli.pages.pembayaran');
     })->name('pembayaran');
+
+    Route::get('/riwayat-pesanan', function () {
+        return view('pembeli.pages.riwayat_pesanan');
+    })->name('riwayat-pesanan');
 });
 
 
@@ -104,18 +108,14 @@ Route::prefix('admin')->group(function () {
     })->name('admin.riwayat-penjualan');
 
     Route::get('/profil_perusahaan', function () {
-        return view('admin.pages.profil_perusahaan');
+        return view('admin.pages.sistem_dan_toko.profil_perusahaan');
     })->name('admin.profil');
 
     Route::get('/operasional_libur', function () {
-        return view('admin.pages.operasional_libur');
+        return view('admin.pages.sistem_dan_toko.operasional_libur');
     })->name('admin.operasional');
 
-    Route::get('/pengiriman', function () {
-        return view('admin.pages.kelola_pengiriman');
-    })->name('admin.pengiriman');
-
-    Route::get('/kelola-akses', function () {
+        Route::get('/kelola-akses', function () {
         return view('admin.pages.kelola_akun.akses');
     })->name('admin.kelola-akses');
 
@@ -146,4 +146,8 @@ Route::prefix('admin')->group(function () {
     Route::get('/refund_pembatalan', function() {
         return view('admin.pages.operasional.batal_refund');
     })->name('admin.refund_pembatalan');
+
+    Route::get('/kelola_pengiriman', function () {
+        return view('admin.pages.operasional.kelola_pengiriman');
+    })->name('admin.kelola_pengiriman');
 });

@@ -16,10 +16,11 @@ protected $fillable = [
         'email_address',
         'address',
         'map_embed_url',
-        'map_external_url',  
+        'map_external_url',
         'instagram_handle',
         'image_url',
         'latitude',
         'longitude',
+        'rajaongkir_destination_id',
     ];
 }

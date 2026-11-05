@@ -14,6 +14,7 @@
 
     <!-- Phosphor Icons (Vektor Profesional) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    @yield('css')
 
     <style>
         .hide-scrollbar {
@@ -45,7 +46,7 @@
 
                             // Palet Navbar & Background
                             navBg: '#E8D5F6',
-                            bg: '#F5F2F8',    
+                            bg: '#F5F2F8',
 
                             // Aksen & Teks
                             accent: '#E4CCFF',
