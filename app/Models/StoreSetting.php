@@ -10,6 +10,7 @@ class StoreSetting extends Model
         'max_qty_per_day',
         'max_orders_per_hour',
         'operational_time_start',
-        'operational_time_end'
+        'operational_time_end',
+        'free_delivery_max_distance'
     ];
 }

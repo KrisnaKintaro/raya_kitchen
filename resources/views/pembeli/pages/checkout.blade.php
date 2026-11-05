@@ -142,6 +142,27 @@
                     <div class="py-4 space-y-2 border-b border-gray-100 text-sm">
                         <div class="flex justify-between text-gray-500"><span>Total Belanja</span><span id="co-subtotal">Rp 0</span></div>
                     </div>
+                    
+                    <!-- Bagian Ringkasan Ongkir -->
+                    <div class="flex justify-between items-center mt-4 pb-4 border-b border-gray-200">
+                        <div>
+                            <p class="text-sm font-bold text-gray-700">Ongkos Kirim</p>
+                            <p id="teks-kurir" class="text-xs text-blue-600 font-semibold italic">Pilih alamat pengiriman dulu</p>
+                        </div>
+                        <p id="teks-ongkir" class="font-bold text-gray-800">Rp 0</p>
+                    </div>
+
+                    <!-- Grand Total -->
+                    <div class="flex justify-between items-center mt-4">
+                        <p class="text-base font-black text-gray-900">Total Pembayaran</p>
+                        <!-- Pastikan subtotal lu simpan di atribut data-value biar gampang dihitung JS -->
+                        <p id="teks-grand-total" data-subtotal="150000" class="text-xl font-black text-purple-600">Rp 150,000</p>
+                    </div>
+
+                    <!-- Input Hidden buat nyimpen data ke backend pas form disubmit -->
+                    <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
+                    <input type="hidden" name="courier_name" id="input-courier-name" value="">
+                    <input type="hidden" name="shipping_service" id="input-shipping-service" value="">
 
                     <div class="pt-4">
                         <div class="flex justify-between items-center mb-6">
@@ -236,10 +257,21 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
     <script>
+    // Deklarasi Variabel Global
     let provincesData = [];
     let citiesData = [];
     let districtsData = [];
+    window.subtotalBelanja = 0;
+    window.ongkirSaatIni = 0;
+    let heatmapData = {};
 
+    function formatRupiah(number) { 
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); 
+    }
+
+    // ==========================================
+    // LOGIKA MODAL TAMBAH ALAMAT
+    // ==========================================
     function openAddressModal() {
         $('#addressModal').removeClass('hidden');
         setTimeout(() => {
@@ -265,14 +297,84 @@
         setTimeout(() => { $('#addressModal').addClass('hidden'); }, 300);
     }
 
+    function showCustomAlert(title, message) {
+        $('#alertModalTitle').text(title);
+        $('#alertModalMessage').text(message);
+        $('#customAlertModal').removeClass('hidden');
+        setTimeout(() => {
+            $('#customAlertModal').removeClass('opacity-0');
+            $('#customAlertModal > div').removeClass('scale-95');
+        }, 10);
+    }
+
+    function closeCustomAlert() {
+        $('#customAlertModal').addClass('opacity-0');
+        $('#customAlertModal > div').addClass('scale-95');
+        setTimeout(() => { $('#customAlertModal').addClass('hidden'); }, 300);
+    }
+
     $(document).ready(function() {
-        function formatRupiah(number) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number); }
+        
+        // ==========================================
+        // FUNGSI UPDATE GRAND TOTAL (BELANJA + ONGKIR)
+        // ==========================================
+        window.updateGrandTotal = function() {
+            let grandTotal = window.subtotalBelanja + window.ongkirSaatIni;
+            $('#teks-grand-total').text(formatRupiah(grandTotal));
 
-        let totalKeseluruhan = 0;
-        let totalDP = 0;
-        let heatmapData = {};
+            let selectedMethod = $('input[name="payment_method"]:checked').val();
+            
+            if (selectedMethod === 'transfer_full') {
+                $('#label-tagihan').text('Total Tagihan (Lunas)');
+                $('#co-tagihan-sekarang').text(formatRupiah(grandTotal));
+                $('#btn-text-bayar').text('Bayar Lunas Sekarang');
+            } else {
+                // Skema DP 30% (Untuk opsi DP dan COD)
+                $('#label-tagihan').text('Wajib Bayar (DP 30%)');
+                $('#co-tagihan-sekarang').text(formatRupiah(grandTotal * 0.3));
+                $('#btn-text-bayar').text('Bayar DP Sekarang');
+            }
+        };
 
-        // --- FETCH PROFIL DAN ALAMAT ---
+        // Jika opsi pembayaran diubah, hitung ulang grand total
+        $('input[name="payment_method"]').change(function() {
+            $('.payment-lbl').removeClass('border-purple-500 bg-purple-50 text-purple-700').addClass('border-gray-200 bg-white text-gray-700');
+            $(this).closest('label').removeClass('border-gray-200 bg-white text-gray-700').addClass('border-purple-500 bg-purple-50 text-purple-700');
+            
+            updateGrandTotal();
+        });
+
+        // ==========================================
+        // FETCH CART (KERANJANG)
+        // ==========================================
+        $.get('/api/pembeli/cart', function(res) {
+            if(res.status === 'success') {
+                let itemsHTML = '';
+                let totalKeseluruhan = 0;
+
+                res.data.items.forEach(item => {
+                    totalKeseluruhan += (item.price * item.qty);
+                    itemsHTML += `<div class="flex justify-between items-start">
+                        <div><p class="font-semibold text-gray-800">${item.name} <span class="text-purple-600">x ${item.qty}</span></p></div>
+                        <span class="font-medium text-gray-700">${formatRupiah(item.price * item.qty)}</span>
+                    </div>`;
+                });
+
+                $('#checkout-items').html(itemsHTML);
+                $('#co-subtotal').text(formatRupiah(totalKeseluruhan));
+                
+                // Simpan subtotal ke memori & perbarui total UI
+                window.subtotalBelanja = totalKeseluruhan;
+                updateGrandTotal();
+
+                let now = new Date();
+                fetchHeatmap(now.getMonth() + 1, now.getFullYear());
+            }
+        });
+
+        // ==========================================
+        // FETCH PROFIL DAN ALAMAT
+        // ==========================================
         $.ajax({
             url: '/api/pembeli/profil-data',
             type: 'GET',
@@ -294,62 +396,64 @@
                             let label = addr.label ? addr.label + ' - ' : '';
                             let textLengkap = `${prefix}${label}${addr.street_address}, ${addr.district}, ${addr.city}, ${addr.province} ${addr.postal_code}`;
                             let isSelected = addr.is_primary == 1 ? 'selected' : '';
-                            select.append(`<option value="${textLengkap}" ${isSelected}>${textLengkap}</option>`);
+                            select.append(`<option value="${textLengkap}" data-id="${addr.id}" ${isSelected}>${textLengkap}</option>`);
                         });
                         select.removeClass('hidden');
                         $('#btn-tambah-alamat-tambahan').removeClass('hidden');
+                        
+                        // Hitung ongkir otomatis saat load pertama kali
+                        cekOngkir($('#alamat_select').find(':selected').data('id'));
                     }
                 }
             },
-            error: function() {
-                showCustomAlert('Error', 'Gagal memuat data profil. Silakan muat ulang halaman.');
-            }
+            error: function() { showCustomAlert('Error', 'Gagal memuat data profil.'); }
         });
 
-        // --- STYLING OPSI PEMBAYARAN ---
-        $('input[name="payment_method"]').change(function() {
-            $('.payment-lbl').removeClass('border-purple-500 bg-purple-50 text-purple-700').addClass('border-gray-200 bg-white text-gray-700');
-            $(this).closest('label').removeClass('border-gray-200 bg-white text-gray-700').addClass('border-purple-500 bg-purple-50 text-purple-700');
+        // ==========================================
+        // LOGIKA ONGKOS KIRIM
+        // ==========================================
+        function cekOngkir(addressId) {
+            if (!addressId) return;
 
-            let selectedMethod = $(this).val();
+            $('#teks-kurir').text('Menghitung jarak...');
+            $('#teks-ongkir').text('...');
 
-            if (selectedMethod === 'transfer_full') {
-                $('#label-tagihan').text('Total Tagihan (Lunas)');
-                $('#co-tagihan-sekarang').text(formatRupiah(totalKeseluruhan));
-                $('#btn-text-bayar').text('Bayar Lunas Sekarang');
-            } else {
-                $('#label-tagihan').text('Wajib Bayar (DP 30%)');
-                $('#co-tagihan-sekarang').text(formatRupiah(totalDP));
-                $('#btn-text-bayar').text('Bayar DP Sekarang');
-            }
+            $.ajax({
+                url: '/checkout/cek-ongkir', 
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    address_id: addressId
+                },
+                success: function(res) {
+                    if(res.status === 'success') {
+                        $('#teks-kurir').html(`${res.courier_name} <br> <span class="text-[10px] text-gray-500">${res.shipping_service}</span>`);
+                        $('#teks-ongkir').text(res.shipping_cost === 0 ? 'GRATIS' : formatRupiah(res.shipping_cost));
+
+                        $('#input-shipping-cost').val(res.shipping_cost);
+                        $('#input-courier-name').val(res.courier_name);
+                        $('#input-shipping-service').val(res.shipping_service);
+
+                        window.ongkirSaatIni = res.shipping_cost;
+                        updateGrandTotal(); // Perbarui Harga
+                    }
+                },
+                error: function(xhr) {
+                    showCustomAlert('Ongkir Error', xhr.responseJSON?.message || 'Gagal menghitung ongkir.');
+                }
+            });
+        }
+
+        // Kalau alamat diganti oleh user
+        $('#alamat_select').change(function() {
+            let addressId = $(this).find(':selected').data('id');
+            cekOngkir(addressId);
         });
 
-        // --- FETCH CART ---
-        $.get('/api/pembeli/cart', function(res) {
-            if(res.status === 'success') {
-                let itemsHTML = '';
-                totalKeseluruhan = 0;
 
-                res.data.items.forEach(item => {
-                    totalKeseluruhan += (item.price * item.qty);
-                    itemsHTML += `<div class="flex justify-between items-start">
-                        <div><p class="font-semibold text-gray-800">${item.name} <span class="text-purple-600">x ${item.qty}</span></p></div>
-                        <span class="font-medium text-gray-700">${formatRupiah(item.price * item.qty)}</span>
-                    </div>`;
-                });
-
-                totalDP = totalKeseluruhan * 0.3;
-
-                $('#checkout-items').html(itemsHTML);
-                $('#co-subtotal').text(formatRupiah(totalKeseluruhan));
-                $('#co-tagihan-sekarang').text(formatRupiah(totalKeseluruhan));
-
-                let now = new Date();
-                fetchHeatmap(now.getMonth() + 1, now.getFullYear());
-            }
-        });
-
-        // --- LOGIC KALENDER PRE-ORDER ---
+        // ==========================================
+        // LOGIC KALENDER PRE-ORDER (TIDAK BERUBAH)
+        // ==========================================
         function fetchHeatmap(month, year, fpInstance = null) {
             $.ajax({
                 url: "/api/pembeli/checkout/heatmap",
@@ -358,18 +462,11 @@
                 success: function(res) {
                     if(res.status === 'success') {
                         heatmapData = { ...heatmapData, ...res.data };
-                        if (fpInstance) {
-                            fpInstance.redraw();
-                        } else {
-                            initFlatpickr();
-                        }
+                        if (fpInstance) { fpInstance.redraw(); } else { initFlatpickr(); }
                         $('#loading-jadwal').fadeOut();
                     }
                 },
-                error: function(xhr) {
-                    showCustomAlert('Jadwal Error', 'Gagal mengambil jadwal dapur dari server.');
-                    $('#loading-jadwal').fadeOut();
-                }
+                error: function() { $('#loading-jadwal').fadeOut(); }
             });
         }
 
@@ -378,58 +475,31 @@
                 locale: "id",
                 minDate: new Date().fp_incr(1),
                 dateFormat: "Y-m-d",
-                disable: [
-                    function(date) {
-                        let dStr = flatpickr.formatDate(date, "Y-m-d");
-                        return heatmapData[dStr] === 'full' || heatmapData[dStr] === 'past';
-                    }
-                ],
+                disable: [ function(date) { return heatmapData[flatpickr.formatDate(date, "Y-m-d")] === 'full' || heatmapData[flatpickr.formatDate(date, "Y-m-d")] === 'past'; } ],
                 onDayCreate: function(dObj, dStr, fp, dayElem) {
                     let d = flatpickr.formatDate(dayElem.dateObj, "Y-m-d");
-                    if (heatmapData[d] === 'med') {
-                        dayElem.classList.add('is-med');
-                    } else if (heatmapData[d] === 'low') {
-                        dayElem.classList.add('is-low');
-                    } else if (heatmapData[d] === 'full') {
-                        dayElem.classList.add('is-full');
-                    }
+                    if (heatmapData[d] === 'med') dayElem.classList.add('is-med');
+                    else if (heatmapData[d] === 'low') dayElem.classList.add('is-low');
+                    else if (heatmapData[d] === 'full') dayElem.classList.add('is-full');
                 },
-                onMonthChange: function(selectedDates, dateStr, instance) {
-                    $('#loading-jadwal').fadeIn();
-                    let currentMonth = instance.currentMonth + 1;
-                    let currentYear = instance.currentYear;
-                    fetchHeatmap(currentMonth, currentYear, instance);
-                },
-                onYearChange: function(selectedDates, dateStr, instance) {
-                    $('#loading-jadwal').fadeIn();
-                    let currentMonth = instance.currentMonth + 1;
-                    let currentYear = instance.currentYear;
-                    fetchHeatmap(currentMonth, currentYear, instance);
-                },
-                onChange: function(selectedDates, dateStr, instance) {
-                    fetchJamTersedia(dateStr);
-                }
+                onMonthChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
+                onYearChange: function(s, d, ins) { $('#loading-jadwal').fadeIn(); fetchHeatmap(ins.currentMonth + 1, ins.currentYear, ins); },
+                onChange: function(s, dateStr) { fetchJamTersedia(dateStr); }
             });
         }
 
         function fetchJamTersedia(tanggal) {
             let jamSelect = $('#jam_kirim');
             jamSelect.html('<option value="">Memuat jam...</option>').prop('disabled', true);
-
             $.ajax({
-                url: "/api/pembeli/checkout/times",
-                type: "GET",
-                data: { tanggal: tanggal },
+                url: "/api/pembeli/checkout/times", type: "GET", data: { tanggal: tanggal },
                 success: function(res) {
                     if(res.status === 'success') {
                         jamSelect.empty();
-                        if(res.data.length === 0) {
-                            jamSelect.append('<option value="">Jam Operasional Penuh/Habis</option>');
-                        } else {
+                        if(res.data.length === 0) { jamSelect.append('<option value="">Jam Operasional Penuh/Habis</option>'); } 
+                        else {
                             jamSelect.append('<option value="">-- Pilih Jam --</option>');
-                            res.data.forEach(jam => {
-                                jamSelect.append(`<option value="${jam}">${jam} WIB</option>`);
-                            });
+                            res.data.forEach(jam => { jamSelect.append(`<option value="${jam}">${jam} WIB</option>`); });
                             jamSelect.prop('disabled', false);
                         }
                     }
@@ -437,125 +507,102 @@
             });
         }
 
-        // --- LOGIC AUTOCOMPLETE ALAMAT BARU ---
+        // ==========================================
+        // AUTOCOMPLETE ALAMAT BARU & SUBMIT
+        // ==========================================
         $('#provinsi').on('input', function() {
-            let selectedVal = $(this).val();
-            let selectedProv = provincesData.find(p => p.name === selectedVal);
-
-            $('#kota').val('').prop('disabled', true);
-            $('#list-kota').empty();
-            $('#kecamatan').val('').prop('disabled', true);
-            $('#list-kecamatan').empty();
-
+            let selectedProv = provincesData.find(p => p.name === $(this).val());
+            $('#kota, #kecamatan').val('').prop('disabled', true); $('#list-kota, #list-kecamatan').empty();
             if (selectedProv) {
-                $('#kota').attr('placeholder', 'Memuat data kota...').prop('disabled', false);
+                $('#kota').attr('placeholder', 'Memuat data...').prop('disabled', false);
                 fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${selectedProv.id}.json`)
-                    .then(res => res.json())
-                    .then(data => {
-                        citiesData = data;
-                        let options = '';
-                        data.forEach(c => options += `<option value="${c.name}">`);
-                        $('#list-kota').html(options);
-                        $('#kota').attr('placeholder', 'Ketik kota...');
+                    .then(res => res.json()).then(data => {
+                        citiesData = data; let opts = ''; data.forEach(c => opts += `<option value="${c.name}">`);
+                        $('#list-kota').html(opts); $('#kota').attr('placeholder', 'Ketik kota...');
                     });
             }
         });
 
         $('#kota').on('input', function() {
-            let selectedVal = $(this).val();
-            let selectedCity = citiesData.find(c => c.name === selectedVal);
-
-            $('#kecamatan').val('').prop('disabled', true);
-            $('#list-kecamatan').empty();
-
+            let selectedCity = citiesData.find(c => c.name === $(this).val());
+            $('#kecamatan').val('').prop('disabled', true); $('#list-kecamatan').empty();
             if (selectedCity) {
-                $('#kecamatan').attr('placeholder', 'Memuat data kecamatan...').prop('disabled', false);
+                $('#kecamatan').attr('placeholder', 'Memuat data...').prop('disabled', false);
                 fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${selectedCity.id}.json`)
-                    .then(res => res.json())
-                    .then(data => {
-                        districtsData = data;
-                        let options = '';
-                        data.forEach(d => options += `<option value="${d.name}">`);
-                        $('#list-kecamatan').html(options);
-                        $('#kecamatan').attr('placeholder', 'Ketik kecamatan...');
+                    .then(res => res.json()).then(data => {
+                        districtsData = data; let opts = ''; data.forEach(d => opts += `<option value="${d.name}">`);
+                        $('#list-kecamatan').html(opts); $('#kecamatan').attr('placeholder', 'Ketik kecamatan...');
                     });
             }
         });
 
         $('#form-tambah-alamat').submit(function(e) {
             e.preventDefault();
-
             if(!provincesData.find(p => p.name === $('#provinsi').val())) {
-                showCustomAlert('Provinsi Belum Sesuai', 'Silakan pilih Provinsi dari daftar otomatis yang muncul saat mengetik ya cuy.');
-                return;
+                showCustomAlert('Provinsi Belum Sesuai', 'Silakan pilih Provinsi dari daftar otomatis.'); return;
             }
-
-            let btn = $('#btn-simpan-alamat');
-            let originalText = btn.html();
+            let btn = $('#btn-simpan-alamat'); let originalText = btn.html();
             btn.html('Menyimpan...').prop('disabled', true);
 
             $.ajax({
-                url: "{{ route('alamat.ajax') }}",
-                type: "POST",
-                data: $(this).serialize(),
+                url: "{{ route('alamat.ajax') }}", type: "POST", data: $(this).serialize(),
                 headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
                 success: function(res) {
                     if(res.status === 'success') {
                         $('#no-address-alert').addClass('hidden');
                         $('#btn-tambah-alamat-tambahan').removeClass('hidden');
                         let select = $('#alamat_select');
-                        select.removeClass('hidden').append(new Option(res.data.text, res.data.value, true, true));
-
+                        
+                        // Tambahkan ke dropdown dan pilih otomatis
+                        select.removeClass('hidden').append(`<option value="${res.data.text}" data-id="${res.data.id}" selected>${res.data.text}</option>`);
+                        
+                        // Hitung ongkir untuk alamat yang baru diinput
+                        cekOngkir(res.data.id);
+                        
                         closeAddressModal();
                         $('#form-tambah-alamat')[0].reset();
                         $('#kota, #kecamatan').prop('disabled', true);
                     }
                 },
-                error: function(xhr) {
-                    let errorMsg = xhr.responseJSON?.message || 'Pastikan semua form terisi dengan benar.';
-                    showCustomAlert('Gagal Menyimpan', errorMsg);
-                },
-                complete: function() {
-                    btn.html(originalText).prop('disabled', false);
-                }
+                error: function(xhr) { showCustomAlert('Gagal Menyimpan', xhr.responseJSON?.message || 'Pastikan semua form terisi dengan benar.'); },
+                complete: function() { btn.html(originalText).prop('disabled', false); }
             });
         });
 
-        // --- SUBMIT PROSES CHECKOUT ---
+        // ==========================================
+        // SUBMIT PROSES CHECKOUT
+        // ==========================================
         $('#btn-konfirmasi').click(function() {
-            let addressVal = $('#alamat_select').val();
+            let addressVal = $('#alamat_select').val(); // Mengandung text alamat
             let tglKirim = $('#tanggal_kirim').val();
             let jamKirim = $('#jam_kirim').val();
 
-            if(!addressVal) {
-                showCustomAlert('Alamat Kosong', 'Alamat pengiriman belum diatur cuy! Pilih atau tambah alamat dulu.');
-                return;
-            }
-            if(!tglKirim || !jamKirim) {
-                showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim (Tanggal & Jam) wajib diisi cuy!');
-                return;
-            }
+            if(!addressVal) { showCustomAlert('Alamat Kosong', 'Alamat pengiriman belum diatur cuy!'); return; }
+            if(!tglKirim || !jamKirim) { showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim wajib diisi cuy!'); return; }
+            if($('#teks-ongkir').text() === '...') { showCustomAlert('Ongkir Diproses', 'Tunggu ongkir selesai dihitung dulu ya!'); return; }
 
-            let btn = $(this);
-            let originalText = btn.html();
+            let btn = $(this); let originalText = btn.html();
             btn.html('Memproses... <span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full ml-2"></span>').prop('disabled', true);
 
             $.ajax({
-                url: "/api/pembeli/checkout/process",
-                type: "POST",
+                url: "/api/pembeli/checkout/process", type: "POST",
                 data: {
                     name: $('#penerima_name').val(),
                     phone: $('#penerima_phone').val(),
-                    address: addressVal,
+                    address: addressVal, 
                     delivery_date: tglKirim,
                     delivery_time: jamKirim,
                     payment_method: $('input[name="payment_method"]:checked').val(),
+                    
+                    // Kita kirim ongkir yang udah dihitung ke backend juga
+                    shipping_cost: $('#input-shipping-cost').val(),
+                    courier_name: $('#input-courier-name').val(),
+                    shipping_service: $('#input-shipping-service').val(),
+                    
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(res) {
-                    if(res.status === 'success') {
-                        window.location.href = res.data.redirect_url;
-                    }
+                    if(res.status === 'success') { window.location.href = res.data.redirect_url; }
                 },
                 error: function(xhr) {
                     showCustomAlert('Checkout Gagal', xhr.responseJSON?.message || 'Gagal memproses pesanan kamu.');
@@ -564,23 +611,5 @@
             });
         });
     });
-
-    function showCustomAlert(title, message) {
-        $('#alertModalTitle').text(title);
-        $('#alertModalMessage').text(message);
-
-        $('#customAlertModal').removeClass('hidden');
-        setTimeout(() => {
-            $('#customAlertModal').removeClass('opacity-0');
-            $('#customAlertModal > div').removeClass('scale-95');
-        }, 10);
-    }
-
-    function closeCustomAlert() {
-        $('#customAlertModal').addClass('opacity-0');
-        $('#customAlertModal > div').addClass('scale-95');
-        setTimeout(() => { $('#customAlertModal').addClass('hidden'); }, 300);
-    }
-
     </script>
 @endpush

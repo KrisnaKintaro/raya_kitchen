@@ -412,6 +412,44 @@ class CheckoutController extends Controller
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
+    public function cekOngkir(Request $request)
+    {
+        $alamat = \App\Models\UserAddress::find($request->address_id);
+        $setting = \App\Models\StoreSetting::first();
+        
+        // Ambil batas jarak dari database (default 10 jika kosong)
+        $max_jarak = $setting->free_delivery_max_distance ?? 10;
+
+        if (!$alamat || !$alamat->distance_to_store) {
+            return response()->json([
+                'status' => 'error', 
+                'message' => 'Titik peta alamat belum diset. Silakan edit alamat Anda.'
+            ], 400);
+        }
+
+        // LOGIKA PENENTUAN KURIR
+        if ($alamat->distance_to_store <= $max_jarak) {
+            // Jarak dekat -> Kurir Internal
+            return response()->json([
+                'status' => 'success',
+                'is_internal' => true,
+                'courier_name' => 'Kurir Internal Raya Kitchen',
+                'shipping_service' => 'Gratis Ongkir (' . $alamat->distance_to_store . ' KM)',
+                'shipping_cost' => 0
+            ]);
+        } else {
+            // Jarak jauh -> Ekspedisi Pihak Ketiga (Persiapan API)
+            // TODO: Nanti di sini kita pasang cURL API Biteship/RajaOngkir
+            
+            return response()->json([
+                'status' => 'success',
+                'is_internal' => false,
+                'courier_name' => 'Paxel (Simulasi API)',
+                'shipping_service' => 'Next Day Delivery',
+                'shipping_cost' => 25000 // Angka dummy sementara
+            ]);
+        }
+    }
 
     public function payRemaining(Request $request)
     {

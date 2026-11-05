@@ -147,5 +147,41 @@ class ProfileController extends Controller
                 'message' => 'Terjadi kesalahan pada server: ' . $e->getMessage()
             ], 500);
         }
+        // Ambil titik dapur Raya Kitchen
+        $dapur = \App\Models\CompanyProfile::first();
+        $jarak = 0;
+
+        // Hitung jarak kalau koordinat dapur dan koordinat alamat pelanggan ada
+        if ($dapur && $dapur->latitude && $dapur->longitude && $request->latitude && $request->longitude) {
+            $jarak = $this->hitungJarak($dapur->latitude, $dapur->longitude, $request->latitude, $request->longitude);
+        }
+
+        // Proses simpan alamat (sesuaikan field dengan kodemu)
+        \App\Models\UserAddress::create([
+            'user_id' => auth()->id(),
+            // ... field lain seperti jalan, kota, dll ...
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+            'distance_to_store' => $jarak // Simpan hasil hitungan KM
+        ]);
+    }
+    /**
+     * Rumus Haversine untuk hitung jarak lurus (KM) antara 2 titik koordinat
+     */
+    private function hitungJarak($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Jari-jari bumi dalam kilometer
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+            cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+            sin($dLon / 2) * sin($dLon / 2);
+            
+        $c = 2 * asin(sqrt($a));
+        $distance = $earthRadius * $c;
+
+        return round($distance, 2); // Dibulatkan 2 angka di belakang koma
     }
 }

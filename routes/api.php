@@ -86,6 +86,7 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     // --- NOTIFIKASI ---
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead']);
+    
 });
 
 
@@ -124,3 +125,9 @@ Route::get('/test-webhook/{orderNumber}/{amount}', function($orderNumber, $amoun
 // ROUTE FONNTE
 // ========================
 Route::post('/fonnte/webhook', [WhatsAppBotController::class, 'webhook']);
+
+
+// Rute API Kelola Pengiriman
+    Route::get('/pengiriman', [App\Http\Controllers\Api\Admin\SystemStoreController::class, 'getPengiriman']);
+    Route::post('/pengiriman/{id}/kirim', [App\Http\Controllers\Api\Admin\SystemStoreController::class, 'prosesKirim']);
+    Route::post('/checkout/cek-ongkir', [App\Http\Controllers\CheckoutController::class, 'cekOngkir'])->name('checkout.cek_ongkir');

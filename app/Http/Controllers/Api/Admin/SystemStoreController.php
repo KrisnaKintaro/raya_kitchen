@@ -59,6 +59,8 @@ class SystemStoreController extends Controller
                 'max_orders_per_hour' => 5,
                 'operational_time_start' => '08:00:00',
                 'operational_time_end' => '17:00:00',
+                // TAMBAHAN: Nilai default jarak gratis ongkir (misal 10 KM)
+                'free_delivery_max_distance' => 10,
             ]);
         }
 
@@ -77,6 +79,8 @@ class SystemStoreController extends Controller
             $setting = new StoreSetting();
         }
 
+        // Karena request->all() dipakai, pastikan fillable di Model StoreSetting
+        // sudah memuat 'free_delivery_max_distance'
         $setting->update($request->all());
         return response()->json(['status' => 'success', 'message' => 'Pengaturan operasional tersimpan!']);
     }
@@ -150,5 +154,59 @@ class SystemStoreController extends Controller
             'status' => 'success', 
             'message' => "$insertedCount hari libur berhasil ditambahkan otomatis untuk tahun $year!"
         ]);
+    }
+    // ==========================================
+    // KELOLA PENGIRIMAN
+    // ==========================================
+    public function getPengiriman()
+    {
+        // Asumsi nama Model lu 'Order' dan status 'Selesai' artinya kue udah matang siap kirim
+        $orders = \App\Models\Order::with('userAddress')->where('status', 'Selesai')->get();
+
+        $internal = [];
+        $ekspedisi = [];
+
+        foreach ($orders as $order) {
+            // Kita pisahkan berdasarkan nama kurir yang sudah di-set saat checkout
+            if ($order->courier_name == 'Kurir Internal') {
+                $internal[] = $order;
+            } else {
+                $ekspedisi[] = $order;
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'internal' => $internal,
+                'ekspedisi' => $ekspedisi
+            ]
+        ]);
+    }
+
+    public function prosesKirim(Request $request, $id)
+    {
+        $order = \App\Models\Order::find($id);
+        if (!$order) return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+
+        // Ubah status pesanan
+        $order->status = 'Dikirim';
+        
+        // Simpan resi jika dari ekspedisi
+        if ($request->has('tracking_number')) {
+            $order->tracking_number = $request->tracking_number;
+        }
+        $order->save();
+
+        // Catat log tracking pertama kali
+        \App\Models\OrderTracking::create([
+            'order_id' => $order->id,
+            'status' => 'Pesanan sedang dalam perjalanan',
+            // Ambil koordinat dapur sebagai titik awal keberangkatan
+            'latitude' => \App\Models\CompanyProfile::first()->latitude ?? null,
+            'longitude' => \App\Models\CompanyProfile::first()->longitude ?? null,
+        ]);
+
+        return response()->json(['status' => 'success', 'message' => 'Status pesanan berhasil diubah menjadi Dikirim!']);
     }
 }

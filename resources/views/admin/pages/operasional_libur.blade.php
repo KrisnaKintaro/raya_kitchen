@@ -73,6 +73,16 @@
                 </tbody>
             </table>
         </div>
+        <!-- Tambahan Input Jarak Ongkir -->
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1">Batas Jarak Gratis Ongkir (KM)</label>
+                <div class="relative">
+                    <input type="number" step="0.1" name="free_delivery_max_distance" id="free_delivery_max_distance" required class="w-full p-3 pr-12 border rounded-xl bg-gray-50">
+                    <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">KM</span>
+                </div>
+            </div>
+            
+            <button type="submit" id="btn-submit-op" class="w-full py-3 mt-4 bg-purple-600 text-white font-bold rounded-xl hover:bg-purple-700 transition">Simpan Pengaturan</button>
     </div>
 </div>
 @endsection
@@ -82,13 +92,14 @@
 $(document).ready(function() {
     // Load Operasional
     $.get('/api/admin/operasional', function(res) {
-        if(res.status === 'success' && res.data) {
-            $('#max_qty_per_day').val(res.data.max_qty_per_day);
-            $('#max_orders_per_hour').val(res.data.max_orders_per_hour);
-            $('#operational_time_start').val(res.data.operational_time_start);
-            $('#operational_time_end').val(res.data.operational_time_end);
-        }
-    });
+            if(res.status === 'success' && res.data) {
+                $('#max_qty_per_day').val(res.data.max_qty_per_day);
+                $('#max_orders_per_hour').val(res.data.max_orders_per_hour);
+                $('#operational_time_start').val(res.data.operational_time_start);
+                $('#operational_time_end').val(res.data.operational_time_end);
+                $('#free_delivery_max_distance').val(res.data.free_delivery_max_distance);
+            }
+        });
 
     $('#form-operasional').submit(function(e) {
         e.preventDefault();

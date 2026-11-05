@@ -99,13 +99,33 @@
                         Simpan Alamat
                     </button>
                 </div>
+
+                <!-- Elemen Map Picker dengan Fitur Cari Jalan -->
+                <div class="mb-5 mt-4">
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Tandai Lokasi di Peta (Wajib untuk hitung ongkir)</label>
+                    <div id="map" class="w-full h-[300px] rounded-xl border-2 border-gray-200 z-10"></div>
+                    <p class="text-xs text-gray-500 mt-1">Gunakan kotak pencarian di peta atau geser pin merah untuk menentukan titik pasti lokasi Anda.</p>
+                    
+                    <input type="hidden" name="latitude" id="latitude" required>
+                    <input type="hidden" name="longitude" id="longitude" required>
+                </div>
             </form>
         </div>
 
     </div>
 </div>
 @endsection
+
+<!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Load CSS & JS Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Load Leaflet Control Geocoder (Plugin Pencarian Nama Jalan) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
 @push('script')
 <script>
@@ -115,9 +135,69 @@ $(document).ready(function() {
     let citiesData = [];
     let districtsData = [];
 
+    // --- INISIALISASI MAP & MARKER TUNGGAL ---
+    let defaultLat = -7.983908; 
+    let defaultLng = 112.621391;
+    let map = L.map('map').setView([defaultLat, defaultLng], 14);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let marker = null;
+
+    function setMarker(lat, lng) {
+        // Hapus SEMUA marker yang ada di map agar dijamin hanya sisa 1 marker
+        map.eachLayer(function (layer) {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+
+        // Buat marker baru yang tunggal dan bisa digeser
+        marker = L.marker([lat, lng], {draggable: true}).addTo(map);
+        
+        marker.on('dragend', function (e) {
+            updateLokasi(marker.getLatLng().lat, marker.getLatLng().lng);
+        });
+
+        updateLokasi(lat, lng);
+    }
+
+    function updateLokasi(lat, lng) {
+        $('#latitude').val(lat);
+        $('#longitude').val(lng);
+    }
+
+    // Set posisi awal default
+    setMarker(defaultLat, defaultLng);
+
+    // Kalau map diklik manual
+    map.on('click', function(e) {
+        setMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    // --- PENCARIAN JALAN SELURUH INDONESIA (DENGAN 1 MARKER TUNGGAL) ---
+    L.Control.geocoder({
+        defaultMarkGeocoder: false, 
+        placeholder: 'Cari jalan atau lokasi di Indonesia...',
+        errorMessage: 'Lokasi tidak ditemukan.',
+        geocoder: L.Control.Geocoder.nominatim({
+            geocodingQueryParams: {
+                countrycodes: 'id',
+                addressdetails: 1,
+                limit: 5
+            }
+        })
+    }).on('markgeocode', function(e) {
+        let center = e.geocode.center;
+        map.setView(center, 16); 
+        setMarker(center.lat, center.lng); // Otomatis bersihkan pin lain dan pindahkan pin tunggal
+    }).addTo(map);
+
     // --- LOGIKA AUTOCOMPLETE WILAYAH ---
     function loadProvinces() {
-        if(provincesData.length > 0) return; // Load sekali aja
+        if(provincesData.length > 0) return;
         fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
             .then(res => res.json())
             .then(data => {
@@ -128,12 +208,10 @@ $(document).ready(function() {
             });
     }
 
-    // Deteksi saat user ngetik & memilih Provinsi
     $('#provinsi').on('input', function() {
         let selectedVal = $(this).val();
         let selectedProv = provincesData.find(p => p.name === selectedVal);
         
-        // Reset anak-anaknya
         $('#kota').val('').prop('disabled', true);
         $('#list-kota').empty();
         $('#kecamatan').val('').prop('disabled', true);
@@ -153,12 +231,10 @@ $(document).ready(function() {
         }
     });
 
-    // Deteksi saat user ngetik & memilih Kota
     $('#kota').on('input', function() {
         let selectedVal = $(this).val();
         let selectedCity = citiesData.find(c => c.name === selectedVal);
         
-        // Reset anak
         $('#kecamatan').val('').prop('disabled', true);
         $('#list-kecamatan').empty();
 
@@ -207,6 +283,7 @@ $(document).ready(function() {
             let isUtama = addr.is_primary == 1;
             let badgeUtama = isUtama ? '<span class="bg-purple-100 text-purple-700 text-[10px] uppercase px-2.5 py-1 rounded-full font-extrabold tracking-wide">Utama</span>' : '';
             let btnJadikanUtama = !isUtama ? `<button type="button" class="btn-jadikan-utama text-xs font-bold text-gray-700 bg-white border border-gray-300 hover:bg-gray-100 hover:text-green-600 px-3 py-1.5 rounded-lg transition" data-id="${addr.id}">Jadikan Utama</button>` : '';
+            let textJarak = addr.distance_to_store ? `<span class="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg ml-2">Jarak: ${addr.distance_to_store} KM</span>` : '';
 
             container.append(`
                 <div class="p-4 ${isUtama ? 'bg-purple-50/30 border-purple-300' : 'bg-white border-gray-200'} border rounded-2xl transition hover:shadow-sm">
@@ -222,7 +299,7 @@ $(document).ready(function() {
                         </div>
                     </div>
                     <div class="text-sm text-gray-600 mt-2 space-y-1">
-                        <p class="font-medium text-gray-700">${addr.recipient_name || ''} ${addr.recipient_whatsapp || ''}</p>
+                        <p class="font-medium text-gray-700">${addr.recipient_name || ''} ${addr.recipient_whatsapp || ''} ${textJarak}</p>
                         <p>${addr.street_address}</p>
                         <p>${addr.district}, ${addr.city}, ${addr.province} ${addr.postal_code}</p>
                         ${addr.landmark ? `<p class="text-xs text-gray-500 italic mt-1">Patokan: ${addr.landmark}</p>` : ''}
@@ -257,12 +334,11 @@ $(document).ready(function() {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             },
-            error: function(xhr) { alert('Terjadi kesalahan saat memproses data.'); },
+            error: function() { alert('Terjadi kesalahan saat memproses data.'); },
             complete: function() { btnSubmit.text(originalText).prop('disabled', false); }
         });
     }
 
-    // --- FUNGSI HAPUS ALAMAT (DENGAN SWEETALERT2) ---
     $(document).on('click', '.btn-hapus-alamat', function() {
         let id = $(this).data('id');
         let btn = $(this);
@@ -272,8 +348,8 @@ $(document).ready(function() {
             text: "Alamat ini akan dihapus dari daftar Anda!",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: "#9333ea", // Warna ungu khas Raya Kitchen
-            cancelButtonColor: "#ef4444", // Warna merah batal
+            confirmButtonColor: "#9333ea", 
+            cancelButtonColor: "#ef4444", 
             confirmButtonText: "Ya, Hapus!",
             cancelButtonText: "Batal",
             reverseButtons: true
@@ -293,8 +369,7 @@ $(document).ready(function() {
                                 icon: "success",
                                 confirmButtonColor: "#9333ea"
                             });
-                            
-                            loadAlamatData(); // Tarik data terbaru setelah dihapus
+                            loadAlamatData(); 
                         }
                     },
                     error: function(xhr) {
@@ -325,23 +400,26 @@ $(document).ready(function() {
             $('textarea[name="street_address"]').val(addr.street_address || '');
             $('input[name="landmark"]').val(addr.landmark || '');
 
-            // Render form data
             $('#checkbox-utama-container').toggle(addr.is_primary != 1);
             $('#is_primary').prop('checked', addr.is_primary == 1);
             $('#form-address-title').text('Edit Alamat: ' + (addr.label || ''));
             $('#form-alamat-section').slideDown();
 
-            // Jalankan Autocomplete Setup untuk Edit (supaya child-nya kebuka)
             loadProvinces();
             $('#provinsi').val(addr.province);
             $('#kota').prop('disabled', false).val(addr.city);
             $('#kecamatan').prop('disabled', false).val(addr.district);
             
-            // Panggil paksa trigger agar internal array terisi (jika mau edit cabangnya lagi)
             setTimeout(() => { $('#provinsi').trigger('input'); }, 500);
             setTimeout(() => { $('#kota').val(addr.city).trigger('input'); }, 1500);
             setTimeout(() => { $('#kecamatan').val(addr.district); }, 2500);
             
+            if(addr.latitude && addr.longitude) {
+                setMarker(addr.latitude, addr.longitude);
+                map.setView(new L.LatLng(addr.latitude, addr.longitude), 15);
+            }
+
+            setTimeout(() => { map.invalidateSize(); }, 500);
             $('html, body').animate({ scrollTop: $("#form-alamat-section").offset().top - 100 }, 500);
         }
     });
@@ -351,12 +429,17 @@ $(document).ready(function() {
         $('#address_id').val(''); 
         $('#kota, #kecamatan').prop('disabled', true);
         
-        loadProvinces(); // Mulai tarik API
+        loadProvinces(); 
         
         $('#checkbox-utama-container').show();
         $('#is_primary').prop('checked', false);
         $('#form-address-title').text('Tambah Alamat Baru');
         $('#form-alamat-section').slideDown();
+        
+        setMarker(defaultLat, defaultLng);
+        map.setView([defaultLat, defaultLng], 14);
+        
+        setTimeout(() => { map.invalidateSize(); }, 500);
         $('html, body').animate({ scrollTop: $("#form-alamat-section").offset().top - 100 }, 500);
     });
 
@@ -365,7 +448,6 @@ $(document).ready(function() {
     $('#alamatForm').on('submit', function(e) {
         e.preventDefault(); 
         
-        // Cek validasi sederhana: pastikan provinsi/kota bukan asal ketik tapi dipilih dari list
         if(!provincesData.find(p => p.name === $('#provinsi').val())) {
             alert('Silakan pilih Provinsi dari daftar yang muncul saat mengetik.'); return;
         }
@@ -379,6 +461,8 @@ $(document).ready(function() {
             postal_code: $('input[name="postal_code"]').val(),
             street_address: $('textarea[name="street_address"]').val(),
             landmark: $('input[name="landmark"]').val(),
+            latitude: $('#latitude').val(),
+            longitude: $('#longitude').val(),
             is_primary: $('#is_primary').is(':checked') ? 1 : 0
         });
     });
