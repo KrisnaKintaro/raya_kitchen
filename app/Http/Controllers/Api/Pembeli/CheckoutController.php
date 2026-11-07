@@ -79,19 +79,18 @@ class CheckoutController extends Controller
         $alamat = UserAddress::find($request->address_id);
         $dapur = CompanyProfile::first();
         $setting = StoreSetting::first();
+        
+        // Ambil batas maksimal jarak dari tabel setting, default 10 KM
         $max_jarak = $setting->free_delivery_max_distance ?? 10;
 
-        // Baca data kurir aktif dari admin
-        $activeCouriers = $setting->active_couriers ?? 'jne,sicepat,jnt';
-
-        if (!$alamat || !$alamat->rajaongkir_destination_id || !$dapur->rajaongkir_destination_id) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'ID Tujuan wilayah Anda atau Dapur belum diset untuk RajaOngkir. Silakan edit dan simpan ulang alamat Anda.'
-            ], 400);
+        if (!$alamat) {
+            return response()->json(['status' => 'error', 'message' => 'Alamat tidak ditemukan.'], 404);
         }
 
+        // =======================================================================
         // 1. JIKA JARAK DEKAT (Kurir Internal Toko / Gratis Ongkir)
+        // Di cek PERTAMA KALI supaya alamat terdekat tidak terblokir ID RajaOngkir
+        // =======================================================================
         if ($alamat->distance_to_store !== null && $alamat->distance_to_store <= $max_jarak) {
             return response()->json([
                 'status' => 'success',
@@ -102,36 +101,49 @@ class CheckoutController extends Controller
             ]);
         }
 
-        // 2. JIKA JARAK JAUH (Hitung via API RajaOngkir Komerce)
-        $userId = $request->user()->id;
+        // =======================================================================
+        // 2. JIKA JARAK JAUH / LUAR KOTA (Wajib Pakai Ekspedisi RajaOngkir)
+        // =======================================================================
+        
+        // Karena jaraknya jauh, kita wajibkan ID RajaOngkir harus ada
+        if (!$alamat->rajaongkir_destination_id || !$dapur->rajaongkir_destination_id) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Jarak di luar jangkauan Kurir Internal. ID Tujuan wilayah belum diset untuk Ekspedisi. Silakan edit dan simpan ulang alamat Anda.'
+            ], 400);
+        }
+
+        // Baca data kurir aktif dari admin
+        $activeCouriers = $setting->active_couriers ?? 'jne,sicepat,jnt';
+
+        $userId = $request->user()->id ?? Auth::id();
         $cartItems = Cart::with('productVariant')->where('user_id', $userId)->get();
 
         $totalBeratGram = 0;
-        $totalRotiCheckout = 0;
-
         foreach($cartItems as $item) {
             $beratSatuan = $item->productVariant->weight ?? 500;
             $totalBeratGram += ($beratSatuan * $item->quantity);
-            $totalRotiCheckout += $item->quantity;
         }
 
-        if ($totalBeratGram < 1000) $totalBeratGram = 1000; // Minimal 1 KG
+        if ($totalBeratGram < 1000) {
+            $totalBeratGram = 1000; // Standar ongkir ekspedisi minimal hitungan 1 KG
+        }
 
         try {
+            // Daftar kurir yang didukung Komerce
             $validCouriers = ['jne','sicepat','ide','sap','jnt','ninja','tiki','lion','anteraja','pos','ncs','rex','rpx','sentral','star','wahana','spx'];
 
             $apiCouriers = collect(explode(',', $activeCouriers))
                 ->map(fn($c) => trim(strtolower($c)))
                 ->filter(fn($c) => in_array($c, $validCouriers))
                 ->unique()
-                ->implode(':'); // <-- titik dua
+                ->implode(':'); // Format kurir komerce dipisah titik dua (jne:sicepat:jnt)
 
-            // Jika setelah difilter ternyata kosong (misal cuma 'pemilik_toko' doang isinya)
             if (empty($apiCouriers)) {
                 return response()->json(['status' => 'error', 'message' => 'Layanan kurir ekspedisi tidak tersedia saat ini.'], 400);
             }
 
-            // Hitung ongkir pakai RajaOngkir (menggunakan kurir yang sudah difilter)
+            // Hitung ongkir pakai RajaOngkir Komerce
             $response = Http::withHeaders([
                 'key' => env('RAJAONGKIR_API_KEY'),
                 'Content-Type' => 'application/x-www-form-urlencoded'
@@ -139,7 +151,7 @@ class CheckoutController extends Controller
                 'origin' => $dapur->rajaongkir_destination_id,
                 'destination' => $alamat->rajaongkir_destination_id,
                 'weight' => $totalBeratGram,
-                'courier' => $apiCouriers // <-- Pake variable yang udah dibersihkan
+                'courier' => $apiCouriers 
             ]);
 
             Log::info('RajaOngkir Response: ' . $response->body());
@@ -147,7 +159,7 @@ class CheckoutController extends Controller
             if ($response->successful() && isset($response->json()['data'])) {
 
                 $rates = collect($response->json()['data'])->flatMap(function ($item) {
-                // Format flat (Komerce)
+                    // Cek format respon Komerce
                     if (isset($item['service'])) {
                         return [[
                             'company'  => strtoupper($item['code']),
@@ -157,20 +169,20 @@ class CheckoutController extends Controller
                         ]];
                     }
 
-                    // Format nested (RajaOngkir lama)
+                    // Fallback jika format response beda (RajaOngkir Nested)
                     return collect($item['costs'] ?? [])->map(fn($cost) => [
                         'company'  => strtoupper($item['code']),
                         'type'     => $cost['service'],
                         'price'    => $cost['cost'][0]['value'],
                         'duration' => $cost['cost'][0]['etd'] ?? '2-3',
                     ]);
-                    })->filter(fn($r) => is_numeric($r['price']) && strtolower($r['company']) !== 'pemilik_toko');
+                })->filter(fn($r) => is_numeric($r['price']) && strtolower($r['company']) !== 'pemilik_toko');
 
                 if ($rates->isEmpty()) {
                     return response()->json(['status' => 'error', 'message' => 'Layanan kurir tidak tersedia untuk tujuan ini.'], 400);
                 }
 
-                // Jangan ambil yang termurah lagi, tapi kembalikan SEMUA list kurir buat frontend
+                // Kirim semua opsi ekspedisi ke frontend
                 return response()->json([
                     'status' => 'success',
                     'is_internal' => false,
