@@ -51,6 +51,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/riwayat-pesanan', function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('riwayat-pesanan');
+
+    Route::get('/nota', function (\Illuminate\Http\Request $request) {
+        return view('pembeli.pages.nota');
+    })->name('nota');
 });
 
 

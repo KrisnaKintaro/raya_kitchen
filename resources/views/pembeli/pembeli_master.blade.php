@@ -71,9 +71,9 @@
                                 let notifs = res.data.notifications;
 
                                 if(count > 0) {
-                                    $('#notif-badge').text(count).removeClass('hidden');
+                                    $('.notif-badge').text(count).removeClass('hidden'); // Ganti ke class
                                 } else {
-                                    $('#notif-badge').addClass('hidden');
+                                    $('.notif-badge').addClass('hidden'); // Ganti ke class
                                 }
 
                                 let html = '';
@@ -90,24 +90,24 @@
                                         `;
                                     });
                                 }
-                                $('#notif-list').html(html);
+                                $('.notif-list').html(html);
                             }
                         }
                     });
                 }
 
                 // Klik 1 notif = Redirect ke Nota & Tandai dibaca
-                $(document).on('click', '.notif-item', function() {
+                $(document).on('click', '.notif-item', function(e) {
+                    e.preventDefault();
                     let id = $(this).data('id');
                     let orderNum = $(this).data('order');
-
                     $.post('/api/pembeli/notifications/read', { id: id, _token: $('meta[name="csrf-token"]').attr('content') }, function() {
                         window.location.href = '/nota?order_number=' + orderNum;
                     });
                 });
 
                 // Tandai semua dibaca
-                $('#btn-read-all').click(function(e) {
+                $(document).on('click', '.btn-read-all', function(e) { // Ganti ke class
                     e.stopPropagation();
                     $.post('/api/pembeli/notifications/read', { _token: $('meta[name="csrf-token"]').attr('content') }, function() {
                         fetchNotifications();

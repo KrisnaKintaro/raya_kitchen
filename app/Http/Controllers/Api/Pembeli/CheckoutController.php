@@ -187,7 +187,7 @@ class CheckoutController extends Controller
         }
     }
 
-    public function store(Request $request)
+public function store(Request $request)
     {
         $request->validate([
             'name' => 'required',
@@ -212,13 +212,16 @@ class CheckoutController extends Controller
                 $totalRotiCheckout += $item->quantity;
             }
 
-            $shippingCost = (float) $request->input('shipping_cost', 0);
-            $grandTotal = $totalAmount + $shippingCost;
-            $dpAmount = $grandTotal * 0.3;
+            // PERBAIKAN: Ikat jadi Integer bulat, Duitku nolak angka koma/desimal
+            $shippingCost = (int) round($request->input('shipping_cost', 0));
+            $grandTotal = (int) round($totalAmount + $shippingCost);
+            $dpAmount = (int) round($grandTotal * 0.3);
+
             $pilihanBayar = $request->input('payment_method');
             $remainingAmount = ($pilihanBayar === 'transfer_full') ? 0 : ($grandTotal - $dpAmount);
-            $orderNumber = 'RK-' . date('Ymd') . '-' . rand(1000, 9999);
+            $amountToPay = ($pilihanBayar === 'transfer_full') ? $grandTotal : $dpAmount;
 
+            $orderNumber = 'RK-' . date('Ymd') . '-' . rand(1000, 9999);
             $isInternal = ($shippingCost == 0);
 
             if ($request->input('delivery_date') === 'auto' || (!$isInternal && $shippingCost > 0)) {
@@ -241,7 +244,7 @@ class CheckoutController extends Controller
                 'shipping_cost' => $shippingCost,
                 'courier_name' => $request->input('courier_name'),
                 'shipping_service' => $request->input('shipping_service'),
-                'total_amount' => $grandTotal,
+                'total_amount' => $grandTotal, // Simpan total komplit ke DB
                 'dp_amount' => $dpAmount,
                 'remaining_amount' => $remainingAmount,
                 'status' => 'pending',
@@ -259,83 +262,68 @@ class CheckoutController extends Controller
                 ]);
             }
 
-            $amountToPay = ($pilihanBayar === 'transfer_full') ? $grandTotal : $dpAmount;
             $tipeTransaksi = ($pilihanBayar === 'cod') ? 'cod' : 'transfer';
 
             $transaction = Transaction::create([
                 'order_id' => $order->id,
-                'amount' => $amountToPay,
+                'amount' => $amountToPay, // Tagihan saat ini (DP atau Lunas)
                 'payment_method' => $tipeTransaksi,
                 'payment_status' => 'unpaid'
             ]);
 
             Cart::where('user_id', $userId)->delete();
 
-            // HAPUS DB::commit(); DARI SINI!
+            // PERBAIKAN: Hapus pengecekan if($tipeTransaksi !== 'cod').
+            // Duitku dieksekusi buat SEMUA metode biar COD tetep keluar QRIS-nya.
 
-            if ($tipeTransaksi !== 'cod') {
-                $merchantCode = env('DUITKU_MERCHANT_CODE');
-                $merchantKey = env('DUITKU_MERCHANT_KEY');
+            $merchantCode = env('DUITKU_MERCHANT_CODE');
+            $merchantKey = env('DUITKU_MERCHANT_KEY');
 
-                $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
-                $duitkuConfig->setSandboxMode(true);
-                $duitkuConfig->setSanitizedMode(true);
-                $duitkuConfig->setDuitkuLogs(false);
+            $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
+            $duitkuConfig->setSandboxMode(true);
+            $duitkuConfig->setSanitizedMode(true);
+            $duitkuConfig->setDuitkuLogs(false);
 
-                $params = [
-                    'paymentAmount'     => (int) $amountToPay,
-                    'paymentMethod'     => "SP",
-                    'merchantOrderId'   => $orderNumber,
-                    'productDetails'    => 'Pembayaran Pesanan ' . $orderNumber,
-                    'email'             => 'customer@rayakitchen.com',
-                    'phoneNumber'       => $request->input('phone'),
-                    'customerVaName'    => $request->input('name'),
-                    'callbackUrl'       => url('/api/duitku/callback'),
-                    'returnUrl'         => url('/riwayat-pesanan?success=true'),
-                    'expiryPeriod'      => 60
-                ];
+            $params = [
+                'paymentAmount'     => $amountToPay,
+                'paymentMethod'     => "SP", // Kode QRIS
+                'merchantOrderId'   => $orderNumber,
+                'productDetails'    => 'Pembayaran Pesanan ' . $orderNumber,
+                'email'             => 'customer@rayakitchen.com',
+                'phoneNumber'       => $request->input('phone'),
+                'customerVaName'    => $request->input('name'),
+                'callbackUrl'       => url('/api/duitku/callback'),
+                'returnUrl'         => url('/riwayat-pesanan?success=true'),
+                'expiryPeriod'      => 1440 // 1 jam
+            ];
 
-                try {
-                    $responseDuitkuApi = \Duitku\Api::createInvoice($params, $duitkuConfig);
-                    $result = json_decode($responseDuitkuApi, true);
+            try {
+                $responseDuitkuApi = \Duitku\Api::createInvoice($params, $duitkuConfig);
+                $result = json_decode($responseDuitkuApi, true);
 
-                    if ($result['statusCode'] == '00') {
-                        $transaction->update([
-                            'reference' => $result['reference'] ?? null,
-                            'qr_string' => $result['qrString'] ?? null
-                        ]);
+                if ($result['statusCode'] == '00') {
+                    $transaction->update([
+                        'reference' => $result['reference'] ?? null,
+                        'qr_string' => $result['qrString'] ?? null
+                    ]);
 
-                        // 1. PINDAH KESINI: Commit HANYA jika Duitku berhasil mengembalikan sukses (00)
-                        DB::commit();
+                    DB::commit();
 
-                        return response()->json([
-                            'status' => 'success',
-                            'data' => [
-                                'order_number' => $orderNumber,
-                                'redirect_url' => url('/pembayaran/' . $orderNumber)
-                            ]
-                        ], 200);
-                    } else {
-                        // Jika Duitku gagal memproses, data akan di-rollback dengan sempurna
-                        DB::rollBack();
-                        return response()->json(['status' => 'error', 'message' => 'Duitku Error: ' . ($result['statusMessage'] ?? '')], 500);
-                    }
-                } catch (\Exception $e) {
-                    // Jika API Duitku timeout atau error jaringan, rollback juga dieksekusi
+                    return response()->json([
+                        'status' => 'success',
+                        'data' => [
+                            'order_number' => $orderNumber,
+                            'redirect_url' => url('/pembayaran/' . $orderNumber)
+                        ]
+                    ], 200);
+                } else {
                     DB::rollBack();
-                    return response()->json(['status' => 'error', 'message' => 'Exception Duitku: ' . $e->getMessage()], 500);
+                    return response()->json(['status' => 'error', 'message' => 'Duitku Error: ' . ($result['statusMessage'] ?? '')], 500);
                 }
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['status' => 'error', 'message' => 'Exception Duitku: ' . $e->getMessage()], 500);
             }
-
-            // 2. TAMBAH KESINI: Commit jika metode pembayarannya COD (langsung sukses tanpa Duitku)
-            DB::commit();
-
-            return response()->json([
-                'status' => 'success',
-                'data' => [
-                    'redirect_url' => url('/riwayat-pesanan?success=true')
-                ]
-            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -351,7 +339,7 @@ class CheckoutController extends Controller
             ->get();
 
         foreach ($orders as $order) {
-            $expiredAt = $order->created_at->addMinutes(60);
+            $expiredAt = $order->created_at->addMinutes(1440);
             if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
                 $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis (60 menit).']);
                 $order->transaction->update(['payment_status' => 'failed']);
@@ -474,10 +462,11 @@ class CheckoutController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
         }
 
-        $expiredAt = $order->created_at->addMinutes(60);
+        // PERBAIKAN: Ubah 60 jadi 1440 (24 Jam)
+        $expiredAt = $order->created_at->addMinutes(1440);
 
         if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
-            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis.']);
+            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran habis.']);
             $order->transaction->update(['payment_status' => 'failed']);
             NotificationController::send($order, 'batal_otomatis');
         }
@@ -486,7 +475,7 @@ class CheckoutController extends Controller
             'status' => 'success',
             'data' => [
                 'order' => $order,
-                'expired_at' => $expiredAt->toIso8601String()
+                'expired_at' => $expiredAt->toIso8601String() // Ini yang dipakai Javascript buat Timer
             ]
         ]);
     }
@@ -494,19 +483,25 @@ class CheckoutController extends Controller
     public function cekStatusPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
+
         if (!$order) {
             return response()->json(['status' => 'error', 'message' => 'Order tidak ditemukan'], 404);
         }
 
-        $expiredAt = $order->created_at->addMinutes(60);
+        // PERBAIKAN: Ubah 60 jadi 1440 (24 Jam)
+        $expiredAt = $order->created_at->addMinutes(1440);
+
         if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
-            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis.']);
+            $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran habis.']);
             $order->transaction->update(['payment_status' => 'failed']);
             NotificationController::send($order, 'batal_otomatis');
             return response()->json(['status' => 'success', 'payment_status' => 'failed']);
         }
 
-        return response()->json(['status' => 'success', 'payment_status' => $order->transaction->payment_status]);
+        return response()->json([
+            'status' => 'success',
+            'payment_status' => $order->transaction->payment_status // unpaid, paid_dp, paid_full, atau failed
+        ]);
     }
 
     public function cancelOrder(Request $request)

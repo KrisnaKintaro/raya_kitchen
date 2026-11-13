@@ -13,13 +13,11 @@ class NotificationController extends Controller
     {
         $userId = Auth::id();
 
-        // Ambil data 24 jam terakhir
         $notifs = UserNotification::where('user_id', $userId)
-            ->where('created_at', '>=', now()->subDay())
-            ->orderBy('created_at', 'desc')
-            ->get();
+        ->orderBy('created_at', 'desc')
+        ->limit(20)
+        ->get();
 
-        // Hitung total notifikasi belum dibaca secara keseluruhan
         $unreadCount = UserNotification::where('user_id', $userId)
             ->where('is_read', false)
             ->count();
@@ -36,11 +34,11 @@ class NotificationController extends Controller
     // Endpoint: Tandai sudah dibaca
     public function markAsRead(Request $request)
     {
-        $userId = Auth::id() ?? 1;
-        if ($request->has('id')) {
+        $userId = Auth::id();
+        
+        if ($request->filled('id')) {
             UserNotification::where('id', $request->id)->where('user_id', $userId)->update(['is_read' => true]);
         } else {
-            // Tandai semua dibaca
             UserNotification::where('user_id', $userId)->update(['is_read' => true]);
         }
         return response()->json(['status' => 'success']);

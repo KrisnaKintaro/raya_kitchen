@@ -25,27 +25,24 @@
                 <p id="countdown-timer" class="text-2xl font-black text-red-600 tracking-widest">00:00:00</p>
             </div>
 
-            <!-- Informasi Tagihan -->
-            <div class="bg-white p-4 rounded-2xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border border-gray-100 mb-6 flex justify-between items-center text-left">
-                <div>
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Tagihan</p>
-                    <p id="tagihan-amount" class="text-xl font-black text-buyer-primary">Rp 0</p>
-                </div>
-                <div class="text-right">
-                    <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">No. Order</p>
-                    <p id="order-number" class="text-sm font-bold text-gray-800"># -</p>
-                </div>
+           <!-- Informasi Tagihan -->
+        <div class="bg-white p-4 rounded-2xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] border border-gray-100 mb-6 flex justify-between items-center text-left">
+            <div>
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Tagihan</p>
+                <p id="tagihan-amount" class="text-xl font-black text-buyer-primary">Rp 0</p>
             </div>
+            <div class="text-right">
+                <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">No. Order</p>
+                <p id="order-number" class="text-sm font-bold text-gray-800"># -</p>
+            </div>
+        </div>
 
-            <!-- Gambar QRIS -->
-            <div class="relative w-72 h-72 mx-auto bg-white rounded-3xl p-3 shadow-[0_10px_20px_rgba(192,153,206,0.2)] border border-purple-100 mb-6 cursor-pointer hover:scale-105 transition-transform" onclick="openZoomModal()">
-
-                <img id="qris-image" src="" alt="QRIS Duitku" class="hidden w-full h-full object-contain rounded-2xl">
-
-                <div id="qris-failed" class="hidden w-full h-full flex flex-col items-center justify-center bg-gray-100 rounded-2xl border-2 border-dashed border-red-300">
-                    <p class="text-sm font-bold text-red-500">QRIS Gagal Dimuat</p>
-                </div>
-
+        <!-- Gambar QRIS -->
+        <div class="relative w-72 h-72 mx-auto bg-white rounded-3xl p-3 shadow-[0_10px_20px_rgba(192,153,206,0.2)] border border-purple-100 mb-6 cursor-pointer hover:scale-105 transition-transform" onclick="openZoomModal()">
+            <img id="qris-image" src="" alt="QRIS Duitku" class="hidden w-full h-full object-contain rounded-2xl">
+            <div id="qris-failed" class="hidden w-full h-full flex flex-col items-center justify-center bg-gray-100 rounded-2xl border-2 border-dashed border-red-300">
+                <p class="text-sm font-bold text-red-500">QRIS Gagal Dimuat</p>
+            </div>
                 <div class="absolute inset-0 bg-black/5 opacity-0 hover:opacity-100 rounded-3xl flex flex-col items-center justify-center transition-opacity">
                     <div class="bg-white p-2 rounded-full shadow-md text-buyer-primary">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
