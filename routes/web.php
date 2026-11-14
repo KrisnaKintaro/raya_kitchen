@@ -109,13 +109,9 @@ Route::prefix('admin')->group(function () {
     })->name('admin.password.reset');
 
     // Halaman Admin
-    Route::get('/ringkasan_finansial', function () {
+    Route::get('/dashboard_finansial', function () {
         return view('admin.pages.finansial.ringkasan_finansial');
-    })->name('admin.ringkasan-finansial');
-
-    Route::get('/riwayat_penjualan', function () {
-        return view('admin.pages.finansial.riwayat_penjualan');
-    })->name('admin.riwayat-penjualan');
+    })->name('admin.dashboard-finansial');
 
     Route::get('/profil_perusahaan', function () {
         return view('admin.pages.sistem_dan_toko.profil_perusahaan');

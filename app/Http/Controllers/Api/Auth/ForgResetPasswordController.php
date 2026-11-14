@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Kstmostofa\LaravelWhatsApp\Facades\WhatsApp;
 
 class ForgResetPasswordController extends Controller
 {
@@ -18,9 +17,7 @@ class ForgResetPasswordController extends Controller
     {
         $request->validate(['whatsapp_number' => 'required']);
 
-        $waNumber = $request->whatsapp_number;
-        $waNumber = preg_replace('/[^0-9]/', '', $waNumber);
-
+        $waNumber = preg_replace('/[^0-9]/', '', $request->whatsapp_number);
         if (str_starts_with($waNumber, '0')) {
             $waNumber = '62' . substr($waNumber, 1);
         } elseif (!str_starts_with($waNumber, '62')) {
@@ -40,9 +37,8 @@ class ForgResetPasswordController extends Controller
         $token = Str::random(40);
         Cache::put('reset_token_' . $waNumber, $token, now()->addMinutes(15));
 
-        // Bikin URL Link Reset (Arahin ke halaman blade reset password)
+        // Bikin URL Link Reset
         $resetLink = url("/reset-password?wa={$waNumber}&token={$token}");
-
 
         $pesan = "Halo *{$user->name}*! 👋\n\n"
             . "Ada yang minta reset password buat akun Raya Kitchen kamu nih.\n\n"
@@ -51,21 +47,17 @@ class ForgResetPasswordController extends Controller
             . "Link ini cuma berlaku 15 menit ya. Kalau bukan kamu yang minta, cuekin aja pesan ini.";
 
         try {
-            $target = $waNumber;
-
             $randomDelay = rand(2, 6);
 
-            // Tembak API Fonnte
             $response = Http::withHeaders([
                 'Authorization' => env('FONNTE_TOKEN'),
             ])->post('https://api.fonnte.com/send', [
-                'target' => $target,
+                'target' => $waNumber,
                 'message' => $pesan,
                 'delay' => (string) $randomDelay,
                 'typing' => true,
             ]);
 
-            // Cek kalau API Fonnte ngasih pesan gagal
             if (!$response->successful() || $response->json('status') == false) {
                 Log::error('Fonnte Error: ' . $response->body());
             }
@@ -91,7 +83,14 @@ class ForgResetPasswordController extends Controller
             'password' => 'required|min:6|confirmed'
         ]);
 
-        $waNumber = $request->whatsapp_number;
+        // Normalisasi nomor WA agar konsisten dengan key di Cache & Database
+        $waNumber = preg_replace('/[^0-9]/', '', $request->whatsapp_number);
+        if (str_starts_with($waNumber, '0')) {
+            $waNumber = '62' . substr($waNumber, 1);
+        } elseif (!str_starts_with($waNumber, '62')) {
+            $waNumber = '62' . $waNumber;
+        }
+
         $cachedToken = Cache::get('reset_token_' . $waNumber);
 
         // Validasi Token

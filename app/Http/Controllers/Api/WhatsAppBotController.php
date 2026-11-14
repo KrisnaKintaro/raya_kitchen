@@ -29,34 +29,48 @@ class WhatsAppBotController extends Controller
     public function webhook(Request $request)
     {
         $sender = $request->input('sender');
-        $message = trim($request->input('message'));
+        $message = trim((string) $request->input('message'));
 
-        if (empty($sender) || $message === '' || $message === null) {
+        if (empty($sender) || $message === '') {
             return response()->json(['status' => 'ignored']);
         }
 
+        // Normalisasi nomor WA ke format 628xxx
         $waNumber = preg_replace('/[^0-9]/', '', $sender);
         if (str_starts_with($waNumber, '0')) {
             $waNumber = '62' . substr($waNumber, 1);
+        } elseif (!str_starts_with($waNumber, '62')) {
+            $waNumber = '62' . $waNumber;
         }
 
+        // Buat atau ambil user berdasarkan nomor WA
         $user = User::firstOrCreate(
             ['whatsapp_number' => $waNumber],
             [
-                'name' => 'Pelanggan ' . substr($waNumber, -4),
+                'name'     => 'Pelanggan ' . substr($waNumber, -4),
                 'password' => Hash::make(Str::random(10)),
-                'role' => 'pelanggan'
+                'role'     => 'pelanggan'
             ]
         );
 
-        Auth::login($user);
+        // Gunakan setUser (stateless) alih-alih login() agar tidak butuh session store di route API
+        Auth::setUser($user);
 
+        // WAJIB sertakan last_interaction_at di array create karena kolom DB bersifat NOT NULL
         $session = WhatsappSession::firstOrCreate(
             ['whatsapp_number' => $waNumber],
-            ['current_step' => 'sapaan', 'session_data' => []]
+            [
+                'current_step'        => 'sapaan',
+                'session_data'        => [],
+                'last_interaction_at' => now(),
+            ]
         );
 
-        $session->update(['last_interaction_at' => now()]);
+        // Jika sesi sudah ada sebelumnya, tetap perbarui waktu interaksi terakhir
+        if (!$session->wasRecentlyCreated) {
+            $session->update(['last_interaction_at' => now()]);
+        }
+
         $sessionData = is_array($session->session_data) ? $session->session_data : [];
 
         switch ($session->current_step) {
@@ -481,12 +495,31 @@ class WhatsAppBotController extends Controller
         $kategori = $variant->product->name ?? '-';
         $deskripsi = $variant->product->description ?? '-';
 
+        // Normalisasi URL Gambar Produk agar bisa dibuka dari WhatsApp
+        $appUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
+        $rawImg = $variant->image_url;
+
+        if (empty($rawImg)) {
+            $linkGambar = '-';
+        } elseif (str_starts_with($rawImg, 'http')) {
+            $linkGambar = $rawImg;
+        } else {
+            $cleanPath = ltrim($rawImg, '/');
+            // Cek apakah di DB sudah tertulis 'produk/namafile.jpg' atau baru 'namafile.jpg'
+            if (str_starts_with($cleanPath, 'produk/')) {
+                $linkGambar = "{$appUrl}/storage/{$cleanPath}";
+            } else {
+                $linkGambar = "{$appUrl}/storage/produk/{$cleanPath}";
+            }
+        }
+
         $reply = $this->getTemplate('detail_varian', [
             'nama_produk'      => $variant->variant_name,
             'kategori_produk'  => $kategori,
             'harga_produk'     => $harga,
-            'deskripsi_produk' => $deskripsi
-        ]) ?? "Detail Produk:\n\n🍞 *{$kategori} - {$variant->variant_name}*\n🏷️ Kategori: {$kategori}\n💰 Harga: Rp {$harga}\n\n📝 Deskripsi:\n{$deskripsi}\n\nKetik angka berikut:\n1. 🛒 Tambah ke Keranjang\n0. 🔙 Kembali ke Daftar Varian";
+            'deskripsi_produk' => $deskripsi,
+            'link_gambar'      => $linkGambar,
+        ]) ?? "Detail Produk:\n\n🍞 *{$kategori} - {$variant->variant_name}*\n🏷️ Kategori: {$kategori}\n💰 Harga: Rp {$harga}\n🖼️ Foto Produk: {$linkGambar}\n\n📝 Deskripsi:\n{$deskripsi}\n\nKetik angka berikut:\n1. 🛒 Tambah ke Keranjang\n0. 🔙 Kembali ke Daftar Varian";
 
         $this->sendMessage($waNumber, $reply);
     }
@@ -1480,8 +1513,10 @@ class WhatsAppBotController extends Controller
             $session->update(['session_data' => $sessionData]);
 
             $user = User::find($addr->user_id);
-            Auth::login($user);
-            $this->stepCekOngkirDanJadwal($request->wa, $user, $session);
+            if ($user) {
+                Auth::setUser($user);
+                $this->stepCekOngkirDanJadwal($request->wa, $user, $session);
+            }
         }
 
         return response()->json(['status' => 'success']);

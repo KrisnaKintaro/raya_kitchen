@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\DashboardFinansialController;
 use App\Http\Controllers\Api\Admin\SystemStoreController;
 use App\Http\Controllers\Api\Admin\WhatsappBotTemplateController;
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
@@ -65,6 +66,9 @@ Route::prefix('admin')->group(function () {
     Route::get('/bot-templates', [WhatsappBotTemplateController::class, 'index']);
     Route::post('/bot-templates/update', [WhatsappBotTemplateController::class, 'update']);
     Route::post('/bot-templates/reset', [WhatsappBotTemplateController::class, 'reset']);
+
+    // Finansial
+    Route::get('/dashboard-finansial', [DashboardFinansialController::class, 'index']);
 });
 
 // Perlu login untuk akses route di bawah ini
