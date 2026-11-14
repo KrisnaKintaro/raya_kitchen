@@ -38,6 +38,7 @@
     .wa-bold { font-weight: 800; }
     .wa-italic { font-style: italic; }
     .wa-strikethrough { text-decoration: line-through; }
+    .wa-link { color: #027eb5; text-decoration: underline; word-break: break-all; }
 </style>
 @endsection
 
@@ -182,6 +183,7 @@
             "{kategori_produk}": "Roti Manis",
             "{harga_produk}": "12.000",
             "{deskripsi_produk}": "Roti lembut dengan isian coklat lumer premium.",
+            "{link_gambar}": window.location.origin + "/storage/produk/roti1.jpeg",
             "{isi_keranjang}": "- Roti Manis - Coklat Lumer (2x) = Rp 24.000\n- Roti Gurih - Abon Sapi (1x) = Rp 15.000",
             "{total_harga}": "39.000",
             "{daftar_alamat}": "Alamat Tersimpan:\n1. [Rumah] Jl. Mawar No 5, Jatiasih, Kota Bekasi (Patokan: Pagar Hitam)",
@@ -283,9 +285,15 @@
             Object.keys(dummyVars).forEach(key => {
                 parsedText = parsedText.replaceAll(key, dummyVars[key]);
             });
+
+            // Format Bold, Italic (tanpa merusak underscore di dalam URL/variabel), dan Strikethrough
             parsedText = parsedText.replace(/\*(.*?)\*/g, '<span class="wa-bold">$1</span>');
-            parsedText = parsedText.replace(/_(.*?)_/g, '<span class="wa-italic">$1</span>');
+            parsedText = parsedText.replace(/(^|\s)_(.*?)_(?=\s|$|[.,!?])/g, '$1<span class="wa-italic">$2</span>');
             parsedText = parsedText.replace(/~(.*?)~/g, '<span class="wa-strikethrough">$1</span>');
+
+            // Format URL (http/https) agar berwarna biru seperti di WhatsApp
+            parsedText = parsedText.replace(/(https?:\/\/[^\s<]+)/g, '<span class="wa-link">$1</span>');
+
             return parsedText;
         }
 
@@ -360,9 +368,12 @@
                 $('#edit-session-state').val(data.session_state);
                 $('#edit-message').val(data.message_text);
 
-                // Ekstrak variabel wajib dari default_message_text (Opsi 1)
-                let foundVars = (data.default_message_text || '').match(/\{[a-zA-Z0-9_]+\}/g);
-                if (foundVars) {
+                // Gunakan required_variables dari Controller (atau fallback regex dari default_message_text)
+                let foundVars = (data.required_variables && data.required_variables.length > 0)
+                    ? data.required_variables
+                    : ((data.default_message_text || '').match(/\{[a-zA-Z0-9_]+\}/g) || []);
+
+                if (foundVars.length > 0) {
                     currentRequiredVars = [...new Set(foundVars)];
 
                     let buttonsHtml = currentRequiredVars.map(v =>
@@ -401,6 +412,8 @@
                         const idx = templatesData.findIndex(t => t.session_state === currentActiveState);
                         if (idx !== -1) {
                             templatesData[idx].message_text = res.data.message_text;
+                            templatesData[idx].default_message_text = res.data.default_message_text;
+                            templatesData[idx].required_variables = res.data.required_variables;
                         }
                         $('#edit-message').val(res.data.message_text);
                         updatePreview();

@@ -54,7 +54,7 @@ class BotTemplateSeeder extends Seeder
                 'session_state' => 'detail_varian',
                 'description' => 'Menampilkan detail produk dan opsi tambah ke keranjang',
                 'is_active' => true,
-                'message_text' => "Detail Produk:\n\n🍞 *{kategori_produk} - {nama_produk}*\n🏷️ Kategori: {kategori_produk}\n💰 Harga: Rp {harga_produk}\n\n📝 Deskripsi:\n{deskripsi_produk}\n\nKetik angka berikut:\n1. 🛒 Tambah ke Keranjang\n0. 🔙 Kembali ke Daftar Varian"
+                'message_text' => "Detail Produk:\n\n🍞 *{kategori_produk} - {nama_produk}*\n🏷️ Kategori: {kategori_produk}\n💰 Harga: Rp {harga_produk}\n🖼️ Foto Produk: {link_gambar}\n\n📝 Deskripsi:\n{deskripsi_produk}\n\nKetik angka berikut:\n1. 🛒 Tambah ke Keranjang\n0. 🔙 Kembali ke Daftar Varian"
             ],
             [
                 'session_state' => 'input_qty',

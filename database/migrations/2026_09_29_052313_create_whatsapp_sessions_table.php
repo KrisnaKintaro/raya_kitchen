@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('whatsapp_number')->unique();
             $table->string('current_step')->default('sapaan');
             $table->json('session_data')->nullable();
-            $table->timestamp('last_interaction_at');
+            $table->timestamp('last_interaction_at')->useCurrent();;
             $table->timestamps();
         });
     }

@@ -2,7 +2,7 @@
 
     <!-- Branding Header -->
     <div class="flex items-center justify-between h-[88px] px-8 border-b border-white/20 shrink-0 bg-black/5 relative z-10">
-        <a href="/admin/ringkasan_finansial" class="flex items-center gap-4 interactive-element focus-visible:outline-none group">
+        <a href="/admin/dashboard_finansial" class="flex items-center gap-4 interactive-element focus-visible:outline-none group">
             <div class="flex items-center justify-center w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1),inset_0_2px_4px_rgba(255,255,255,0.3)] border border-white/30 group-hover:bg-white/30 transition-colors">
                 <i class="ph ph-oven text-3xl text-white"></i>
             </div>
@@ -16,29 +16,14 @@
     <!-- Navigation Area -->
     <nav class="flex-1 overflow-y-auto hide-scrollbar py-6 px-4 space-y-4">
 
-        <!-- MODULE: FINANSIAL -->
-        <div class="menu-group">
-            <button class="btn-toggle-menu w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all interactive-element focus-visible:outline-none text-white/90 hover:bg-white/10" aria-expanded="true">
-                <span class="text-xs font-black text-admin-accent uppercase tracking-[0.15em] drop-shadow-sm">Finansial</span>
-                <i class="ph ph-caret-down text-sm transition-transform duration-300 icon-caret rotate-180"></i>
-            </button>
-            <div class="submenu-container overflow-hidden transition-all duration-300 max-h-[500px]">
-                <!-- Kapsul Pembungkus Submenu -->
-                <ul class="mt-1 space-y-1 p-1.5 bg-black/10 rounded-[1.25rem] border border-black/5 shadow-inner">
-                    <li>
-                        <a href="/admin/ringkasan_finansial" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/ringkasan_finansial') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-chart-line-up text-xl {{ request()->is('admin/ringkasan_finansial') ? 'text-white' : '' }}"></i>
-                            Ringkasan Finansial
-                        </a>
-                    </li>
-                    <li>
-                        <a href="/admin/riwayat_penjualan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/riwayat_penjualan') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-receipt text-xl {{ request()->is('admin/riwayat_penjualan') ? 'text-white' : '' }}"></i>
-                            Riwayat Penjualan
-                        </a>
-                    </li>
-                </ul>
-            </div>
+        <!-- CORE MENU: DASHBOARD FINANSIAL (Single Menu Utama) -->
+        <div>
+            <a href="/admin/dashboard_finansial" class="flex items-center gap-4 px-4 min-h-[54px] rounded-2xl font-black text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/dashboard_finansial*') || request()->is('admin/ringkasan_finansial*') || request()->is('admin/riwayat_penjualan*') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3),0_8px_20px_rgba(0,0,0,0.15)] border border-white/30' : 'bg-black/10 text-white/85 hover:bg-white/15 hover:text-white border border-white/10' }}">
+                <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                    <i class="ph ph-chart-line-up text-xl text-white"></i>
+                </div>
+                <span>Dashboard Finansial</span>
+            </a>
         </div>
 
         <!-- MODULE: OPERASIONAL -->
@@ -68,8 +53,8 @@
                         </a>
                     </li>
                     <li>
-                        <a href="/admin/refund_pembatalan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/pembatalan_refund') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
-                            <i class="ph ph-arrow-u-up-left text-xl {{ request()->is('admin/pembatalan_refund') ? 'text-white' : '' }}"></i>
+                        <a href="/admin/refund_pembatalan" class="flex items-center gap-4 px-3 min-h-[48px] rounded-xl font-bold text-sm transition-all interactive-element focus-visible:outline-none {{ request()->is('admin/refund_pembatalan*') || request()->is('admin/pembatalan_refund*') ? 'bg-admin-sideActive text-white shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.3)] border border-white/20' : 'text-white/70 hover:bg-white/10 hover:text-white' }}">
+                            <i class="ph ph-arrow-u-up-left text-xl {{ request()->is('admin/refund_pembatalan*') ? 'text-white' : '' }}"></i>
                             Batal & Refund
                         </a>
                     </li>
@@ -170,21 +155,14 @@
     </nav>
 </aside>
 
-<!-- SCRIPT ACCORDION SIDEBAR (Tanpa jQuery, murni Vanilla JS biar kenceng & No Memory Leak) -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Ambil URL path saat ini biar sidebar kebuka otomatis di posisi menu yang lagi diklik
-        const currentPath = window.location.pathname;
-
         document.querySelectorAll('.menu-group').forEach(group => {
             const btn = group.querySelector('.btn-toggle-menu');
             const container = group.querySelector('.submenu-container');
             const caret = group.querySelector('.icon-caret');
-
-            // Cek apakah ada submenu aktif di dalam grup ini
             const hasActiveLink = container.querySelector('a[class*="bg-admin-sideActive"]');
 
-            // Buka default jika grup ini mengandung link aktif
             if (hasActiveLink) {
                 btn.setAttribute('aria-expanded', 'true');
                 container.style.maxHeight = container.scrollHeight + "px";
@@ -195,11 +173,9 @@
                 caret.classList.remove('rotate-180');
             }
 
-            // Event listener klik
             btn.addEventListener('click', () => {
                 const isExpanded = btn.getAttribute('aria-expanded') === 'true';
 
-                // Opsional: Tutup semua menu lain saat satu menu dibuka (Accordion Mode)
                 document.querySelectorAll('.menu-group').forEach(otherGroup => {
                     if (otherGroup !== group) {
                         const otherBtn = otherGroup.querySelector('.btn-toggle-menu');
@@ -212,7 +188,6 @@
                     }
                 });
 
-                // Toggle menu yg diklik
                 if (!isExpanded) {
                     btn.setAttribute('aria-expanded', 'true');
                     container.style.maxHeight = container.scrollHeight + "px";
