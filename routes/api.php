@@ -1,14 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\SystemStoreController;
+use App\Http\Controllers\Api\Admin\WhatsappBotTemplateController;
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
-use App\Http\Controllers\Api\Admin\SystemStoreController;
 use App\Http\Controllers\Api\Pembeli\CartController;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
 use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\NotificationController;
-
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
 use App\Http\Controllers\Api\WhatsAppBotController;
@@ -33,11 +33,19 @@ Route::prefix('auth')->middleware('web')->group(function () {
 // ROUTE TAMPILAN PEMBELI
 // ========================================================================================
 // API ga perlu login
+// Di routes/api.php bagian atas (API ga perlu login):
 Route::prefix('pembeli')->group(function () {
     Route::get('/katalog', [KatalogController::class, 'index']);
     Route::get('/katalog/{id}', [KatalogController::class, 'show']);
     Route::get('/tentang-kami', [TentangKamiController::class, 'index']);
+    Route::post('/alamat-update-koordinat', [WhatsAppBotController::class, 'updateKoordinatMap']);
+    Route::get('/nota', [CheckoutController::class, 'showNota']);
+    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']);
+    Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
+    Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
 });
+
+
 
 // BUAT TAMPILAN ADMIN
 Route::prefix('admin')->group(function () {
@@ -52,6 +60,11 @@ Route::prefix('admin')->group(function () {
     Route::post('/libur', [SystemStoreController::class, 'addLibur']);
     Route::delete('/libur/{id}', [SystemStoreController::class, 'deleteLibur']);
     Route::post('/libur/generate', [SystemStoreController::class, 'generateLiburOtomatis']);
+
+    // Template pesan wa
+    Route::get('/bot-templates', [WhatsappBotTemplateController::class, 'index']);
+    Route::post('/bot-templates/update', [WhatsappBotTemplateController::class, 'update']);
+    Route::post('/bot-templates/reset', [WhatsappBotTemplateController::class, 'reset']);
 });
 
 // Perlu login untuk akses route di bawah ini
@@ -65,8 +78,6 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
 
     // --- TRANSAKSI & PESANAN ---
     Route::get('riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');
-    Route::get('/nota', [CheckoutController::class, 'showNota']);
-    Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']);
 
     // --- CART (KERANJANG) ---
     Route::get('/cart', [CartController::class, 'index']);

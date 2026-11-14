@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
@@ -20,6 +21,19 @@ Route::get('/produk/{id}', function ($id) {
 Route::get('/tentang-kami', function () {
     return view('pembeli.pages.tentang_kami');
 })->name('tentang-kami');
+
+Route::get('/pembayaran/{order_number}', function ($order_number) {
+    return view('pembeli.pages.pembayaran');
+})->name('pembayaran');
+
+Route::get('/nota', function (Request $request) {
+    return view('pembeli.pages.nota');
+})->name('nota');
+
+Route::get('/pin-lokasi/{id}', function (Request $request, $id) {
+    $wa = $request->query('wa');
+    return view('pembeli.pages.pin_lokasi', compact('id', 'wa'));
+})->name('pin-lokasi');
 
 
 // ==========================================
@@ -44,17 +58,9 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.alamat');
     })->name('alamat');
 
-    Route::get('/pembayaran/{order_number}', function ($order_number) {
-        return view('pembeli.pages.pembayaran');
-    })->name('pembayaran');
-
     Route::get('/riwayat-pesanan', function () {
         return view('pembeli.pages.riwayat_pesanan');
     })->name('riwayat-pesanan');
-
-    Route::get('/nota', function (\Illuminate\Http\Request $request) {
-        return view('pembeli.pages.nota');
-    })->name('nota');
 });
 
 

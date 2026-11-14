@@ -34,10 +34,6 @@
         border-color: #B38CDA;
     }
 
-    /* Checkbox Toggle CSS */
-    input:checked ~ .dot { transform: translateX(100%); background-color: #9368B7; }
-    input:checked ~ .block { background-color: #E4CCFF; }
-
     /* Basic Markdown untuk preview wa */
     .wa-bold { font-weight: 800; }
     .wa-italic { font-style: italic; }
@@ -46,6 +42,14 @@
 @endsection
 
 @section('content')
+<!-- Toast Notifikasi Pojok Kanan Atas -->
+<div id="toast-notif" class="fixed top-6 right-6 z-[200] hidden items-center gap-3 px-5 py-3.5 rounded-2xl bg-white border border-admin-accent shadow-2xl transition-all">
+    <div id="toast-icon" class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+        <i class="ph ph-check-circle text-lg"></i>
+    </div>
+    <p id="toast-msg" class="text-xs font-black text-admin-textMain">Berhasil disimpan!</p>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
 
     <!-- LEFT PANEL: Daftar Template (Span 4) -->
@@ -57,7 +61,7 @@
 
         <!-- List Scrollable -->
         <div class="flex-1 overflow-y-auto hide-scrollbar p-3 space-y-2" id="template-list">
-            <!-- Di-inject via JS -->
+            <p class="text-xs font-bold text-admin-textMuted text-center py-10 animate-pulse">Memuat skenario pesan...</p>
         </div>
     </div>
 
@@ -75,20 +79,17 @@
 
         <!-- Kolom Editor Text -->
         <div class="flex-1 flex flex-col border-b xl:border-b-0 xl:border-r border-admin-border h-full p-5 lg:p-6 overflow-y-auto hide-scrollbar">
-            <div class="flex justify-between items-start mb-4 shrink-0">
+            <div class="flex justify-between items-start mb-4 shrink-0 gap-4">
                 <div>
                     <h3 class="font-black text-lg text-admin-textMain" id="edit-title">Nama State</h3>
                     <p class="text-xs font-bold text-admin-textMuted mt-1" id="edit-desc">Deskripsi skenario</p>
                 </div>
-                <!-- Toggle Aktif/Nonaktif -->
-                <label class="flex items-center cursor-pointer group shrink-0 ml-4">
-                    <div class="relative">
-                        <input type="checkbox" id="edit-is-active" class="sr-only">
-                        <div class="block bg-gray-200 w-10 h-6 rounded-full transition-colors group-hover:bg-gray-300"></div>
-                        <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform shadow-sm"></div>
-                    </div>
-                    <span class="ml-2 text-xs font-bold text-admin-textMuted" id="edit-status-text">Aktif</span>
-                </label>
+
+                <!-- Tombol Kembalikan ke Default -->
+                <button type="button" id="btn-reset-default" class="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-admin-bg hover:bg-admin-navBg text-admin-sideBg font-black text-xs border border-admin-accent/60 transition-all shadow-sm hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-40 disabled:pointer-events-none" title="Kembalikan teks ke bawaan sistem">
+                    <i class="ph ph-arrow-counter-clockwise text-sm"></i>
+                    <span id="btn-reset-text">Kembalikan ke Default</span>
+                </button>
             </div>
 
             <!-- Form Edit -->
@@ -96,7 +97,11 @@
                 <input type="hidden" id="edit-session-state">
 
                 <div class="flex-1 flex flex-col relative mb-4">
-                    <label class="text-[11px] font-black text-admin-accent uppercase tracking-widest mb-2 opacity-90 drop-shadow-sm shrink-0">Isi Pesan (Format WhatsApp)</label>
+                    <div class="flex justify-between items-center mb-2 shrink-0">
+                        <label class="text-[11px] font-black text-admin-accent uppercase tracking-widest opacity-90 drop-shadow-sm">Isi Pesan (Format WhatsApp)</label>
+                        <span id="badge-status-default" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">Default Sistem</span>
+                    </div>
+
                     <textarea id="edit-message" class="flex-1 w-full p-4 bg-admin-bg/50 border border-admin-border rounded-2xl text-sm font-medium text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideHover resize-none shadow-inner min-h-[200px]" placeholder="Ketik pesan di sini..."></textarea>
 
                     <!-- Bantuan Variabel (STRICT MODE) -->
@@ -162,50 +167,108 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        // --- 1. DATA DUMMY TEMPLATE ---
-        const dummyTemplates = [
-            { session_state: "sapaan", description: "Pesan sapaan awal saat pelanggan baru chat", is_active: true, message_text: "Halo Kak {nama}! Selamat datang di Raya Kitchen. 🍞✨\n\nKetik angka dari menu di bawah ini untuk mulai:\n1. 📖 Lihat Katalog Produk\n2. 🛒 Cek Keranjang Saya\n3. 📦 Cek Status Pesanan\n4. ℹ️ Cara Pemesanan" },
-            { session_state: "instruksi", description: "Pesan panduan cara menggunakan bot", is_active: true, message_text: "Cara pesannya gampang banget Kak!\n\n1. Pilih 'Lihat Katalog' lalu ketik angka produk yang mau dibeli.\n2. Masukkan jumlah produk.\n3. Ikuti langkah pengisian data pengiriman.\n4. Pilih metode pembayaran (Lunas, DP, atau COD).\n5. Lakukan pembayaran via QRIS dan pesanan otomatis diproses!\n\n0. 🔙 Kembali ke Menu Utama" },
-            { session_state: "lihat_kategori", description: "Menampilkan daftar kategori produk yang aktif", is_active: true, message_text: "Silakan pilih kategori produk yang mau dilihat:\n\n{daftar_kategori}\n0. 🔙 Kembali ke Menu Utama" },
-            { session_state: "detail_varian", description: "Menampilkan detail produk dan opsi tambah ke keranjang", is_active: true, message_text: "Detail Produk:\n\n🍞 *{nama_produk}*\n🏷️ Kategori: {kategori_produk}\n💰 Harga: Rp {harga_produk}\n\n📝 Deskripsi:\n{deskripsi_produk}\n\nKetik angka berikut:\n1. 🛒 Tambah ke Keranjang\n0. 🔙 Kembali ke Daftar Varian" },
-            { session_state: "keranjang", description: "Menampilkan isi keranjang belanja dan opsi checkout", is_active: true, message_text: "🛒 *Isi Keranjang Kamu:*\n\n{isi_keranjang}\nTotal Belanja: Rp {total_harga}\n\nPilih aksi:\n1. ✅ Lanjut Checkout\n2. ➕ Tambah Produk Lain\n3. 🗑️ Kosongkan Keranjang\n0. 🔙 Kembali ke Menu Utama" },
-            { session_state: "checkout_konfirmasi", description: "Menampilkan ringkasan final sebelum generate QRIS", is_active: true, message_text: "🧾 *Ringkasan Pesanan*\n{ringkasan_pesanan}\n\n*Total Tagihan (Sesuai Skema): Rp {total_tagihan}*\n\nApakah data pesanan sudah benar?\n1. ✅ Ya, Buat Pesanan & Bayar\n2. ❌ Tidak, Batal Checkout" },
-            { session_state: "pembayaran_qris", description: "Pesan instruksi pembayaran beserta gambar QRIS", is_active: true, message_text: "🎉 Pesanan *#{order_number}* berhasil dibuat!\n\nSilakan scan QRIS pada gambar di atas untuk membayar tagihan sebesar *Rp {total_tagihan}*.\nBatas waktu pembayaran adalah 1 jam dari sekarang.\n\nSistem akan otomatis mengirimkan notifikasi jika pembayaran sudah berhasil diterima.\n\n0. 🔙 Kembali ke Menu Utama" },
-        ];
+        let templatesData = [];
+        let currentActiveState = null;
+        let currentRequiredVars = [];
 
-        // --- 2. DATA DUMMY UNTUK PREVIEW VARIABEL ---
+        // --- 1. DATA CONTOH UNTUK LIVE PREVIEW VARIABEL ---
         const dummyVars = {
             "{nama}": "Budi Santoso",
-            "{daftar_kategori}": "1. Roti Tawar\n2. Roti Manis\n3. Kue Kering",
+            "{nama_penerima}": "Budi Santoso",
+            "{daftar_kategori}": "1. Roti Manis\n2. Roti Gurih\n3. Kue Kering",
             "{nama_kategori}": "Roti Manis",
-            "{daftar_varian}": "1. Roti Coklat\n2. Roti Keju\n3. Roti Srikaya",
-            "{nama_produk}": "Roti Sisir Mentega",
+            "{daftar_varian}": "1. Coklat Lumer (Rp 12.000)\n2. Keju Susu (Rp 13.000)",
+            "{nama_produk}": "Coklat Lumer",
             "{kategori_produk}": "Roti Manis",
-            "{harga_produk}": "15.000",
-            "{deskripsi_produk}": "Roti sisir lembut dengan olesan mentega manis yang lumer di mulut.",
-            "{isi_keranjang}": "- 2x Roti Sisir Mentega\n- 1x Roti Tawar Gandum",
-            "{total_harga}": "55.000",
-            "{daftar_alamat}": "1. Rumah (Jl. Melati No 5)\n2. Kantor (Gedung Sudirman)",
-            "{ringkasan_pesanan}": "Penerima: Budi Santoso\nAlamat: Jl. Melati No 5\nTgl Kirim: 2026-10-30 09:00\nItem: 3 Roti",
-            "{total_tagihan}": "16.500",
-            "{order_number}": "RK-20261025-9988"
+            "{harga_produk}": "12.000",
+            "{deskripsi_produk}": "Roti lembut dengan isian coklat lumer premium.",
+            "{isi_keranjang}": "- Roti Manis - Coklat Lumer (2x) = Rp 24.000\n- Roti Gurih - Abon Sapi (1x) = Rp 15.000",
+            "{total_harga}": "39.000",
+            "{daftar_alamat}": "Alamat Tersimpan:\n1. [Rumah] Jl. Mawar No 5, Jatiasih, Kota Bekasi (Patokan: Pagar Hitam)",
+            "{form_alamat}": "--- Form Alamat Baru ---\nLabel Alamat : \nProvinsi : \nKota / Kabupaten : \nKecamatan : \nKode Pos : \nAlamat Jalan : \nPatokan : ",
+            "{link_maps}": "https://rayakitchen.com/pin-lokasi/1?wa=628123456789",
+            "{jarak}": "4.5",
+            "{daftar_ekspedisi}": "1. JNE - REG (Rp 12.000) | Est: 2-3 hr\n2. SICEPAT - REG (Rp 11.500) | Est: 2-3 hr",
+            "{contoh_tanggal}": "2026-11-16",
+            "{tanggal}": "2026-11-16",
+            "{sisa_kuota}": "5",
+            "{alasan_penolakan}": "Waduh, kuota produksi dapur pada tanggal tersebut sudah penuh.",
+            "{daftar_tanggal}": "1. Senin, 16 November 2026 (2026-11-16)\n2. Selasa, 17 November 2026 (2026-11-17)",
+            "{jam_buka}": "08:00",
+            "{jam_tutup}": "17:00",
+            "{jam}": "10:00",
+            "{daftar_jam}": "1. Jam 09:00 WIB (Sisa 4 slot)\n2. Jam 11:00 WIB (Sisa 5 slot)",
+            "{ringkasan_pesanan}": "Pemesan: Budi Santoso\nAlamat: Jl. Mawar No 5, Bekasi\nKurir: Kurir Internal Raya Kitchen (Gratis)\nJadwal: 2026-11-16 Jam 10:00 WIB\n\nItem:\n- Roti Manis - Coklat Lumer (2x) = Rp 24.000\n\nTotal Pesanan: Rp 24.000\nMetode: DP 30% (QRIS)",
+            "{total_tagihan}": "7.200",
+            "{order_number}": "RK-20261114-8899",
+            "{link_pembayaran}": "https://rayakitchen.com/pembayaran/RK-20261114-8899",
+            "{link_nota}": "https://rayakitchen.com/nota?order_number=RK-20261114-8899",
+            "{label_filter}": "SEMUA PESANAN",
+            "{halaman_sekarang}": "1",
+            "{total_halaman}": "2",
+            "{total_pesanan}": "8",
+            "{daftar_pesanan}": "*1. #RK-20261114-8899*\n📅 Tgl: 14 Nov 2026, 10:00\n📌 Status: *DALAM ANTREAN* (TRANSFER - DP 30%)\n💳 Status Bayar: *PAID_DP*\n💰 Total: Rp 24.000\n⏳ Sisa Tagihan: *Rp 16.800*\n🧾 Lihat Nota: https://rayakitchen.com/nota?order_number=RK-20261114-8899",
+            "{navigasi_halaman}": "⏭️ Ketik *lanjut* untuk melihat 5 pesanan berikutnya\n",
+            "{status_pesanan}": "DIPROSES",
+            "{info_refund}": "Dana refund akan segera diproses oleh Admin ke rekening *BCA - 1234567890 a/n Budi Santoso* maksimal 1x24 jam.",
+            "{total_pesanan}": "Rp 24.000",
+            "{nominal_dp}": "Rp 7.200",
+            "{sisa_tagihan}": "Rp 16.800",
+            "{info_status}": "Status pesananmu kini telah *SELESAI*.",
+            "{info_pelunasan}": "⚠️ *Belum Lunas (Sisa Rp 16.800):*\nSilakan lunasi sisa tagihanmu sebelum pesanan diselesaikan melalui link berikut:\n👉 https://rayakitchen.com/pembayaran/RK-20261114-8899"
         };
 
-        let currentActiveState = null;
-        let currentRequiredVars = []; // Simpan list variabel asli dari database
+        function showToast(message, isSuccess = true) {
+            const toast = $('#toast-notif');
+            const icon = $('#toast-icon');
+            $('#toast-msg').text(message);
+
+            if (isSuccess) {
+                icon.removeClass('bg-rose-100 text-rose-600').addClass('bg-emerald-100 text-emerald-600')
+                    .html('<i class="ph ph-check-circle text-lg"></i>');
+            } else {
+                icon.removeClass('bg-emerald-100 text-emerald-600').addClass('bg-rose-100 text-rose-600')
+                    .html('<i class="ph ph-warning-circle text-lg"></i>');
+            }
+
+            toast.removeClass('hidden').addClass('flex');
+            setTimeout(() => {
+                toast.removeClass('flex').addClass('hidden');
+            }, 3000);
+        }
+
+        // --- 2. FETCH DATA DARI DATABASE VIA API ---
+        function loadTemplates() {
+            $.ajax({
+                url: '/api/admin/bot-templates',
+                type: 'GET',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        templatesData = res.data || [];
+                        renderList();
+                    }
+                },
+                error: function() {
+                    $('#template-list').html('<p class="text-xs font-bold text-rose-500 text-center py-10">Gagal memuat data template.</p>');
+                }
+            });
+        }
 
         // --- 3. RENDER LIST SIDEBAR ---
         function renderList() {
             let html = '';
-            dummyTemplates.forEach(t => {
+            templatesData.forEach(t => {
                 let title = t.session_state.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 let activeClass = currentActiveState === t.session_state ? 'list-active' : 'border-transparent hover:bg-admin-bg';
+                let isModified = (t.message_text || '').trim() !== (t.default_message_text || '').trim();
 
                 html += `
                     <div class="template-item p-3 border-2 rounded-2xl cursor-pointer transition-all ${activeClass}" data-state="${t.session_state}">
                         <div class="flex justify-between items-center mb-1">
                             <span class="font-bold text-sm text-admin-textMain">${title}</span>
-                            ${t.is_active ? '<div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_5px_#10B981]"></div>' : '<div class="w-2 h-2 bg-gray-300 rounded-full"></div>'}
+                            ${isModified
+                                ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-admin-sideBg">Diubah</span>'
+                                : '<div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_5px_#10B981]" title="Default"></div>'}
                         </div>
                         <p class="text-[11px] font-medium text-admin-textMuted line-clamp-1">${t.description}</p>
                     </div>
@@ -218,8 +281,7 @@
         function parseWaFormat(text) {
             let parsedText = text;
             Object.keys(dummyVars).forEach(key => {
-                let regex = new RegExp(key, "gi");
-                parsedText = parsedText.replace(regex, dummyVars[key]);
+                parsedText = parsedText.replaceAll(key, dummyVars[key]);
             });
             parsedText = parsedText.replace(/\*(.*?)\*/g, '<span class="wa-bold">$1</span>');
             parsedText = parsedText.replace(/_(.*?)_/g, '<span class="wa-italic">$1</span>');
@@ -227,11 +289,32 @@
             return parsedText;
         }
 
+        function updateDefaultBadgeAndButton() {
+            const data = templatesData.find(t => t.session_state === currentActiveState);
+            if (!data) return;
+
+            const currentText = $('#edit-message').val().trim();
+            const defaultText = (data.default_message_text || '').trim();
+            const badge = $('#badge-status-default');
+            const btnReset = $('#btn-reset-default');
+
+            if (currentText === defaultText) {
+                badge.text('Default Sistem')
+                     .removeClass('bg-purple-100 text-admin-sideBg border-purple-200')
+                     .addClass('bg-emerald-50 text-emerald-600 border-emerald-200');
+                btnReset.prop('disabled', true);
+            } else {
+                badge.text('Telah Dikustomisasi')
+                     .removeClass('bg-emerald-50 text-emerald-600 border-emerald-200')
+                     .addClass('bg-purple-100 text-admin-sideBg border-purple-200');
+                btnReset.prop('disabled', false);
+            }
+        }
+
         function validateVariables() {
             const currentText = $('#edit-message').val();
             let missingVars = [];
 
-            // Cek apakah semua variabel wajib masih ada di textarea
             currentRequiredVars.forEach(v => {
                 if (!currentText.includes(v)) {
                     missingVars.push(v);
@@ -243,12 +326,10 @@
             const errorText = $('#var-error-text');
 
             if (missingVars.length > 0) {
-                // Ada yang terhapus! Disable tombol simpan
                 errorText.html(`Anda menghapus variabel wajib: <b>${missingVars.join(', ')}</b>. Silakan masukkan kembali!`);
                 errorBox.removeClass('hidden');
                 btnSave.prop('disabled', true);
             } else {
-                // Aman
                 errorBox.addClass('hidden');
                 btnSave.prop('disabled', false);
             }
@@ -259,19 +340,17 @@
             const formattedHTML = parseWaFormat(rawText);
             $('#preview-text').html(formattedHTML);
 
-            // Setiap ada perubahan teks, jalankan validasi
             validateVariables();
+            updateDefaultBadgeAndButton();
         }
 
         // --- 5. EVENT LISTENERS ---
-
-        // Pilih Template
         $(document).on('click', '.template-item', function() {
             const state = $(this).data('state');
             currentActiveState = state;
             renderList();
 
-            const data = dummyTemplates.find(t => t.session_state === state);
+            const data = templatesData.find(t => t.session_state === state);
             if(data) {
                 $('#editor-empty').fadeOut(200);
 
@@ -279,16 +358,13 @@
                 $('#edit-title').text(title);
                 $('#edit-desc').text(data.description);
                 $('#edit-session-state').val(data.session_state);
-                $('#edit-is-active').prop('checked', data.is_active);
-                $('#edit-status-text').text(data.is_active ? 'Aktif' : 'Nonaktif');
                 $('#edit-message').val(data.message_text);
 
-                // Ekstrak variabel wajib dari DB (Hanya pas awal load)
-                let foundVars = data.message_text.match(/\{.*?\}/g);
+                // Ekstrak variabel wajib dari default_message_text (Opsi 1)
+                let foundVars = (data.default_message_text || '').match(/\{[a-zA-Z0-9_]+\}/g);
                 if (foundVars) {
                     currentRequiredVars = [...new Set(foundVars)];
 
-                    // Bikin tombol insert untuk tiap variabel
                     let buttonsHtml = currentRequiredVars.map(v =>
                         `<button type="button" class="btn-insert-var px-2.5 py-1.5 bg-white border border-amber-300 text-amber-700 text-[11px] font-black rounded-lg shadow-sm hover:bg-amber-100 hover:-translate-y-0.5 transition-transform focus:outline-none" data-var="${v}">+ ${v}</button>`
                     ).join('');
@@ -302,6 +378,46 @@
             }
         });
 
+        // Klik Kembalikan ke Default (Langsung Reset ke DB via API)
+        $('#btn-reset-default').on('click', function() {
+            const data = templatesData.find(t => t.session_state === currentActiveState);
+            if (!data) return;
+
+            if (!confirm('Kembalikan isi pesan ini ke teks default bawaan sistem?')) return;
+
+            const btn = $(this);
+            const ogText = $('#btn-reset-text').text();
+            $('#btn-reset-text').text('Mereset...');
+            btn.prop('disabled', true);
+
+            $.ajax({
+                url: '/api/admin/bot-templates/reset',
+                type: 'POST',
+                data: {
+                    session_state: currentActiveState
+                },
+                success: function(res) {
+                    if (res.status === 'success') {
+                        const idx = templatesData.findIndex(t => t.session_state === currentActiveState);
+                        if (idx !== -1) {
+                            templatesData[idx].message_text = res.data.message_text;
+                        }
+                        $('#edit-message').val(res.data.message_text);
+                        updatePreview();
+                        renderList();
+                        showToast(res.message, true);
+                    }
+                },
+                error: function(xhr) {
+                    showToast(xhr.responseJSON?.message || 'Gagal mereset template.', false);
+                    btn.prop('disabled', false);
+                },
+                complete: function() {
+                    $('#btn-reset-text').text(ogText);
+                }
+            });
+        });
+
         // Insert Variabel ke Cursor Position
         $(document).on('click', '.btn-insert-var', function() {
             const varText = $(this).data('var');
@@ -311,10 +427,8 @@
             const endPos = textarea.selectionEnd;
             const text = textarea.value;
 
-            // Suntik teks di posisi kursor
             textarea.value = text.substring(0, startPos) + varText + text.substring(endPos, text.length);
 
-            // Kembalikan fokus dan geser kursor ke ujung variabel yang baru dimasukkan
             textarea.selectionStart = startPos + varText.length;
             textarea.selectionEnd = startPos + varText.length;
             textarea.focus();
@@ -324,11 +438,7 @@
 
         $('#edit-message').on('input', updatePreview);
 
-        $('#edit-is-active').on('change', function() {
-            $('#edit-status-text').text($(this).is(':checked') ? 'Aktif' : 'Nonaktif');
-        });
-
-        // Submit
+        // Submit Simpan Perubahan ke DB via API
         $('#form-template').on('submit', function(e) {
             e.preventDefault();
             const btn = $('#btn-save');
@@ -337,29 +447,34 @@
             btn.html('<i class="ph ph-spinner-gap animate-spin text-xl"></i> Menyimpan...').prop('disabled', true);
 
             $.ajax({
-                url: '#', // Nanti ganti endpoint api update
+                url: '/api/admin/bot-templates/update',
                 type: 'POST',
                 data: {
                     session_state: $('#edit-session-state').val(),
-                    message_text: $('#edit-message').val(),
-                    is_active: $('#edit-is-active').is(':checked')
+                    message_text: $('#edit-message').val()
                 },
-                success: function() {
-                    const idx = dummyTemplates.findIndex(t => t.session_state === currentActiveState);
-                    if (idx !== -1) {
-                        dummyTemplates[idx].message_text = $('#edit-message').val();
-                        dummyTemplates[idx].is_active = $('#edit-is-active').is(':checked');
+                success: function(res) {
+                    if (res.status === 'success') {
+                        const idx = templatesData.findIndex(t => t.session_state === currentActiveState);
+                        if (idx !== -1) {
+                            templatesData[idx].message_text = res.data.message_text;
+                        }
+                        updateDefaultBadgeAndButton();
+                        renderList();
+                        showToast(res.message, true);
                     }
-
+                },
+                error: function(xhr) {
+                    showToast(xhr.responseJSON?.message || 'Gagal menyimpan template.', false);
+                },
+                complete: function() {
                     btn.html(ogHtml).prop('disabled', false);
-                    renderList();
-
-                    alert('Template WA berhasil diperbarui!');
+                    validateVariables();
                 }
             });
         });
 
-        renderList();
+        loadTemplates();
     });
 </script>
 @endpush

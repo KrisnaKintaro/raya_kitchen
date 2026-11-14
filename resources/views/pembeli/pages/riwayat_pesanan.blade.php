@@ -178,14 +178,16 @@ $(document).ready(function() {
         let filteredOrders = allOrders.filter(order => {
             if (filterType === 'semua') return true;
 
-            let pStatus = order.payment_status ? order.payment_status.toLowerCase() : '';
-            let oStatus = order.status ? order.status.toLowerCase() : '';
+            let pStatus = (order.payment_status || '').toLowerCase();
+            let oStatus = (order.raw_status || order.status || '').toLowerCase().replace(/\s+/g, '_');
+            if (['siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'].includes(oStatus)) {
+                oStatus = 'siap_diambil';
+            }
 
-            if (filterType === 'unpaid') return pStatus === 'unpaid' || pStatus === 'failed';
+            if (filterType === 'unpaid') return (pStatus === 'unpaid' || pStatus === 'failed') && oStatus !== 'dibatalkan';
             if (filterType === 'paid_dp') return pStatus === 'paid_dp';
             if (filterType === 'paid_full') return pStatus === 'paid_full';
-
-            if (filterType === 'pending') return oStatus === 'pending' && pStatus !== 'unpaid';
+            if (filterType === 'pending') return oStatus === 'pending' && pStatus !== 'unpaid' && pStatus !== 'failed';
             if (filterType === 'diproses') return oStatus === 'diproses';
             if (filterType === 'siap_diambil') return oStatus === 'siap_diambil';
             if (filterType === 'selesai') return oStatus === 'selesai';
@@ -204,11 +206,15 @@ $(document).ready(function() {
 
         filteredOrders.forEach(order => {
             let statusColor = 'bg-gray-100 text-gray-600';
-            let pStatus = order.payment_status ? order.payment_status.toLowerCase() : '';
-            let oStatus = order.status ? order.status.toLowerCase() : '';
-            let pMethod = order.payment_method ? order.payment_method.toLowerCase() : '';
+            let pStatus = (order.payment_status || '').toLowerCase();
+            let oStatus = (order.raw_status || order.status || '').toLowerCase().replace(/\s+/g, '_');
+            if (['siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'].includes(oStatus)) {
+                oStatus = 'siap_diambil';
+            }
+            let pMethod = (order.payment_method || '').toLowerCase();
+            let remainingAmount = parseFloat(order.remaining_amount || 0);
 
-            let displayStatus = 'Status Tidak Diketahui';
+            let displayStatus = 'DALAM ANTREAN';
 
             if (oStatus === 'dibatalkan') {
                 statusColor = 'bg-red-100 text-red-700 border border-red-200';
@@ -230,10 +236,9 @@ $(document).ready(function() {
                 displayStatus = 'SELESAI';
             }
 
-            // Tag Metode Pembayaran (Border radius 12px)
             let methodText = pMethod === 'cod' ? 'COD' : 'TRANSFER';
             let methodColor = pMethod === 'cod' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200';
-            let methodTag = `<span class="px-2.5 py-1 text-[10px] font-black rounded-[12px] border ${methodColor} uppercase tracking-wider">${methodText}</span>`;
+            let methodTag = `<span class="px-2.5 py-1 text-[10px] font-black rounded-[12px] border ${methodColor} uppercase tracking-wider">${methodText} (${order.tipe_bayar})</span>`;
 
             let actionButtons = '';
 
@@ -244,17 +249,23 @@ $(document).ready(function() {
                     actionButtons += `<a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-sm hover:bg-white transition-all">Lihat Nota</a>`;
                 }
 
+                // Tombol Bayar Awal (Unpaid)
                 if (pStatus === 'unpaid' || pStatus === 'failed') {
-                    if (pMethod === 'cod') {
-                        actionButtons += `<button disabled class="flex-1 md:flex-none text-center py-2.5 px-4 bg-gray-200 text-gray-500 font-extrabold text-xs rounded-xl shadow-sm cursor-not-allowed border border-gray-300">Silahkan menunggu pesananmu sampai</button>`;
+                    actionButtons += `<a href="/pembayaran/${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-amber-600 transition-all">Bayar Sekarang</a>`;
+                }
+
+                // Tombol Bayar Sisa Tagihan (Khusus DP 30% yang belum lunas, terutama saat Siap Diantar/Diambil)
+                if (pStatus === 'paid_dp' && remainingAmount > 0 && oStatus !== 'selesai') {
+                    if (pMethod === 'cod' && oStatus !== 'siap_diambil') {
+                        actionButtons += `<span class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-50 text-amber-700 font-extrabold text-xs rounded-xl border border-amber-200">Sisa COD: ${order.sisa_tagihan_formatted}</span>`;
                     } else {
-                        actionButtons += `<a href="/pembayaran/${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-500 text-white font-extrabold text-xs rounded-xl shadow-md hover:bg-amber-600 transition-all">Bayar Sekarang</a>`;
+                        let highlightClass = (oStatus === 'siap_diambil') ? 'bg-red-500 hover:bg-red-600 animate-pulse' : 'bg-purple-600 hover:bg-purple-700';
+                        actionButtons += `<button type="button" onclick="lunasiDariRiwayat('${order.order_number}', this)" class="flex-1 md:flex-none text-center py-2.5 px-4 ${highlightClass} text-white font-extrabold text-xs rounded-xl shadow-md transition-all">Bayar Sisa (${order.sisa_tagihan_formatted})</button>`;
                     }
                 }
 
-                // HANYA MUNCUL JIKA STATUS PENDING
+                // Tombol Batalkan (Hanya jika status masih pending)
                 if (oStatus === 'pending') {
-                    // Cek apakah dia udah bayar sesuatu (Buat nampilin kolom rekening)
                     let isPaid = (pStatus === 'paid_dp' || pStatus === 'paid_full');
                     actionButtons += `<button onclick="openCancelModal('${order.order_number}', ${isPaid})" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-red-100 text-red-600 font-extrabold text-xs rounded-xl shadow-sm hover:bg-red-200 transition-all">Batalkan</button>`;
                 }
@@ -262,7 +273,6 @@ $(document).ready(function() {
 
             htmlContent += `
             <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-sm border border-purple-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-
                 <div class="space-y-2 w-full md:w-auto">
                     <div class="flex items-center justify-between md:justify-start gap-3 w-full">
                         <span class="text-xs font-bold text-gray-400">${order.date}</span>
@@ -273,17 +283,14 @@ $(document).ready(function() {
                             ${methodTag}
                         </div>
                     </div>
-
                     <h3 class="font-extrabold text-gray-800 text-base md:text-lg">
                         No. Pesanan: <span class="text-purple-600">${order.order_number}</span>
                     </h3>
-
                     <div class="text-xs md:text-sm text-gray-500 space-y-1 font-medium">
                         <p><strong class="text-gray-700">Penerima:</strong> ${order.recipient_name} (${order.recipient_whatsapp})</p>
                         <p><strong class="text-gray-700">Alamat:</strong> ${order.shipping_address || 'Belum diatur'}</p>
                     </div>
                 </div>
-
                 <div class="flex flex-col md:items-end justify-between w-full md:w-auto gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
                     <div class="text-left md:text-right flex justify-between md:block items-center w-full">
                         <span class="text-xs font-bold text-gray-400 block">Total Pembayaran</span>
@@ -293,12 +300,35 @@ $(document).ready(function() {
                         ${actionButtons}
                     </div>
                 </div>
-
             </div>`;
         });
 
         ordersContainer.html(htmlContent);
     }
+
+    window.lunasiDariRiwayat = function(orderNumber, btnEl) {
+        let btn = $(btnEl);
+        let ogText = btn.html();
+        btn.html('Menyiapkan QRIS...').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/checkout/pay-remaining",
+            type: "POST",
+            data: {
+                order_number: orderNumber,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if(res.status === 'success') {
+                    window.location.href = res.data.redirect_url;
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || 'Gagal menyiapkan QRIS pelunasan.');
+                btn.html(ogText).prop('disabled', false);
+            }
+        });
+    };
 
     // ==========================================
     // LOGIC MODAL PEMBATALAN

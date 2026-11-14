@@ -251,6 +251,7 @@
                     $('#summary-total-barang').text(formatRupiah(order.total_amount));
 
                     let remainingAmount = parseFloat(order.remaining_amount);
+                    let paymentStatus = (order.transaction?.payment_status || 'unpaid').toLowerCase();
                     let watermarkHtml = '';
                     let bottomHtml = '';
 
@@ -306,12 +307,28 @@
                         bottomHtml += `</div>`;
                         $('#bottom-section').html(bottomHtml).removeClass('hidden');
 
-                    } else if (remainingAmount === 0) {
+                    } else if (paymentStatus === 'unpaid' || paymentStatus === 'failed') {
+                        watermarkHtml = 'BELUM DIBAYAR';
+                        $('#watermark-status').addClass('border-red-500 text-red-600 bg-red-50').text(watermarkHtml);
+                        $('#summary-label').text('Tagihan Saat Ini');
+                        $('#summary-value').text(formatRupiah(order.transaction?.amount || order.total_amount)).removeClass('text-purple-700').addClass('text-red-600');
+                        $('#bottom-section').html(`
+                            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-4 flex gap-3 items-start">
+                                <svg class="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div>
+                                    <p class="font-bold text-amber-800 text-sm mb-1">Menunggu Pembayaran QRIS</p>
+                                    <p class="text-xs text-amber-700 font-medium">Pesananmu belum dibayar. Silakan selesaikan pembayaran QRIS agar pesanan segera diproses dapur.</p>
+                                </div>
+                            </div>
+                            <a href="/pembayaran/${order.order_number}" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-center text-sm transition shadow-md">
+                                Bayar Sekarang via QRIS
+                            </a>
+                        `).removeClass('hidden');
+                    } else if (paymentStatus === 'paid_full' || remainingAmount === 0) {
                         watermarkHtml = 'LUNAS';
                         $('#watermark-status').addClass('border-green-500 text-green-600 bg-green-50').text(watermarkHtml);
                         $('#summary-label').text('Total Lunas');
                         $('#summary-value').text(formatRupiah(order.total_amount));
-
                         $('#bottom-section').html('<p class="text-sm font-bold text-green-600 text-center">Pesanan telah lunas. Terima kasih telah berbelanja di Raya Kitchen!</p>').removeClass('hidden');
                     } else {
                         watermarkHtml = `DP 30% - Sisa ${formatRupiah(remainingAmount)}`;
