@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\DashboardFinansialController;
+use App\Http\Controllers\Api\Admin\PantauanDapurController;
 use App\Http\Controllers\Api\Admin\SystemStoreController;
 use App\Http\Controllers\Api\Admin\WhatsappBotTemplateController;
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
@@ -69,6 +70,10 @@ Route::prefix('admin')->group(function () {
 
     // Finansial
     Route::get('/dashboard-finansial', [DashboardFinansialController::class, 'index']);
+
+    // --- PANTAUAN DAPUR (KDS) ---
+    Route::get('/pantauan-dapur', [PantauanDapurController::class, 'index']);
+    Route::post('/pantauan-dapur/move', [PantauanDapurController::class, 'moveItem']);
 });
 
 // Perlu login untuk akses route di bawah ini
