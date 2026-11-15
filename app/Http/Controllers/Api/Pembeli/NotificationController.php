@@ -208,6 +208,37 @@ class NotificationController extends Controller
                     'link_nota'     => $linkNota
                 ]);
                 break;
+            case 'refund_selesai':
+                $totalAmt     = (int) round($order->total_amount ?? 0);
+                $dpAmt        = (int) round($order->dp_amount ?? 0);
+                $remAmt       = (int) round($order->remaining_amount ?? 0);
+                $trxAmt       = (int) round($order->transaction->amount ?? 0);
+                $isFullRefund = ($pStatus === 'paid_full')
+                    || ($remAmt <= 0 && $totalAmt > 0)
+                    || ($trxAmt >= $totalAmt && $totalAmt > 0);
+
+                $nominalRefund = $isFullRefund
+                    ? $totalAmt
+                    : ($dpAmt > 0 ? $dpAmt : ($trxAmt > 0 ? $trxAmt : (int) round($totalAmt * 0.3)));
+
+                $refundFormatted = 'Rp ' . number_format($nominalRefund, 0, ',', '.');
+                $linkBuktiRefund = !empty($order->refund_proof)
+                    ? (str_starts_with($order->refund_proof, 'http')
+                        ? $order->refund_proof
+                        : asset('storage/bukti_refund/' . ltrim($order->refund_proof, '/')))
+                    : $linkNota;
+
+                $title = 'Pengembalian Dana (Refund) Selesai';
+                $message = 'Dana refund sebesar ' . $refundFormatted . ' untuk pesanan #' . $order->order_number . ' telah ditransfer oleh Admin. Klik untuk melihat bukti transfer di Nota.';
+                $waMessage = self::getTemplateMessage('notif_refund_selesai', [
+                    'nama_penerima'     => $order->recipient_name,
+                    'order_number'      => $order->order_number,
+                    'nominal_refund'    => $refundFormatted,
+                    'rekening_refund'   => $order->refund_account_number ?? '-',
+                    'link_bukti_refund' => $linkBuktiRefund,
+                    'link_nota'         => $linkNota,
+                ]);
+                break;
         }
 
         // 1. Simpan Notifikasi Web
