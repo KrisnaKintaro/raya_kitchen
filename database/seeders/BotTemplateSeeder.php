@@ -426,6 +426,12 @@ class BotTemplateSeeder extends Seeder
                 'is_active' => true,
                 'message_text' => "Halo *{nama}*! 🔐\n\nAda permintaan reset password untuk akun Raya Kitchen kamu.\n\nKlik link di bawah untuk membuat password baru:\n{link_reset}\n\nLink ini hanya berlaku 15 menit. Jika bukan kamu yang meminta, abaikan pesan ini."
             ],
+            [
+                'session_state' => 'notif_refund_selesai',
+                'description' => 'Notifikasi WA otomatis saat Admin telah mentransfer pengembalian dana (Refund)',
+                'is_active' => true,
+                'message_text' => "💳 *Pengembalian Dana (Refund) Berhasil*\n\nHalo Kak *{nama_penerima}*,\nDana refund untuk pesanan *#{order_number}* telah berhasil ditransfer oleh Admin ke rekening *{rekening_refund}*.\n\nSilakan cek bukti transfer pengembalian dana pada Nota Digital berikut:\n🧾 {link_nota}"
+            ],
         ];
     }
 

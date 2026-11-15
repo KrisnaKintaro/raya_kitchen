@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\BatalRefundController;
 use App\Http\Controllers\Api\Admin\DashboardFinansialController;
 use App\Http\Controllers\Api\Admin\KelolaPengirimanController;
 use App\Http\Controllers\Api\Admin\PantauanDapurController;
@@ -83,6 +84,11 @@ Route::prefix('admin')->group(function () {
     Route::post('/kelola-pengiriman/{order_number}/resi', [KelolaPengirimanController::class, 'updateResi']);
     Route::post('/kelola-pengiriman/{order_number}/cek-status-kurir', [KelolaPengirimanController::class, 'syncCourierStatus']);
     Route::post('/kelola-pengiriman/{order_number}/selesai', [KelolaPengirimanController::class, 'selesaikanPengiriman']);
+
+    // BATAL & REFUND
+    Route::get('/batal-refund', [BatalRefundController::class, 'index']);
+    Route::get('/batal-refund/count', [BatalRefundController::class, 'pendingCount']);
+    Route::post('/batal-refund/{order_number}/proses', [BatalRefundController::class, 'prosesRefund']);
 });
 
 // Perlu login untuk akses route di bawah ini

@@ -194,7 +194,7 @@
         let currentRequiredVars = [];
         let activeCategoryFilter = 'all';
 
-        // --- 1. DATA CONTOH UNTUK LIVE PREVIEW SEMUA VARIABEL ---
+        // --- 1. DATA CONTOH UNTUK LIVE PREVIEW SEMUA VARIABEL (TERMASUK REFUND SELESAI) ---
         const dummyVars = {
             "{nama}": "Budi Santoso",
             "{nama_penerima}": "Budi Santoso",
@@ -235,6 +235,8 @@
             "{navigasi_halaman}": "⏭️ Ketik *lanjut* untuk melihat 5 pesanan berikutnya\n",
             "{status_pesanan}": "DIPROSES",
             "{rekening_refund}": "BCA - 1234567890 a/n Budi Santoso",
+            "{nominal_refund}": "Rp 24.000",
+            "{link_bukti_refund}": window.location.origin + "/storage/bukti_refund/refund_RK-20261115-8899.jpg",
             "{pesan_error}": "Pesanan ini sudah lunas atau telah selesai.",
             "{total_pesanan}": "Rp 24.000",
             "{nominal_dp}": "Rp 7.200",
@@ -390,12 +392,20 @@
                 }
             });
 
+            // Cek juga apakah Admin tidak sengaja membuat variabel {...} yang tidak dikenali skenario ini
+            const typedVars = currentText.match(/\{[a-zA-Z0-9_]+\}/g) || [];
+            const unknownVars = [...new Set(typedVars.filter(v => !currentRequiredVars.includes(v)))];
+
             const btnSave = $('#btn-save');
             const errorBox = $('#var-error-msg');
             const errorText = $('#var-error-text');
 
             if (missingVars.length > 0) {
                 errorText.html(`Anda menghapus variabel wajib: <b>${missingVars.join(', ')}</b>. Silakan masukkan kembali!`);
+                errorBox.removeClass('hidden');
+                btnSave.prop('disabled', true);
+            } else if (unknownVars.length > 0) {
+                errorText.html(`Variabel tidak dikenali pada skenario ini: <b>${unknownVars.join(', ')}</b>. Gunakan tombol variabel yang tersedia.`);
                 errorBox.removeClass('hidden');
                 btnSave.prop('disabled', true);
             } else {
