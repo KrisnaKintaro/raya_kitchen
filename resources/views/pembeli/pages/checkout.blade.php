@@ -173,6 +173,7 @@
                     <input type="hidden" name="shipping_cost" id="input-shipping-cost" value="0">
                     <input type="hidden" name="courier_name" id="input-courier-name" value="">
                     <input type="hidden" name="shipping_service" id="input-shipping-service" value="">
+                    <input type="hidden" name="etd" id="input-etd" value="">
 
                     <div class="pt-4">
                         <div class="flex justify-between items-center mb-6">
@@ -691,6 +692,9 @@
                 $('#teks-kurir').html('<span class="text-blue-600 font-bold">Silakan Pilih Kurir Ekspedisi di Atas</span>');
                 $('#teks-ongkir').text('Rp 0');
                 $('#input-shipping-cost').val(0);
+                $('#input-courier-name').val('');
+                $('#input-shipping-service').val('');
+                $('#input-etd').val('');
                 window.ongkirSaatIni = 0;
             } else {
                 let cost = parseInt(selected.val());
@@ -698,13 +702,23 @@
                 let type = selected.data('type');
                 let duration = selected.data('duration');
 
-                $('#teks-kurir').html(`${company} - ${type} <br> <span class="text-[10px] text-gray-500">Estimasi Tiba: ${duration} Hari (Dari tanggal kirim)</span>`);
-                $('#teks-ongkir').text(formatRupiah(cost));
+                // Hitung preview rentang tanggal estimasi tiba secara dinamis dari hari ini
+                let nums = String(duration).match(/\d+/g);
+                let minD = nums && nums.length > 0 ? Math.max(1, Math.min(...nums.map(Number))) : 1;
+                let maxD = nums && nums.length > 0 ? Math.max(1, Math.max(...nums.map(Number))) : 2;
+                let dMin = new Date(); dMin.setDate(dMin.getDate() + minD);
+                let dMax = new Date(); dMax.setDate(dMax.getDate() + maxD);
+                let optFmt = { day: '2-digit', month: 'short', year: 'numeric' };
+                let estDateStr = (minD === maxD)
+                    ? dMax.toLocaleDateString('id-ID', optFmt)
+                    : `${dMin.toLocaleDateString('id-ID', optFmt)} - ${dMax.toLocaleDateString('id-ID', optFmt)}`;
 
+                $('#teks-kurir').html(`${company} - ${type} <br> <span class="text-[11px] text-purple-700 font-bold">Estimasi Tiba: ${estDateStr} (${duration} Hari)</span>`);
+                $('#teks-ongkir').text(formatRupiah(cost));
                 $('#input-shipping-cost').val(cost);
                 $('#input-courier-name').val(`${company} - ${type}`);
-                $('#input-shipping-service').val(`Estimasi Tiba: ${duration} Hari`);
-
+                $('#input-shipping-service').val(`${type} (Estimasi Tiba: ${duration} Hari)`);
+                $('#input-etd').val(duration);
                 window.ongkirSaatIni = cost;
             }
             updateGrandTotal();
@@ -827,7 +841,7 @@
         $('#form-tambah-alamat').submit(function(e) {
             e.preventDefault();
             if(!provincesData.find(p => p.name === $('#provinsi').val())) {
-                showCustomAlert('Provinsi Belum Sesuai', 'Silakan pilih Provinsi dari daftar otomatis (autocomplete) ya cuy.'); return;
+                showCustomAlert('Provinsi Belum Sesuai', 'Silakan pilih Provinsi dari daftar otomatis (autocomplete) ya.'); return;
             }
             let btn = $('#btn-simpan-alamat'); let originalText = btn.html();
             btn.html('<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Menyimpan...').prop('disabled', true);
@@ -874,8 +888,8 @@
             let tglKirim = isInternal ? $('#tanggal_kirim').val() : 'auto';
             let jamKirim = isInternal ? $('#jam_kirim').val() : '10:00:00';
 
-            if(!addressVal) { showCustomAlert('Alamat Kosong', 'Alamat pengiriman belum diatur cuy!'); return; }
-            if(isInternal && (!tglKirim || !jamKirim)) { showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim wajib diisi cuy!'); return; }
+            if(!addressVal) { showCustomAlert('Alamat Kosong', 'Alamat pengiriman belum diatur!'); return; }
+            if(isInternal && (!tglKirim || !jamKirim)) { showCustomAlert('Jadwal Belum Diisi', 'Jadwal kirim wajib diisi!'); return; }
 
             // Validasi jika pengguna di luar jarak tapi belum milih kurir dropdown
             if(!isInternal && !$('#input-courier-name').val()) {
@@ -887,7 +901,8 @@
             btn.html('Memproses... <span class="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full ml-2"></span>').prop('disabled', true);
 
             $.ajax({
-                url: "/api/pembeli/checkout/process", type: "POST",
+                url: "/api/pembeli/checkout/process",
+                type: "POST",
                 data: {
                     name: $('#penerima_name').val(),
                     phone: $('#penerima_phone').val(),
@@ -898,6 +913,7 @@
                     shipping_cost: $('#input-shipping-cost').val(),
                     courier_name: $('#input-courier-name').val(),
                     shipping_service: $('#input-shipping-service').val(),
+                    etd: $('#input-etd').val(),
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(res) {

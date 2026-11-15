@@ -15,18 +15,27 @@ class Order extends Model
         'shipping_cost',
         'courier_name',
         'shipping_service',
+        'tracking_number',
+        'courier_status',
+        'courier_manifest',
         'delivery_date',
         'delivery_time',
         'total_amount',
         'dp_amount',
         'remaining_amount',
         'status',
+        'delivery_proof',
+        'arrival_proof',
+        'payment_proof',
         'order_source',
         'cancellation_reason',
         'refund_account_number',
         'refund_proof',
         'refund_status',
-        'delivery_proof',
+    ];
+
+    protected $casts = [
+        'courier_manifest' => 'array',
     ];
 
     public function user()

@@ -8,7 +8,7 @@
     <div class="bg-buyer-bg p-8 sm:p-10 rounded-[2.5rem] shadow-[inset_0_-4px_6px_rgba(192,153,206,0.1),inset_0_4px_6px_rgba(255,255,255,1),0_20px_40px_rgba(192,153,206,0.2)] border border-white w-full max-w-lg text-center relative overflow-hidden">
 
         <h2 id="page-title" class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Selesaikan Pembayaran</h2>
-        <p id="page-subtitle" class="text-buyer-textSecondary text-sm font-semibold mb-6">Scan QRIS di bawah ini pakai aplikasi M-Banking atau e-Wallet kesayanganmu cuy.</p>
+        <p id="page-subtitle" class="text-buyer-textSecondary text-sm font-semibold mb-6">Scan QRIS di bawah ini pakai aplikasi M-Banking atau e-Wallet kesayanganmu.</p>
 
         <!-- Loading State Skeleton -->
         <div id="loading-skeleton" class="animate-pulse flex flex-col items-center w-full mb-6">
@@ -107,7 +107,7 @@
             <svg class="w-10 h-10 text-green-500 drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
         </div>
         <h3 class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Asyik, Berhasil!</h3>
-        <p class="text-buyer-textSecondary font-medium text-sm mb-2 leading-relaxed">Pembayaranmu udah masuk cuy.</p>
+        <p class="text-buyer-textSecondary font-medium text-sm mb-2 leading-relaxed">Pembayaranmu udah masuk.</p>
         <p class="text-buyer-primary text-xs font-bold animate-pulse">Mengalihkan ke Nota...</p>
     </div>
 </div>
@@ -119,7 +119,7 @@
             <svg class="w-10 h-10 text-red-500 drop-shadow-sm" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
         </div>
         <h3 class="text-2xl font-black text-buyer-textPrimary drop-shadow-sm mb-2">Waduh, Gagal!</h3>
-        <p class="text-buyer-textSecondary font-medium text-sm mb-8 leading-relaxed">Pembayaranmu gagal diproses cuy. Waktu habis atau pesanan dibatalkan.</p>
+        <p class="text-buyer-textSecondary font-medium text-sm mb-8 leading-relaxed">Pembayaranmu gagal diproses. Waktu habis atau pesanan dibatalkan.</p>
         <a id="btn-failed-back" href="/riwayat-pesanan" class="w-full py-3.5 bg-buyer-primary text-white font-black rounded-2xl shadow-[inset_0_-4px_6px_rgba(0,0,0,0.15),inset_0_4px_6px_rgba(255,255,255,0.4),0_8px_20px_rgba(192,153,206,0.4)] hover:-translate-y-1 active:translate-y-0.5 transition-all block text-center">
             Lihat Detail Nota
         </a>

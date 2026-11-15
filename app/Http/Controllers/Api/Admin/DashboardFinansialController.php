@@ -44,7 +44,16 @@ class DashboardFinansialController extends Controller
         // =========================================================================
         // 2. QUERY UTAMA TERFILTER (TANGGAL UNIVERSAL + CHANNEL ORDER)
         // =========================================================================
-        $filteredQuery = Order::with(['transaction', 'items.productVariant.product'])
+        $filteredQuery = Order::with([
+                'transaction',
+                'items.productVariant' => function ($q) {
+                    $q->withTrashed()->with([
+                        'product' => function ($pq) {
+                            $pq->withTrashed();
+                        }
+                    ]);
+                },
+            ])
             ->whereBetween('created_at', [$startDate, $endDate]);
 
         $prevQuery = Order::with('transaction')
@@ -83,9 +92,10 @@ class DashboardFinansialController extends Controller
         // =========================================================================
         $topProducts = $this->calculateTopProducts($filteredOrders);
 
+        $activeFilteredOrders = $filteredOrders->where('status', '!=', 'dibatalkan');
         $channelBreakdown = [
-            'web_orders'      => $filteredOrders->where('order_source', 'web')->count(),
-            'whatsapp_orders' => $filteredOrders->where('order_source', 'whatsapp')->count(),
+            'web_orders'      => $activeFilteredOrders->where('order_source', 'web')->count(),
+            'whatsapp_orders' => $activeFilteredOrders->where('order_source', 'whatsapp')->count(),
         ];
 
         // =========================================================================
@@ -99,11 +109,14 @@ class DashboardFinansialController extends Controller
             $unpaidAmount = 0;
 
             if ($oStatus !== 'dibatalkan') {
-                if ($pStatus === 'paid_full') {
+                if ($pStatus === 'paid_full' || $oStatus === 'selesai') {
                     $paidAmount = (int) $o->total_amount;
                 } elseif ($pStatus === 'paid_dp') {
-                    $paidAmount   = (int) ($o->total_amount - $o->remaining_amount);
-                    $unpaidAmount = (int) $o->remaining_amount;
+                    $dpMasuk = $o->remaining_amount > 0
+                        ? (int) ($o->total_amount - $o->remaining_amount)
+                        : ($o->dp_amount > 0 ? (int) $o->dp_amount : (int) round($o->total_amount * 0.3));
+                    $paidAmount   = $dpMasuk;
+                    $unpaidAmount = max(0, (int) $o->total_amount - $dpMasuk);
                 } else {
                     $unpaidAmount = (int) $o->total_amount;
                 }
@@ -139,7 +152,7 @@ class DashboardFinansialController extends Controller
     }
 
     /**
-     * Menghitung metrik Kas Masuk vs Tagihan Gantung
+     * Menghitung metrik Kas Masuk vs Tagihan Gantung secara akurat
      */
     private function calculateMetrics($orders): array
     {
@@ -162,12 +175,15 @@ class DashboardFinansialController extends Controller
                 continue;
             }
 
-            if ($pStatus === 'paid_full') {
+            if ($pStatus === 'paid_full' || $oStatus === 'selesai') {
                 $revenueLunas += (int) $o->total_amount;
                 $paidFullCount++;
             } elseif ($pStatus === 'paid_dp') {
-                $dpMasuk = (int) ($o->total_amount - $o->remaining_amount);
-                $sisa    = (int) $o->remaining_amount;
+                $dpMasuk = $o->remaining_amount > 0
+                    ? (int) ($o->total_amount - $o->remaining_amount)
+                    : ($o->dp_amount > 0 ? (int) $o->dp_amount : (int) round($o->total_amount * 0.3));
+                $sisa = max(0, (int) $o->total_amount - $dpMasuk);
+
                 $revenueDpPaid += $dpMasuk;
                 $unpaidDpSisa  += $sisa;
                 $paidDpCount++;
@@ -196,20 +212,32 @@ class DashboardFinansialController extends Controller
     }
 
     /**
-     * Mengelompokkan data grafik berdasarkan $filteredOrders dan rentang [$startDate, $endDate]
+     * Mengelompokkan data grafik & memastikan selalu ada minimal 2 titik waktu agar garis grafik terbentuk
      */
     private function buildChartSeries($filteredOrders, string $granularity, Carbon $startDate, Carbon $endDate): array
     {
         $buckets = [];
 
         if ($granularity === 'daily') {
-            $period = CarbonPeriod::create($startDate->copy()->startOfDay(), '1 day', $endDate->copy()->endOfDay());
-            foreach ($period as $dt) {
-                $buckets[] = [
-                    'label' => $dt->locale('id')->isoFormat('dd, D MMM'),
-                    'start' => $dt->copy()->startOfDay(),
-                    'end'   => $dt->copy()->endOfDay(),
-                ];
+            if ($startDate->isSameDay($endDate)) {
+                for ($h = 0; $h <= 21; $h += 3) {
+                    $hStart = $startDate->copy()->setTime($h, 0, 0);
+                    $hEnd   = $startDate->copy()->setTime(min(23, $h + 2), 59, 59);
+                    $buckets[] = [
+                        'label' => sprintf('%02d:00', $h),
+                        'start' => $hStart,
+                        'end'   => $hEnd,
+                    ];
+                }
+            } else {
+                $period = CarbonPeriod::create($startDate->copy()->startOfDay(), '1 day', $endDate->copy()->endOfDay());
+                foreach ($period as $dt) {
+                    $buckets[] = [
+                        'label' => $dt->locale('id')->isoFormat('dd, D MMM'),
+                        'start' => $dt->copy()->startOfDay(),
+                        'end'   => $dt->copy()->endOfDay(),
+                    ];
+                }
             }
         } elseif ($granularity === 'weekly') {
             $cursor = $startDate->copy()->startOfDay();
@@ -241,7 +269,6 @@ class DashboardFinansialController extends Controller
                 $cursor->addMonth();
             }
         } else {
-            // yearly
             $cursor = $startDate->copy()->startOfYear();
             while ($cursor->lte($endDate)) {
                 $yStart = $cursor->copy()->startOfYear();
@@ -291,18 +318,26 @@ class DashboardFinansialController extends Controller
     }
 
     /**
-     * Menghitung Top 5 Varian Produk dari $filteredOrders
+     * Menghitung Top 5 Varian Produk khusus dari pesanan sukses (Lunas / DP)
      */
     private function calculateTopProducts($filteredOrders): array
     {
-        $validOrders = $filteredOrders->where('status', '!=', 'dibatalkan');
+        $validOrders = $filteredOrders->filter(function ($o) {
+            $oStatus = strtolower($o->status ?? 'pending');
+            $pStatus = strtolower($o->transaction->payment_status ?? 'unpaid');
+            return $oStatus !== 'dibatalkan' && (in_array($pStatus, ['paid_full', 'paid_dp']) || $oStatus === 'selesai');
+        });
+
         $map = [];
         $grandOmzetProduk = 0;
 
         foreach ($validOrders as $order) {
             foreach ($order->items as $item) {
                 $vid = $item->product_variant_id;
-                $namaProduk = ($item->productVariant->product->name ?? 'Roti') . ' - ' . ($item->productVariant->variant_name ?? 'Varian');
+                $kategori = $item->productVariant?->product?->name ?? 'Roti';
+                $varian   = $item->productVariant?->variant_name ?? 'Varian';
+                $namaProduk = "{$kategori} - {$varian}";
+
                 if (!isset($map[$vid])) {
                     $map[$vid] = [
                         'name'    => $namaProduk,
@@ -326,3 +361,4 @@ class DashboardFinansialController extends Controller
         return $top5;
     }
 }
+

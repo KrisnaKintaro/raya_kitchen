@@ -8,7 +8,7 @@ use App\Models\BotTemplate;
 class BotTemplateSeeder extends Seeder
 {
     /**
-     * Master Blueprint Default Pesan Bot WhatsApp (Opsi 1 - Tanpa membebani DB)
+     * Master Blueprint Default Pesan Bot WhatsApp (100% Tanpa Hardcode)
      */
     public static function getDefaults(): array
     {
@@ -223,6 +223,12 @@ class BotTemplateSeeder extends Seeder
                 'message_text' => "Waduh, jadwal pengiriman pada jam *{jam} WIB* sudah penuh Kak."
             ],
             [
+                'session_state' => 'jam_tolak_semua_penuh',
+                'description' => 'Alasan tambahan ketika seluruh slot jam pada tanggal tersebut sudah penuh semua',
+                'is_active' => true,
+                'message_text' => "Sayangnya seluruh slot jam pada tanggal *{tanggal}* sudah penuh Kak."
+            ],
+            [
                 'session_state' => 'rekomendasi_jam',
                 'description' => 'Menampilkan rekomendasi jam operasional yang masih kosong',
                 'is_active' => true,
@@ -279,6 +285,12 @@ class BotTemplateSeeder extends Seeder
                 'message_text' => "💳 *Pembayaran Pesanan #{order_number}*\nTagihan: *Rp {total_tagihan}*\n\nSilakan klik link berikut untuk scan QRIS:\n👉 {link_pembayaran}\n\nKetik *0* untuk kembali ke Menu Utama, atau ketik filter/navigasi untuk lanjut cek pesanan."
             ],
             [
+                'session_state' => 'riwayat_bayar_gagal',
+                'description' => 'Pesan saat perintah bayar [nomor] ditolak atau gagal diproses',
+                'is_active' => true,
+                'message_text' => "⚠️ Pembayaran untuk pesanan *#{order_number}* tidak dapat diproses: {pesan_error}"
+            ],
+            [
                 'session_state' => 'batal_tidak_ditemukan',
                 'description' => 'Pesan saat nomor pesanan yang ingin dibatalkan tidak ditemukan',
                 'is_active' => true,
@@ -310,9 +322,21 @@ class BotTemplateSeeder extends Seeder
             ],
             [
                 'session_state' => 'batal_pesanan_berhasil',
-                'description' => 'Pesan konfirmasi setelah pesanan berhasil dibatalkan',
+                'description' => 'Pesan konfirmasi setelah pesanan (belum bayar / tanpa refund) berhasil dibatalkan',
                 'is_active' => true,
-                'message_text' => "✅ Pesanan *#{order_number}* berhasil dibatalkan.\n{info_refund}"
+                'message_text' => "✅ Pesanan *#{order_number}* telah berhasil dibatalkan."
+            ],
+            [
+                'session_state' => 'batal_pesanan_berhasil_refund',
+                'description' => 'Pesan konfirmasi setelah pesanan berbayar berhasil dibatalkan & masuk antrean refund',
+                'is_active' => true,
+                'message_text' => "✅ Pesanan *#{order_number}* berhasil dibatalkan.\nDana refund akan segera diproses oleh Admin ke rekening *{rekening_refund}* maksimal 1x24 jam."
+            ],
+            [
+                'session_state' => 'batal_pesanan_gagal',
+                'description' => 'Pesan saat pembatalan pesanan gagal diproses sistem',
+                'is_active' => true,
+                'message_text' => "⚠️ Gagal membatalkan pesanan *#{order_number}*: {pesan_error}"
             ],
             [
                 'session_state' => 'pesan_tidak_valid',
@@ -332,13 +356,13 @@ class BotTemplateSeeder extends Seeder
                 'session_state' => 'notif_pembayaran_dp',
                 'description' => 'Notifikasi WA otomatis saat pembayaran DP 30% diterima',
                 'is_active' => true,
-                'message_text' => "✅ *Pembayaran DP 30% Berhasil*\n\nHalo Kak *{nama_penerima}*,\nPembayaran DP sebesar *{nominal_dp}* untuk pesanan *#{order_number}* telah diterima!\nSisa tagihan sebesar *{sisa_tagihan}* dapat dilunasi maksimal saat pesanan sudah siap diantar/diambil.\n\n🧾 *Lihat Nota Digital & Status:*\n{link_nota}"
+                'message_text' => "✅ *Pembayaran DP 30% Berhasil*\n\nHalo Kak *{nama_penerima}*,\nPembayaran DP sebesar *{nominal_dp}* untuk pesanan *#{order_number}* telah diterima!\nSisa tagihan sebesar *{sisa_tagihan}* dapat dilunasi maksimal saat pesanan sudah siap dikirim/diambil.\n\n🧾 *Lihat Nota Digital & Status:*\n{link_nota}"
             ],
             [
                 'session_state' => 'notif_pelunasan_berhasil',
                 'description' => 'Notifikasi WA otomatis saat pelunasan sisa tagihan 70% diterima',
                 'is_active' => true,
-                'message_text' => "🎉 *Pelunasan Berhasil (LUNAS 100%)*\n\nHalo Kak *{nama_penerima}*,\nPelunasan tagihan untuk pesanan *#{order_number}* telah berhasil kami terima! {info_status}\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
+                'message_text' => "🎉 *Pelunasan Berhasil (LUNAS 100%)*\n\nHalo Kak *{nama_penerima}*,\nPelunasan tagihan untuk pesanan *#{order_number}* telah berhasil kami terima dan pesananmu kini sudah *LUNAS 100%*!\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
             ],
             [
                 'session_state' => 'notif_pembayaran_gagal',
@@ -353,29 +377,55 @@ class BotTemplateSeeder extends Seeder
                 'message_text' => "❌ *Pesanan Dibatalkan Otomatis*\n\nHalo Kak *{nama_penerima}*,\nMohon maaf, pesananmu dengan nomor *#{order_number}* telah dibatalkan otomatis oleh sistem karena melewati batas waktu pembayaran 24 jam.\n\n🧾 *Detail Nota:*\n{link_nota}"
             ],
             [
-                'session_state' => 'notif_menunggu_pelunasan',
-                'description' => 'Notifikasi WA otomatis pengingat pelunasan sisa tagihan DP',
-                'is_active' => true,
-                'message_text' => "⏳ *Menunggu Pelunasan Tagihan*\n\nHalo Kak *{nama_penerima}*,\nKabar baik! Pesananmu *#{order_number}* sudah *SIAP DIANTAR/DIAMBIL*.\n\nKarena kamu menggunakan skema DP, masih ada sisa tagihan sebesar *{sisa_tagihan}*. Yuk segera lunasi lewat link di bawah agar pesanan bisa langsung diselesaikan:\n\n👉 *Link Pelunasan QRIS:*\n{link_pembayaran}\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
-            ],
-            [
                 'session_state' => 'notif_diproses',
                 'description' => 'Notifikasi WA otomatis saat pesanan mulai diproses dapur',
                 'is_active' => true,
                 'message_text' => "👨‍🍳 *Pesanan Sedang Diproses*\n\nHalo Kak *{nama_penerima}*,\nPesananmu dengan nomor *#{order_number}* saat ini sedang kami *PROSES* di dapur Raya Kitchen.\n\n🧾 *Pantau Nota Digital:*\n{link_nota}"
             ],
             [
-                'session_state' => 'notif_diantar',
-                'description' => 'Notifikasi WA otomatis saat pesanan siap diantar/diambil',
+                'session_state' => 'notif_menunggu_pelunasan',
+                'description' => 'Notifikasi WA otomatis saat pesanan Siap Dikirim namun masih DP (Transfer QRIS)',
                 'is_active' => true,
-                'message_text' => "🚚 *Pesanan Siap Diantar / Diambil*\n\nHalo Kak *{nama_penerima}*,\nPesananmu dengan nomor *#{order_number}* sudah *SIAP* dan sedang dalam perjalanan / menunggu diambil!\n\n{info_pelunasan}\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
+                'message_text' => "⚠️ *Pesanan Siap Dikirim - Segera Lunasi Tagihan*\n\nHalo Kak *{nama_penerima}*,\nKabar baik! Pesananmu *#{order_number}* sudah *SIAP DIKIRIM / DIAMBIL*.\n\nKarena kamu menggunakan skema DP Transfer, masih ada sisa tagihan sebesar *{sisa_tagihan}*. Yuk segera selesaikan pelunasan melalui link QRIS di bawah ini:\n\n💳 *Link Pelunasan QRIS:*\n{link_pembayaran}\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
+            ],
+            [
+                'session_state' => 'notif_menunggu_pelunasan_cod',
+                'description' => 'Notifikasi WA otomatis saat pesanan Siap Dikirim namun masih DP (Metode COD)',
+                'is_active' => true,
+                'message_text' => "🚚 *Pesanan Siap Dikirim - Pengingat Pelunasan COD*\n\nHalo Kak *{nama_penerima}*,\nKabar baik! Pesananmu *#{order_number}* sudah *SIAP DIKIRIM*!\n\n⚠️ *Pengingat Pelunasan COD (DP 30%):*\nMohon segera siapkan uang tunai sebesar *{sisa_tagihan}* untuk pelunasan kepada kurir saat barang sampai, atau lunasi praktis sekarang via QRIS di bawah ini:\n\n💳 *Link Pelunasan QRIS:*\n{link_pembayaran}\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
+            ],
+            [
+                'session_state' => 'notif_diantar',
+                'description' => 'Notifikasi WA otomatis saat pesanan Siap Dikirim / Diambil (Sudah Lunas 100%)',
+                'is_active' => true,
+                'message_text' => "🚚 *Pesanan Siap Dikirim / Diambil*\n\nHalo Kak *{nama_penerima}*,\nPesananmu dengan nomor *#{order_number}* sudah *SIAP DIKIRIM* dan sedang dalam perjalanan / menunggu diambil!\n\n✅ Pembayaran pesanan ini sudah *LUNAS 100%*.\n\n🧾 *Lihat Nota Digital:*\n{link_nota}"
             ],
             [
                 'session_state' => 'notif_selesai',
-                'description' => 'Notifikasi WA otomatis saat pesanan telah selesai',
+                'description' => 'Notifikasi WA otomatis saat pesanan telah selesai beserta info bukti pengiriman',
                 'is_active' => true,
-                'message_text' => "🥳 *Pesanan Selesai*\n\nHalo Kak *{nama_penerima}*,\nTransaksi untuk pesanan *#{order_number}* telah *SELESAI*.\n\nTerima kasih banyak sudah berbelanja di Raya Kitchen. Ditunggu pesanan selanjutnya ya!\n\n🧾 *Nota Digital:*\n{link_nota}"
-            ]
+                'message_text' => "🥳 *Pesanan Selesai*\n\nHalo Kak *{nama_penerima}*,\nTransaksi untuk pesanan *#{order_number}* telah *SELESAI* dan barang telah diterima.\n\nTerima kasih banyak sudah berbelanja di Raya Kitchen. Kamu dapat melihat nota digital beserta foto bukti pengiriman kurir pada link berikut:\n\n🧾 *Nota & Bukti Pengiriman:*\n{link_nota}"
+            ],
+
+            // F. AUTENTIKASI AKUN (OTP PENDAFTARAN & RESET PASSWORD VIA WA)
+            [
+                'session_state' => 'auth_otp_register',
+                'description' => 'Pesan WA pengiriman kode OTP saat pelanggan mendaftar akun baru',
+                'is_active' => true,
+                'message_text' => "Halo *{nama}*! 👋\n\nSelamat datang di *Raya Kitchen*!\nIni kode OTP buat verifikasi pendaftaranmu:\n\n*{kode_otp}*\n\nKode ini hanya berlaku 5 menit ya. Jangan kasih tau siapa-siapa!"
+            ],
+            [
+                'session_state' => 'auth_otp_resend',
+                'description' => 'Pesan WA pengiriman ulang (Resend) kode OTP pendaftaran',
+                'is_active' => true,
+                'message_text' => "Halo *{nama}*! 👋\n\nIni kode OTP *BARU* buat verifikasi pendaftaranmu:\n\n*{kode_otp}*\n\nKode ini berlaku 5 menit ya."
+            ],
+            [
+                'session_state' => 'auth_reset_password',
+                'description' => 'Pesan WA pengiriman link reset password akun pelanggan',
+                'is_active' => true,
+                'message_text' => "Halo *{nama}*! 🔐\n\nAda permintaan reset password untuk akun Raya Kitchen kamu.\n\nKlik link di bawah untuk membuat password baru:\n{link_reset}\n\nLink ini hanya berlaku 15 menit. Jika bukan kamu yang meminta, abaikan pesan ini."
+            ],
         ];
     }
 

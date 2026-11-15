@@ -54,10 +54,29 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
 
     <!-- LEFT PANEL: Daftar Template (Span 4) -->
-    <div class="lg:col-span-4 xl:col-span-3 bg-white rounded-[2rem] shadow-[0_4px_20px_rgba(147,104,183,0.05)] border border-admin-border flex flex-col overflow-hidden h-[50vh] lg:h-auto">
-        <div class="p-5 border-b border-admin-border bg-gray-50/50 shrink-0">
-            <h2 class="font-black text-admin-textMain text-base">Skenario Percakapan</h2>
-            <p class="text-xs font-medium text-admin-textMuted mt-1">Pilih state bot yang ingin diedit.</p>
+    <div class="lg:col-span-4 xl:col-span-3 bg-white rounded-[2rem] shadow-[0_4px_20px_rgba(147,104,183,0.05)] border border-admin-border flex flex-col overflow-hidden h-[55vh] lg:h-auto">
+        <div class="p-4 border-b border-admin-border bg-gray-50/50 shrink-0 space-y-3">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="font-black text-admin-textMain text-base">Skenario Percakapan</h2>
+                    <p class="text-[11px] font-medium text-admin-textMuted">Semua pesan WA dapat diubah di sini.</p>
+                </div>
+                <span id="template-count-badge" class="text-[10px] font-black px-2.5 py-1 rounded-full bg-admin-navBg text-admin-sideBg">0</span>
+            </div>
+
+            <!-- Kolom Pencarian Cepat -->
+            <div class="relative">
+                <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-textMuted text-sm"></i>
+                <input type="text" id="search-template" placeholder="Cari skenario / isi pesan..." class="w-full pl-9 pr-3 py-2 bg-white border border-admin-border rounded-xl text-xs font-bold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideHover">
+            </div>
+
+            <!-- Filter Tab Kategori -->
+            <div class="flex gap-1.5 overflow-x-auto hide-scrollbar pb-0.5">
+                <button type="button" class="cat-tab px-2.5 py-1 rounded-lg text-[10px] font-black bg-admin-sideBg text-white whitespace-nowrap transition-all" data-cat="all">Semua</button>
+                <button type="button" class="cat-tab px-2.5 py-1 rounded-lg text-[10px] font-black bg-white text-admin-textMuted border border-admin-border whitespace-nowrap transition-all" data-cat="bot">Interaksi Bot</button>
+                <button type="button" class="cat-tab px-2.5 py-1 rounded-lg text-[10px] font-black bg-white text-admin-textMuted border border-admin-border whitespace-nowrap transition-all" data-cat="notif">Notifikasi Status</button>
+                <button type="button" class="cat-tab px-2.5 py-1 rounded-lg text-[10px] font-black bg-white text-admin-textMuted border border-admin-border whitespace-nowrap transition-all" data-cat="auth">OTP & Auth</button>
+            </div>
         </div>
 
         <!-- List Scrollable -->
@@ -75,15 +94,19 @@
                 <i class="ph ph-chat-centered-text text-4xl text-admin-textMuted/50"></i>
             </div>
             <h3 class="text-xl font-black text-admin-textMain mb-2">Pilih Template Pesan</h3>
-            <p class="text-sm font-medium text-admin-textMuted max-w-sm">Pilih salah satu skenario dari daftar di sebelah kiri untuk mulai mengubah balasan otomatis Bot WhatsApp.</p>
+            <p class="text-sm font-medium text-admin-textMuted max-w-sm">Pilih salah satu skenario dari daftar di sebelah kiri untuk mulai mengubah balasan atau notifikasi otomatis WhatsApp.</p>
         </div>
 
         <!-- Kolom Editor Text -->
         <div class="flex-1 flex flex-col border-b xl:border-b-0 xl:border-r border-admin-border h-full p-5 lg:p-6 overflow-y-auto hide-scrollbar">
             <div class="flex justify-between items-start mb-4 shrink-0 gap-4">
                 <div>
-                    <h3 class="font-black text-lg text-admin-textMain" id="edit-title">Nama State</h3>
-                    <p class="text-xs font-bold text-admin-textMuted mt-1" id="edit-desc">Deskripsi skenario</p>
+                    <div class="flex items-center gap-2">
+                        <span id="edit-cat-badge" class="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-admin-navBg text-admin-sideBg">Kategori</span>
+                        <code id="edit-state-code" class="text-[11px] font-bold text-admin-textMuted bg-gray-100 px-2 py-0.5 rounded">state_name</code>
+                    </div>
+                    <h3 class="font-black text-lg text-admin-textMain mt-1" id="edit-title">Nama State</h3>
+                    <p class="text-xs font-bold text-admin-textMuted mt-0.5" id="edit-desc">Deskripsi skenario</p>
                 </div>
 
                 <!-- Tombol Kembalikan ke Default -->
@@ -99,7 +122,7 @@
 
                 <div class="flex-1 flex flex-col relative mb-4">
                     <div class="flex justify-between items-center mb-2 shrink-0">
-                        <label class="text-[11px] font-black text-admin-accent uppercase tracking-widest opacity-90 drop-shadow-sm">Isi Pesan (Format WhatsApp)</label>
+                        <label class="text-[11px] font-black text-admin-sideBg uppercase tracking-widest">Isi Pesan (Format WhatsApp)</label>
                         <span id="badge-status-default" class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">Default Sistem</span>
                     </div>
 
@@ -115,9 +138,7 @@
                             <i>(Klik tombol di bawah untuk menyisipkan variabel ke posisi kursor)</i>
                         </p>
 
-                        <div id="edit-vars-container" class="flex flex-wrap gap-2">
-                            <!-- Tombol variabel di-inject via JS -->
-                        </div>
+                        <div id="edit-vars-container" class="flex flex-wrap gap-2"></div>
 
                         <!-- Pesan Error Validasi -->
                         <div id="var-error-msg" class="hidden mt-3 p-2 bg-rose-100 border border-rose-200 rounded-lg text-xs font-bold text-rose-600 flex items-center gap-2">
@@ -171,8 +192,9 @@
         let templatesData = [];
         let currentActiveState = null;
         let currentRequiredVars = [];
+        let activeCategoryFilter = 'all';
 
-        // --- 1. DATA CONTOH UNTUK LIVE PREVIEW VARIABEL ---
+        // --- 1. DATA CONTOH UNTUK LIVE PREVIEW SEMUA VARIABEL ---
         const dummyVars = {
             "{nama}": "Budi Santoso",
             "{nama_penerima}": "Budi Santoso",
@@ -188,7 +210,7 @@
             "{total_harga}": "39.000",
             "{daftar_alamat}": "Alamat Tersimpan:\n1. [Rumah] Jl. Mawar No 5, Jatiasih, Kota Bekasi (Patokan: Pagar Hitam)",
             "{form_alamat}": "--- Form Alamat Baru ---\nLabel Alamat : \nProvinsi : \nKota / Kabupaten : \nKecamatan : \nKode Pos : \nAlamat Jalan : \nPatokan : ",
-            "{link_maps}": "https://rayakitchen.com/pin-lokasi/1?wa=628123456789",
+            "{link_maps}": window.location.origin + "/pin-lokasi/1?wa=628123456789",
             "{jarak}": "4.5",
             "{daftar_ekspedisi}": "1. JNE - REG (Rp 12.000) | Est: 2-3 hr\n2. SICEPAT - REG (Rp 11.500) | Est: 2-3 hr",
             "{contoh_tanggal}": "2026-11-16",
@@ -202,23 +224,34 @@
             "{daftar_jam}": "1. Jam 09:00 WIB (Sisa 4 slot)\n2. Jam 11:00 WIB (Sisa 5 slot)",
             "{ringkasan_pesanan}": "Pemesan: Budi Santoso\nAlamat: Jl. Mawar No 5, Bekasi\nKurir: Kurir Internal Raya Kitchen (Gratis)\nJadwal: 2026-11-16 Jam 10:00 WIB\n\nItem:\n- Roti Manis - Coklat Lumer (2x) = Rp 24.000\n\nTotal Pesanan: Rp 24.000\nMetode: DP 30% (QRIS)",
             "{total_tagihan}": "7.200",
-            "{order_number}": "RK-20261114-8899",
-            "{link_pembayaran}": "https://rayakitchen.com/pembayaran/RK-20261114-8899",
-            "{link_nota}": "https://rayakitchen.com/nota?order_number=RK-20261114-8899",
+            "{order_number}": "RK-20261115-8899",
+            "{link_pembayaran}": window.location.origin + "/pembayaran/RK-20261115-8899",
+            "{link_nota}": window.location.origin + "/nota?order_number=RK-20261115-8899",
             "{label_filter}": "SEMUA PESANAN",
             "{halaman_sekarang}": "1",
             "{total_halaman}": "2",
             "{total_pesanan}": "8",
-            "{daftar_pesanan}": "*1. #RK-20261114-8899*\n📅 Tgl: 14 Nov 2026, 10:00\n📌 Status: *DALAM ANTREAN* (TRANSFER - DP 30%)\n💳 Status Bayar: *PAID_DP*\n💰 Total: Rp 24.000\n⏳ Sisa Tagihan: *Rp 16.800*\n🧾 Lihat Nota: https://rayakitchen.com/nota?order_number=RK-20261114-8899",
+            "{daftar_pesanan}": "*1. #RK-20261115-8899*\n  Tgl Order: 15 Nov 2026, 10:00\n  Kurir: JNE (REG - Est: 2-3 Hari)\n  Estimasi Barang Sampai: *17 Nov 2026 - 18 Nov 2026*\n  Status: *SIAP DIKIRIM/DIAMBIL* (TRANSFER - DP 30%)\n  Status Bayar: *PAID_DP*\n  Total: Rp 24.000\n  Sisa Tagihan: *Rp 16.800*\n  Lihat Nota: " + window.location.origin + "/nota?order_number=RK-20261115-8899",
             "{navigasi_halaman}": "⏭️ Ketik *lanjut* untuk melihat 5 pesanan berikutnya\n",
             "{status_pesanan}": "DIPROSES",
-            "{info_refund}": "Dana refund akan segera diproses oleh Admin ke rekening *BCA - 1234567890 a/n Budi Santoso* maksimal 1x24 jam.",
+            "{rekening_refund}": "BCA - 1234567890 a/n Budi Santoso",
+            "{pesan_error}": "Pesanan ini sudah lunas atau telah selesai.",
             "{total_pesanan}": "Rp 24.000",
             "{nominal_dp}": "Rp 7.200",
             "{sisa_tagihan}": "Rp 16.800",
-            "{info_status}": "Status pesananmu kini telah *SELESAI*.",
-            "{info_pelunasan}": "⚠️ *Belum Lunas (Sisa Rp 16.800):*\nSilakan lunasi sisa tagihanmu sebelum pesanan diselesaikan melalui link berikut:\n👉 https://rayakitchen.com/pembayaran/RK-20261114-8899"
+            "{kode_otp}": "849201",
+            "{link_reset}": window.location.origin + "/reset-password?wa=628123456789&token=sampletoken123"
         };
+
+        function getCategoryInfo(state) {
+            if (state.startsWith('notif_')) {
+                return { key: 'notif', label: 'Notifikasi Otomatis', badgeClass: 'bg-amber-100 text-amber-700' };
+            }
+            if (state.startsWith('auth_')) {
+                return { key: 'auth', label: 'OTP & Autentikasi', badgeClass: 'bg-blue-100 text-blue-700' };
+            }
+            return { key: 'bot', label: 'Interaksi Bot WA', badgeClass: 'bg-purple-100 text-admin-sideBg' };
+        }
 
         function showToast(message, isSuccess = true) {
             const toast = $('#toast-notif');
@@ -256,28 +289,59 @@
             });
         }
 
-        // --- 3. RENDER LIST SIDEBAR ---
+        // --- 3. RENDER LIST SIDEBAR DENGAN PENCARIAN & FILTER KATEGORI ---
         function renderList() {
+            const keyword = ($('#search-template').val() || '').toLowerCase().trim();
+            let filtered = templatesData.filter(t => {
+                const catInfo = getCategoryInfo(t.session_state);
+                if (activeCategoryFilter !== 'all' && catInfo.key !== activeCategoryFilter) {
+                    return false;
+                }
+                if (keyword !== '') {
+                    const hay = `${t.session_state} ${t.description} ${t.message_text}`.toLowerCase();
+                    return hay.includes(keyword);
+                }
+                return true;
+            });
+
+            $('#template-count-badge').text(`${filtered.length} Pesan`);
+
+            if (filtered.length === 0) {
+                $('#template-list').html('<p class="text-xs font-bold text-admin-textMuted text-center py-10">Tidak ada skenario yang cocok.</p>');
+                return;
+            }
+
             let html = '';
-            templatesData.forEach(t => {
+            filtered.forEach(t => {
                 let title = t.session_state.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                 let activeClass = currentActiveState === t.session_state ? 'list-active' : 'border-transparent hover:bg-admin-bg';
                 let isModified = (t.message_text || '').trim() !== (t.default_message_text || '').trim();
+                let catInfo = getCategoryInfo(t.session_state);
 
                 html += `
                     <div class="template-item p-3 border-2 rounded-2xl cursor-pointer transition-all ${activeClass}" data-state="${t.session_state}">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-sm text-admin-textMain">${title}</span>
+                        <div class="flex justify-between items-center mb-1 gap-2">
+                            <span class="font-bold text-sm text-admin-textMain truncate">${title}</span>
                             ${isModified
-                                ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-admin-sideBg">Diubah</span>'
-                                : '<div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_5px_#10B981]" title="Default"></div>'}
+                                ? '<span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-100 text-admin-sideBg shrink-0">Diubah</span>'
+                                : '<div class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_5px_#10B981] shrink-0" title="Default"></div>'}
                         </div>
-                        <p class="text-[11px] font-medium text-admin-textMuted line-clamp-1">${t.description}</p>
+                        <p class="text-[11px] font-medium text-admin-textMuted line-clamp-1 mb-1.5">${t.description}</p>
+                        <span class="text-[9px] font-extrabold px-2 py-0.5 rounded-md ${catInfo.badgeClass}">${catInfo.label}</span>
                     </div>
                 `;
             });
             $('#template-list').html(html);
         }
+
+        $('#search-template').on('input', renderList);
+
+        $('.cat-tab').on('click', function() {
+            $('.cat-tab').removeClass('bg-admin-sideBg text-white').addClass('bg-white text-admin-textMuted border border-admin-border');
+            $(this).removeClass('bg-white text-admin-textMuted border border-admin-border').addClass('bg-admin-sideBg text-white');
+            activeCategoryFilter = $(this).data('cat');
+            renderList();
+        });
 
         // --- 4. ENGINE PARSER PESAN WA & VALIDATOR ---
         function parseWaFormat(text) {
@@ -286,12 +350,9 @@
                 parsedText = parsedText.replaceAll(key, dummyVars[key]);
             });
 
-            // Format Bold, Italic (tanpa merusak underscore di dalam URL/variabel), dan Strikethrough
             parsedText = parsedText.replace(/\*(.*?)\*/g, '<span class="wa-bold">$1</span>');
             parsedText = parsedText.replace(/(^|\s)_(.*?)_(?=\s|$|[.,!?])/g, '$1<span class="wa-italic">$2</span>');
             parsedText = parsedText.replace(/~(.*?)~/g, '<span class="wa-strikethrough">$1</span>');
-
-            // Format URL (http/https) agar berwarna biru seperti di WhatsApp
             parsedText = parsedText.replace(/(https?:\/\/[^\s<]+)/g, '<span class="wa-link">$1</span>');
 
             return parsedText;
@@ -363,12 +424,15 @@
                 $('#editor-empty').fadeOut(200);
 
                 let title = data.session_state.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                let catInfo = getCategoryInfo(data.session_state);
+
+                $('#edit-cat-badge').text(catInfo.label).attr('class', `text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${catInfo.badgeClass}`);
+                $('#edit-state-code').text(data.session_state);
                 $('#edit-title').text(title);
                 $('#edit-desc').text(data.description);
                 $('#edit-session-state').val(data.session_state);
                 $('#edit-message').val(data.message_text);
 
-                // Gunakan required_variables dari Controller (atau fallback regex dari default_message_text)
                 let foundVars = (data.required_variables && data.required_variables.length > 0)
                     ? data.required_variables
                     : ((data.default_message_text || '').match(/\{[a-zA-Z0-9_]+\}/g) || []);
@@ -389,7 +453,6 @@
             }
         });
 
-        // Klik Kembalikan ke Default (Langsung Reset ke DB via API)
         $('#btn-reset-default').on('click', function() {
             const data = templatesData.find(t => t.session_state === currentActiveState);
             if (!data) return;
@@ -431,7 +494,6 @@
             });
         });
 
-        // Insert Variabel ke Cursor Position
         $(document).on('click', '.btn-insert-var', function() {
             const varText = $(this).data('var');
             const textarea = $('#edit-message')[0];
@@ -451,7 +513,6 @@
 
         $('#edit-message').on('input', updatePreview);
 
-        // Submit Simpan Perubahan ke DB via API
         $('#form-template').on('submit', function(e) {
             e.preventDefault();
             const btn = $('#btn-save');

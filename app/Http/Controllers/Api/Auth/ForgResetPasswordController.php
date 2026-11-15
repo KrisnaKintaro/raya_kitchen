@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -40,11 +41,10 @@ class ForgResetPasswordController extends Controller
         // Bikin URL Link Reset
         $resetLink = url("/reset-password?wa={$waNumber}&token={$token}");
 
-        $pesan = "Halo *{$user->name}*! 👋\n\n"
-            . "Ada yang minta reset password buat akun Raya Kitchen kamu nih.\n\n"
-            . "Klik link di bawah buat bikin password baru:\n\n"
-            . "{$resetLink}\n\n"
-            . "Link ini cuma berlaku 15 menit ya. Kalau bukan kamu yang minta, cuekin aja pesan ini.";
+        $pesan = NotificationController::getTemplateMessage('auth_reset_password', [
+            'nama'       => $user->name,
+            'link_reset' => $resetLink,
+        ]);
 
         try {
             $randomDelay = rand(2, 6);

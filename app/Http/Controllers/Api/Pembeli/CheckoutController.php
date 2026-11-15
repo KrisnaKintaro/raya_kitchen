@@ -32,7 +32,7 @@ class CheckoutController extends Controller
             $isLibur = StoreHoliday::whereDate('holiday_date', $tglStr)->exists();
 
             if (!$isLibur) {
-                $totalRotiDipesan = OrderItem::whereHas('order', function($q) use ($tglStr) {
+                $totalRotiDipesan = OrderItem::whereHas('order', function ($q) use ($tglStr) {
                     $q->whereDate('delivery_date', $tglStr)->where('status', '!=', 'dibatalkan');
                 })->sum('quantity');
 
@@ -42,6 +42,107 @@ class CheckoutController extends Controller
             }
             $tanggalOtomatis->addDay();
         }
+    }
+
+    /**
+     * Ekstrak rentang hari estimasi (ETD) dari API Ekspedisi secara dinamis
+     */
+    private function parseEtdDays(?string $rawEtd): array
+    {
+        if (empty($rawEtd)) {
+            return ['min' => 1, 'max' => 1, 'label' => '1 Hari'];
+        }
+
+        preg_match_all('/\d+/', $rawEtd, $matches);
+        $numbers = !empty($matches[0]) ? array_map('intval', $matches[0]) : [];
+
+        if (empty($numbers)) {
+            return ['min' => 1, 'max' => 1, 'label' => '1 Hari'];
+        }
+
+        $min = max(1, min($numbers));
+        $max = max(1, max($numbers));
+        $label = ($min === $max) ? "{$max} Hari" : "{$min}-{$max} Hari";
+
+        return [
+            'min'   => $min,
+            'max'   => $max,
+            'label' => $label,
+        ];
+    }
+
+    /**
+     * Format URL bukti pengiriman/pembayaran (mendukung storage lokal & URL eksternal)
+     */
+    private function formatProofUrl(?string $rawPath): ?string
+    {
+        if (empty($rawPath)) {
+            return null;
+        }
+        if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
+            return $rawPath;
+        }
+        return asset('storage/bukti_pengiriman/' . ltrim($rawPath, '/'));
+    }
+
+    /**
+     * Bangun metadata pengiriman & estimasi sampai yang dinamis untuk Riwayat & Nota
+     */
+    private function buildShippingMeta(Order $order): array
+    {
+        $courierName = trim((string) $order->courier_name);
+        $isInternal = empty($courierName)
+            || str_contains(strtolower($courierName), 'internal')
+            || (float) $order->shipping_cost <= 0;
+
+        $baseDate = $order->created_at ? Carbon::parse($order->created_at) : now();
+
+        if ($isInternal) {
+            $delivDateFormatted = $order->delivery_date
+                ? Carbon::parse($order->delivery_date)->locale('id')->isoFormat('D MMMM YYYY')
+                : $baseDate->copy()->addDay()->locale('id')->isoFormat('D MMMM YYYY');
+            $delivTimeFormatted = $order->delivery_time ? substr($order->delivery_time, 0, 5) . ' WIB' : '15:00 WIB';
+            $scheduleLabel = 'Jadwal Pengiriman / Pengambilan';
+            $scheduleText  = "{$delivDateFormatted} - {$delivTimeFormatted}";
+        } else {
+            $scheduleLabel = 'Estimasi Barang Sampai (Kurir Ekspedisi)';
+            $etdInfo = $this->parseEtdDays($order->shipping_service);
+
+            // Jika di shipping_service ada angka estimasi dari API, hitung dinamis dari tgl checkout
+            if (preg_match('/\d+/', (string) $order->shipping_service)) {
+                $minDate = $baseDate->copy()->addDays($etdInfo['min']);
+                $maxDate = $baseDate->copy()->addDays($etdInfo['max']);
+
+                if ($etdInfo['min'] === $etdInfo['max']) {
+                    $dateRangeStr = $maxDate->locale('id')->isoFormat('D MMMM YYYY');
+                } else {
+                    $dateRangeStr = $minDate->locale('id')->isoFormat('D MMM YYYY') . ' - ' . $maxDate->locale('id')->isoFormat('D MMM YYYY');
+                }
+                $scheduleText = "{$dateRangeStr} (Est. {$etdInfo['label']})";
+            } elseif ($order->delivery_date) {
+                $targetDate = Carbon::parse($order->delivery_date)->locale('id')->isoFormat('D MMMM YYYY');
+                $scheduleText = "{$targetDate}";
+            } else {
+                $scheduleText = 'Mengikuti estimasi kurir ekspedisi';
+            }
+        }
+
+        $rawArrival = $order->arrival_proof ?? $order->delivery_proof ?? null;
+        $rawPayment = $order->payment_proof ?? null;
+
+        return [
+            'is_internal'        => $isInternal,
+            'courier_name'       => $courierName ?: 'Kurir Internal Raya Kitchen',
+            'shipping_service'   => $order->shipping_service ?: ($isInternal ? 'Kurir Toko' : 'Reguler'),
+            'shipping_cost'      => (int) round($order->shipping_cost ?? 0),
+            'tracking_number'    => $order->tracking_number,
+            'courier_status'     => $order->courier_status,
+            'courier_manifest'   => is_array($order->courier_manifest) ? $order->courier_manifest : [],
+            'schedule_label'     => $scheduleLabel,
+            'schedule_text'      => $scheduleText,
+            'arrival_proof_url'  => $this->formatProofUrl($rawArrival),
+            'payment_proof_url'  => $this->formatProofUrl($rawPayment),
+        ];
     }
 
     private function getRajaOngkirId($district, $city)
@@ -55,7 +156,6 @@ class CheckoutController extends Controller
 
             if ($response->successful() && isset($response->json()['data'])) {
                 $cityClean = strtolower(str_replace(['kota ', 'kabupaten ', 'kab. '], '', $city));
-
                 foreach ($response->json()['data'] as $dest) {
                     if (str_contains(strtolower($dest['city_name']), $cityClean)) {
                         return $dest['id'];
@@ -66,7 +166,6 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             Log::error('Gagal fetch RajaOngkir ID: ' . $e->getMessage());
         }
-
         return null;
     }
 
@@ -75,7 +174,6 @@ class CheckoutController extends Controller
         $alamat = UserAddress::find($request->address_id);
         $dapur = CompanyProfile::first();
         $setting = StoreSetting::first();
-
         $max_jarak = $setting->free_delivery_max_distance ?? 10;
 
         if (!$alamat) {
@@ -100,11 +198,10 @@ class CheckoutController extends Controller
         }
 
         $activeCouriers = $setting->active_couriers ?? 'jne,sicepat,jnt';
-
         $userId = $request->user()->id ?? Auth::id();
         $cartItems = Cart::with('productVariant')->where('user_id', $userId)->get();
-
         $totalBeratGram = 0;
+
         foreach ($cartItems as $item) {
             $beratSatuan = $item->productVariant->weight ?? 500;
             $totalBeratGram += ($beratSatuan * $item->quantity);
@@ -116,7 +213,6 @@ class CheckoutController extends Controller
 
         try {
             $validCouriers = ['jne','sicepat','ide','sap','jnt','ninja','tiki','lion','anteraja','pos','ncs','rex','rpx','sentral','star','wahana','spx'];
-
             $apiCouriers = collect(explode(',', $activeCouriers))
                 ->map(fn($c) => trim(strtolower($c)))
                 ->filter(fn($c) => in_array($c, $validCouriers))
@@ -140,20 +236,23 @@ class CheckoutController extends Controller
             if ($response->successful() && isset($response->json()['data'])) {
                 $rates = collect($response->json()['data'])->flatMap(function ($item) {
                     if (isset($item['service'])) {
+                        $rawEtd = trim(str_ireplace(['hari', 'day', 'days'], '', (string) ($item['etd'] ?? '')));
                         return [[
                             'company'  => strtoupper($item['code']),
                             'type'     => $item['service'],
                             'price'    => $item['cost'],
-                            'duration' => $item['etd'] ?? '2-3',
+                            'duration' => $rawEtd !== '' ? $rawEtd : '1-2',
                         ]];
                     }
-
-                    return collect($item['costs'] ?? [])->map(fn($cost) => [
-                        'company'  => strtoupper($item['code']),
-                        'type'     => $cost['service'],
-                        'price'    => $cost['cost'][0]['value'],
-                        'duration' => $cost['cost'][0]['etd'] ?? '2-3',
-                    ]);
+                    return collect($item['costs'] ?? [])->map(function ($cost) use ($item) {
+                        $rawEtd = trim(str_ireplace(['hari', 'day', 'days'], '', (string) ($cost['cost'][0]['etd'] ?? '')));
+                        return [
+                            'company'  => strtoupper($item['code']),
+                            'type'     => $cost['service'],
+                            'price'    => $cost['cost'][0]['value'],
+                            'duration' => $rawEtd !== '' ? $rawEtd : '1-2',
+                        ];
+                    });
                 })->filter(fn($r) => is_numeric($r['price']) && strtolower($r['company']) !== 'pemilik_toko');
 
                 if ($rates->isEmpty()) {
@@ -169,7 +268,6 @@ class CheckoutController extends Controller
 
             $errorMessage = $response->json()['meta']['message'] ?? 'API RajaOngkir gagal mengembalikan tarif.';
             return response()->json(['status' => 'error', 'message' => $errorMessage], 400);
-
         } catch (\Exception $e) {
             Log::error('RajaOngkir Exception: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Gagal terhubung ke RajaOngkir: ' . $e->getMessage()], 500);
@@ -196,6 +294,7 @@ class CheckoutController extends Controller
         try {
             $totalAmount = 0;
             $totalRotiCheckout = 0;
+
             foreach ($cartItems as $item) {
                 $totalAmount += $item->productVariant->price * $item->quantity;
                 $totalRotiCheckout += $item->quantity;
@@ -210,9 +309,16 @@ class CheckoutController extends Controller
             $amountToPay = ($pilihanBayar === 'transfer_full') ? $grandTotal : $dpAmount;
 
             $orderNumber = 'RK-' . date('Ymd') . '-' . rand(1000, 9999);
-            $isInternal = ($shippingCost == 0);
+            $courierNameInput = trim((string) $request->input('courier_name', ''));
+            $isInternal = ($shippingCost == 0 && (empty($courierNameInput) || str_contains(strtolower($courierNameInput), 'internal')));
 
-            if ($request->input('delivery_date') === 'auto' || (!$isInternal && $shippingCost > 0)) {
+            if (!$isInternal) {
+                // DINAMIS BERDASARKAN ESTIMASI API KURIR EKSTERNAL (BUKAN HARDCODE H+2)
+                $rawEtdSource = $request->input('etd') ?: $request->input('shipping_service');
+                $etdParsed = $this->parseEtdDays($rawEtdSource);
+                $deliveryDate = now()->addDays($etdParsed['max'])->format('Y-m-d');
+                $deliveryTime = null;
+            } elseif ($request->input('delivery_date') === 'auto' || empty($request->input('delivery_date'))) {
                 $tglDapurKosong = $this->getValidProductionDate($totalRotiCheckout);
                 $deliveryDate = $tglDapurKosong->format('Y-m-d');
                 $deliveryTime = '15:00:00';
@@ -251,7 +357,6 @@ class CheckoutController extends Controller
             }
 
             $tipeTransaksi = ($pilihanBayar === 'cod') ? 'cod' : 'transfer';
-
             $transaction = Transaction::create([
                 'order_id' => $order->id,
                 'amount' => $amountToPay,
@@ -291,7 +396,6 @@ class CheckoutController extends Controller
                         'reference' => $result['reference'] ?? null,
                         'qr_string' => $result['qrString'] ?? null
                     ]);
-
                     DB::commit();
 
                     return response()->json([
@@ -311,7 +415,6 @@ class CheckoutController extends Controller
                 DB::rollBack();
                 return response()->json(['status' => 'error', 'message' => 'Exception Duitku: ' . $e->getMessage()], 500);
             }
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status' => 'error', 'message' => 'Gagal memproses pesanan: ' . $e->getMessage()], 500);
@@ -326,7 +429,6 @@ class CheckoutController extends Controller
             ->get();
 
         foreach ($orders as $order) {
-            // Hanya batalkan otomatis jika status pembayaran masih UNPAID lewat 24 jam
             $expiredAt = $order->created_at->addMinutes(1440);
             if ($order->status === 'pending' && $order->transaction && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
                 $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran QRIS habis (24 jam).']);
@@ -339,7 +441,6 @@ class CheckoutController extends Controller
             $pStatus = strtolower($order->transaction->payment_status ?? 'unpaid');
             $rawStatus = strtolower(str_replace(' ', '_', $order->status ?? 'pending'));
 
-            // Normalisasi variasi penamaan status siap diantar / siap diambil / dikirim
             if (in_array($rawStatus, ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'])) {
                 $oStatus = 'siap_diambil';
             } else {
@@ -364,24 +465,28 @@ class CheckoutController extends Controller
                 $displayStatus = strtoupper(str_replace('_', ' ', $order->status));
             }
 
-            return [
-                'order_number' => $order->order_number,
-                'status' => $oStatus, // gunakan format snake_case konsisten agar filter & kondisi di web/WA cocok 100%
-                'raw_status' => $oStatus,
-                'display_status' => $displayStatus,
-                'payment_method' => $order->transaction->payment_method ?? '-',
-                'payment_status' => $pStatus,
-                'tipe_bayar' => $isDP ? 'DP 30%' : 'Lunas',
-                'date' => $order->created_at->format('d M Y, H:i'),
-                'recipient_name' => $order->recipient_name,
-                'recipient_whatsapp' => $order->recipient_whatsapp,
-                'shipping_address' => $order->shipping_address,
-                'total_amount' => (int) $order->total_amount,
-                'remaining_amount' => (int) $order->remaining_amount,
+            $shippingMeta = $this->buildShippingMeta($order);
+
+            return array_merge([
+                'order_number'           => $order->order_number,
+                'status'                 => $oStatus,
+                'raw_status'             => $oStatus,
+                'display_status'         => $displayStatus,
+                'payment_method'         => $order->transaction->payment_method ?? '-',
+                'payment_status'         => $pStatus,
+                'tipe_bayar'             => $isDP ? 'DP 30%' : 'Lunas',
+                'date'                   => $order->created_at->format('d M Y, H:i'),
+                'recipient_name'         => $order->recipient_name,
+                'recipient_whatsapp'     => $order->recipient_whatsapp,
+                'shipping_address'       => $order->shipping_address,
+                'delivery_date'          => $order->delivery_date,
+                'delivery_time'          => $order->delivery_time,
+                'total_amount'           => (int) $order->total_amount,
+                'remaining_amount'       => (int) $order->remaining_amount,
                 'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
-                'tagihan_sekarang' => 'Rp ' . number_format($order->transaction->amount ?? 0, 0, ',', '.'),
+                'tagihan_sekarang'       => 'Rp ' . number_format($order->transaction->amount ?? 0, 0, ',', '.'),
                 'sisa_tagihan_formatted' => 'Rp ' . number_format($order->remaining_amount, 0, ',', '.'),
-            ];
+            ], $shippingMeta);
         });
 
         return response()->json(['status' => 'success', 'data' => $mappedOrders]);
@@ -400,11 +505,17 @@ class CheckoutController extends Controller
         }
 
         $company = CompanyProfile::first();
+        $shippingMeta = $this->buildShippingMeta($order);
+
+        $orderArray = $order->toArray();
+        $orderArray['shipping_meta'] = $shippingMeta;
+        $orderArray['arrival_proof_url'] = $shippingMeta['arrival_proof_url'];
+        $orderArray['payment_proof_url'] = $shippingMeta['payment_proof_url'];
 
         return response()->json([
             'status' => 'success',
             'data' => [
-                'order' => $order,
+                'order'   => $orderArray,
                 'company' => $company
             ]
         ]);
@@ -426,9 +537,7 @@ class CheckoutController extends Controller
 
         $user = $request->user() ?? Auth::user();
         $isPrimary = $user->addresses()->doesntExist();
-
         $roId = $this->getRajaOngkirId($request->district, $request->city);
-
         $dapur = CompanyProfile::first();
         $jarak = 0;
 
@@ -462,38 +571,30 @@ class CheckoutController extends Controller
         $earthRadius = 6371;
         $dLat = deg2rad($lat2 - $lat1);
         $dLon = deg2rad($lon2 - $lon1);
-
         $a = sin($dLat / 2) * sin($dLat / 2) +
             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
             sin($dLon / 2) * sin($dLon / 2);
-
         $c = 2 * asin(sqrt($a));
         $distance = $earthRadius * $c;
-
         return round($distance, 2);
     }
 
     public function showPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
-
         if (!$order || !$order->transaction) {
             return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
         }
 
         $pStatus = strtolower($order->transaction->payment_status);
 
-        // 1. Jika masih UNPAID, batas waktunya 24 jam (1440 menit) sejak order dibuat
         $expiredAt = $order->created_at->addMinutes(1440);
-
         if ($order->status === 'pending' && $pStatus === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
             $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran habis (24 jam).']);
             $order->transaction->update(['payment_status' => 'failed']);
             NotificationController::send($order, 'batal_otomatis');
         }
 
-        // 2. Jika sudah PAID_DP (mau bayar sisa tagihan 70%) dan belum pernah generate QRIS pelunasan,
-        // otomatis buatkan QRIS pelunasan supaya QR yang tampil adalah tagihan sisa 70%
         if ($pStatus === 'paid_dp' && $order->remaining_amount > 0 && $order->transaction->amount < $order->total_amount && !in_array($order->status, ['selesai', 'dibatalkan'])) {
             $this->generatePelunasanInvoice($order);
             $order->load('transaction');
@@ -513,14 +614,11 @@ class CheckoutController extends Controller
     public function cekStatusPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
-
         if (!$order || !$order->transaction) {
             return response()->json(['status' => 'error', 'message' => 'Order tidak ditemukan'], 404);
         }
 
         $expiredAt = $order->created_at->addMinutes(1440);
-
-        // Hanya batalkan otomatis jika masih UNPAID (DP yang mau dilunasi tidak terkena batas 24 jam awal)
         if ($order->status === 'pending' && $order->transaction->payment_status === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
             $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran habis (24 jam).']);
             $order->transaction->update(['payment_status' => 'failed']);
@@ -547,13 +645,12 @@ class CheckoutController extends Controller
         ]);
 
         $userId = $request->user()?->id ?? Auth::id();
-
         $query = Order::with('transaction')->where('order_number', $request->order_number);
         if ($userId) {
             $query->where('user_id', $userId);
         }
-        $order = $query->first();
 
+        $order = $query->first();
         if (!$order) {
             return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan.'], 404);
         }
@@ -584,7 +681,6 @@ class CheckoutController extends Controller
 
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Pesanan berhasil dibatalkan.']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan pesanan: ' . $e->getMessage()], 500);
@@ -595,14 +691,12 @@ class CheckoutController extends Controller
     {
         $merchantCode = env('DUITKU_MERCHANT_CODE');
         $merchantKey = env('DUITKU_MERCHANT_KEY');
-
         $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
         $duitkuConfig->setSandboxMode(true);
 
         try {
             $callback = \Duitku\Api::callback($duitkuConfig);
             $notif = json_decode($callback);
-
             $rawMerchantOrderId = $notif->merchantOrderId ?? '';
             $isPelunasanInvoice = str_contains($rawMerchantOrderId, '-LUNAS');
             $cleanOrderId = preg_replace('/(-LUNAS.*|-R\d+)$/', '', $rawMerchantOrderId);
@@ -613,13 +707,13 @@ class CheckoutController extends Controller
                 if ($notif->resultCode == "00") {
                     $prevPaymentStatus = $order->transaction->payment_status;
 
-                    // Cek apakah ini pelunasan DP atau pembayaran lunas 100% di awal
                     if ($isPelunasanInvoice || $prevPaymentStatus === 'paid_dp' || $notif->amount >= $order->total_amount || $order->remaining_amount == 0) {
                         $updateOrderData = ['remaining_amount' => 0];
 
-                        // Jika status pesanan saat ini sudah siap_diambil / siap_diantar, otomatis ubah jadi selesai!
                         $normalizedStatus = strtolower(str_replace(' ', '_', $order->status));
-                        if (in_array($normalizedStatus, ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'])) {
+                        $hasArrivalProof = !empty($order->arrival_proof) || !empty($order->delivery_proof);
+
+                        if (in_array($normalizedStatus, ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar']) && $hasArrivalProof) {
                             $updateOrderData['status'] = 'selesai';
                         }
 
@@ -631,51 +725,41 @@ class CheckoutController extends Controller
 
                         $order->refresh();
 
-                        // Kirim notifikasi WA & Web via Satpam NotificationController
                         if ($prevPaymentStatus === 'paid_dp' || $isPelunasanInvoice) {
                             NotificationController::send($order, 'pelunasan_berhasil');
                         } else {
                             NotificationController::send($order, 'pembayaran_lunas');
                         }
                     } else {
-                        // Pembayaran DP 30% di awal
                         $order->transaction->update([
                             'payment_status' => 'paid_dp',
                             'paid_at' => now()
                         ]);
-
                         $order->refresh();
                         NotificationController::send($order, 'pembayaran_dp');
                     }
                 } else if ($notif->resultCode == "01") {
-                    // Jangan timpa jadi failed kalau sebelumnya sudah paid_dp (agar status DP tetap aman)
                     if ($order->transaction->payment_status === 'unpaid') {
                         $order->transaction->update(['payment_status' => 'failed']);
                     }
                     NotificationController::send($order, 'pembayaran_gagal');
                 }
             }
-
             return response()->json(['message' => 'Callback Processed']);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
 
-    /**
-     * Helper internal untuk membuat invoice QRIS Pelunasan 70% ke Duitku
-     */
     private function generatePelunasanInvoice(Order $order): array
     {
         $merchantCode = env('DUITKU_MERCHANT_CODE');
         $merchantKey = env('DUITKU_MERCHANT_KEY');
-
         $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
         $duitkuConfig->setSandboxMode(true);
         $duitkuConfig->setSanitizedMode(true);
         $duitkuConfig->setDuitkuLogs(false);
 
-        // Gunakan suffix unik bila user klik bayar sisaan berkali-kali agar tidak ditolak duplicate order ID oleh Duitku
         $pelunasanOrderId = $order->order_number . '-LUNAS-' . rand(10, 99);
 
         $params = [
@@ -700,7 +784,6 @@ class CheckoutController extends Controller
                 'reference' => $result['reference'] ?? null,
                 'qr_string' => $result['qrString'] ?? null
             ]);
-
             return ['success' => true, 'result' => $result];
         }
 
@@ -731,7 +814,6 @@ class CheckoutController extends Controller
 
         $pStatus = $order->transaction->payment_status;
 
-        // KASUS 1: Pesanan masih UNPAID (Bayar Ulang / Ambil Link QRIS Awal)
         if ($pStatus === 'unpaid' || $pStatus === 'failed') {
             if (!empty($order->transaction->qr_string) && $pStatus === 'unpaid') {
                 return response()->json([
@@ -790,12 +872,10 @@ class CheckoutController extends Controller
             }
         }
 
-        // KASUS 2: Pesanan sudah LUNAS
         if ($order->remaining_amount <= 0 || $pStatus === 'paid_full') {
             return response()->json(['status' => 'error', 'message' => 'Pesanan ini sudah lunas cuy.'], 400);
         }
 
-        // KASUS 3: Pesanan DP (paid_dp) -> Buat QRIS Pelunasan 70%
         try {
             $gen = $this->generatePelunasanInvoice($order);
             if ($gen['success']) {
@@ -825,15 +905,14 @@ class CheckoutController extends Controller
     {
         $bulan = $request->query('bulan', now()->month);
         $tahun = $request->query('tahun', now()->year);
-
         $userId = $request->user()?->id ?? Auth::id();
+
         if (!$userId) {
             return response()->json(['status' => 'error', 'message' => 'Silakan login terlebih dahulu.']);
         }
 
         $setting = StoreSetting::first();
         $maxQtyPerDay = $setting->max_qty_per_day ?? 60;
-
         $cartQty = Cart::where('user_id', $userId)->sum('quantity');
 
         if ($cartQty == 0) {
@@ -865,19 +944,15 @@ class CheckoutController extends Controller
 
         for ($i = 1; $i <= $daysInMonth; $i++) {
             $dateStr = sprintf("%04d-%02d-%02d", $tahun, $bulan, $i);
-
             if ($dateStr < $besok) {
                 $heatmap[$dateStr] = 'past';
                 continue;
             }
-
             if (in_array($dateStr, $holidays)) {
                 $heatmap[$dateStr] = 'full';
                 continue;
             }
-
             $totalQtyHariIni = $rekapHarian[$dateStr] ?? 0;
-
             if (($totalQtyHariIni + $cartQty) > $maxQtyPerDay) {
                 $heatmap[$dateStr] = 'full';
             } elseif ($totalQtyHariIni > ($maxQtyPerDay * 0.7)) {
@@ -901,7 +976,6 @@ class CheckoutController extends Controller
         }
 
         $tanggal = Carbon::parse($tanggalStr);
-
         $setting = StoreSetting::first();
         $maxOrdersPerHour = $setting->max_orders_per_hour ?? 5;
         $startHourStr = $setting->operational_time_start ?? '08:00:00';
@@ -916,13 +990,13 @@ class CheckoutController extends Controller
         }
 
         $nowPlus24 = Carbon::now()->addHours(24);
-
         $orders = Order::whereDate('delivery_date', $tanggal->format('Y-m-d'))
             ->where('status', '!=', 'dibatalkan')
             ->get();
 
         $rekapJam = [];
         foreach ($orders as $order) {
+            if (!$order->delivery_time) continue;
             $jam = Carbon::parse($order->delivery_time)->format('H:i');
             if (!isset($rekapJam[$jam])) $rekapJam[$jam] = 0;
             $rekapJam[$jam]++;
@@ -931,16 +1005,13 @@ class CheckoutController extends Controller
         $availableTimes = [];
         foreach ($jamOperasional as $jam) {
             $jamLengkap = Carbon::parse($tanggal->format('Y-m-d') . ' ' . $jam);
-
             if ($jamLengkap->lessThan($nowPlus24)) {
                 continue;
             }
-
             $terisi = $rekapJam[$jam] ?? 0;
             if ($terisi >= $maxOrdersPerHour) {
                 continue;
             }
-
             $availableTimes[] = $jam;
         }
 

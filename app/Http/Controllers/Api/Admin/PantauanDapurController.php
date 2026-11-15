@@ -136,16 +136,16 @@ class PantauanDapurController extends Controller
                     $notifToTrigger = 'diproses';
                     $toastMessage = "Nota #{$order->order_number} mulai diproses! Notifikasi dikirim ke pelanggan.";
                 } elseif ($newOrderStatus === 'siap_diambil' && $prevOrderStatus !== 'siap_diambil') {
-                    // Cek apakah pelanggan pakai Transfer DP & masih punya sisa tagihan
+                    // Cek apakah pelanggan masih punya sisa tagihan DP (baik Transfer maupun COD)
                     $pMethod = strtolower($order->transaction->payment_method ?? 'transfer');
                     $pStatus = strtolower($order->transaction->payment_status ?? 'unpaid');
 
-                    if ($pMethod === 'transfer' && $pStatus === 'paid_dp' && $order->remaining_amount > 0) {
-                        $notifToTrigger = 'menunggu_pelunasan';
+                    if ($pStatus === 'paid_dp' && $order->remaining_amount > 0) {
+                        $notifToTrigger = ($pMethod === 'transfer') ? 'menunggu_pelunasan' : 'diantar';
                     } else {
                         $notifToTrigger = 'diantar';
                     }
-                    $toastMessage = "Semua item #{$order->order_number} selesai! Notifikasi Siap Diantar dikirim ke pelanggan.";
+                    $toastMessage = "Semua item #{$order->order_number} selesai! Notifikasi Siap Dikirim & Pengingat Pelunasan dikirim ke pelanggan.";
                 }
             }
 
