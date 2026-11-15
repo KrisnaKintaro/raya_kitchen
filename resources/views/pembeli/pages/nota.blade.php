@@ -394,7 +394,9 @@
                         if (order.refund_account_number) {
                             bottomHtml += `<div class="mt-4 pt-4 border-t border-red-100"><p class="text-xs font-bold text-red-800 mb-2">Status Pengembalian Dana (Refund)</p>`;
                             if (order.refund_proof) {
-                                let refundUrl = order.refund_proof.startsWith('http') ? order.refund_proof : '/storage/bukti_refund/' + order.refund_proof.replace(/^\//, '');
+                                let refundUrl = order.refund_proof_url || (order.refund_proof.startsWith('http')
+                                    ? order.refund_proof
+                                    : '/storage/bukti_refund/' + order.refund_proof.replace(/^\/?(storage\/)?(bukti_refund\/)?/i, ''));
                                 bottomHtml += `
                                     <div class="bg-white p-3 rounded-xl border border-red-100">
                                         <span class="text-xs font-bold text-green-600 block mb-3">✅ Dana berhasil dikembalikan oleh Admin</span>

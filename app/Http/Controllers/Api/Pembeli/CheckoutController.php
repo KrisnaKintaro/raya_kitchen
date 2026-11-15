@@ -74,7 +74,7 @@ class CheckoutController extends Controller
     /**
      * Format URL bukti pengiriman/pembayaran (mendukung storage lokal & URL eksternal)
      */
-    private function formatProofUrl(?string $rawPath): ?string
+    private function formatProofUrl(?string $rawPath, string $folder = 'bukti_pengiriman'): ?string
     {
         if (empty($rawPath)) {
             return null;
@@ -82,7 +82,8 @@ class CheckoutController extends Controller
         if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
             return $rawPath;
         }
-        return asset('storage/bukti_pengiriman/' . ltrim($rawPath, '/'));
+        $clean = preg_replace('#^/?(storage/)?(' . preg_quote($folder, '#') . '/)?#i', '', trim($rawPath));
+        return asset("storage/{$folder}/" . $clean);
     }
 
     /**
@@ -508,9 +509,10 @@ class CheckoutController extends Controller
         $shippingMeta = $this->buildShippingMeta($order);
 
         $orderArray = $order->toArray();
-        $orderArray['shipping_meta'] = $shippingMeta;
+        $orderArray['shipping_meta']     = $shippingMeta;
         $orderArray['arrival_proof_url'] = $shippingMeta['arrival_proof_url'];
         $orderArray['payment_proof_url'] = $shippingMeta['payment_proof_url'];
+        $orderArray['refund_proof_url']  = $this->formatProofUrl($order->refund_proof, 'bukti_refund');
 
         return response()->json([
             'status' => 'success',

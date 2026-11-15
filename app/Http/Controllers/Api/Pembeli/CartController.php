@@ -18,11 +18,11 @@ class CartController extends Controller
             ->get()
             ->map(function ($cart) {
                 return [
-                    'id' => $cart->id,
-                    'name' => $cart->productVariant->variant_name ?? 'Produk Roti',
+                    'id'    => $cart->id,
+                    'name'  => $cart->productVariant->variant_name ?? 'Produk Roti',
                     'price' => $cart->productVariant->price ?? 0,
-                    'qty' => $cart->quantity,
-                    'image' => $cart->productVariant->image_url ?? 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=300&q=80'
+                    'qty'   => $cart->quantity,
+                    'image' => KatalogController::formatProductImageUrl($cart->productVariant->image_url ?? null),
                 ];
             });
 

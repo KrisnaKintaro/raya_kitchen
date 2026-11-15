@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\BatalRefundController;
+use App\Http\Controllers\Api\Admin\DaftarTransaksiController;
 use App\Http\Controllers\Api\Admin\DashboardFinansialController;
 use App\Http\Controllers\Api\Admin\KelolaPengirimanController;
 use App\Http\Controllers\Api\Admin\PantauanDapurController;
@@ -89,6 +90,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/batal-refund', [BatalRefundController::class, 'index']);
     Route::get('/batal-refund/count', [BatalRefundController::class, 'pendingCount']);
     Route::post('/batal-refund/{order_number}/proses', [BatalRefundController::class, 'prosesRefund']);
+    
+    // DAFTAR TRANSAKSI
+    Route::get('/daftar-transaksi', [DaftarTransaksiController::class, 'index']);
+    Route::post('/daftar-transaksi/{order_number}/status', [DaftarTransaksiController::class, 'updateStatus']);
 });
 
 // Perlu login untuk akses route di bawah ini

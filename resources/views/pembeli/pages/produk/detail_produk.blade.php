@@ -141,7 +141,8 @@ $(document).ready(function() {
 
                     let finalImageUrl = data.gambar;
                     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                        finalImageUrl = "{{ asset('storage/produk') }}/" + finalImageUrl.replace(/^\//, '');
+                        let cleanImg = finalImageUrl.replace(/^\/?(storage\/)?(produk\/)?/i, '');
+                        finalImageUrl = "{{ asset('storage/produk') }}/" + cleanImg;
                     }
 
                     $('#pd-gambar').attr('src', finalImageUrl);

@@ -565,7 +565,8 @@ class KelolaPengirimanController extends Controller
         if (str_starts_with($rawPath, 'http://') || str_starts_with($rawPath, 'https://')) {
             return $rawPath;
         }
-        return asset('storage/bukti_pengiriman/' . ltrim($rawPath, '/'));
+        $clean = preg_replace('#^/?(storage/)?(bukti_pengiriman/)?#i', '', trim($rawPath));
+        return asset('storage/bukti_pengiriman/' . $clean);
     }
 
     /**
