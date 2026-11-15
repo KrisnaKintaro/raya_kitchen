@@ -6,175 +6,65 @@
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    :root {
-        /* 60-30-10 Claymorphism Cockpit Tokens */
-        --clay-bg: #F5F2F8;
-        --clay-surface: #FFFFFF;
-        --clay-surface-alt: #FAF8FC;
-        --clay-dark: #1E1B24;
-        --clay-primary: #9368B7;
-        --clay-primary-hover: #7E54A3;
-        --clay-accent-soft: #E8D5F6;
-        --clay-border: #EBE4F2;
-        --clay-text-main: #2D2A32;
-        --clay-text-muted: #6E6A75;
-
-        /* Semantic Status Tokens */
-        --clay-emerald: #10B981;
-        --clay-teal: #0D9488;
-        --clay-amber: #F59E0B;
-        --clay-orange: #EA580C;
-        --clay-rose: #F43F5E;
-
-        /* Tactile Claymorphism Shadows */
-        --clay-shadow-card:
-            inset 0 -4px 6px rgba(147, 104, 183, 0.08),
-            inset 0 4px 6px rgba(255, 255, 255, 0.95),
-            0 10px 24px -4px rgba(147, 104, 183, 0.1);
-        --clay-shadow-dark:
-            inset 0 -4px 8px rgba(0, 0, 0, 0.45),
-            inset 0 2px 4px rgba(255, 255, 255, 0.08),
-            0 14px 28px -6px rgba(30, 27, 36, 0.28);
-        --clay-shadow-well:
-            inset 0 3px 6px rgba(147, 104, 183, 0.14),
-            inset 0 -2px 4px rgba(255, 255, 255, 0.9);
-        --clay-shadow-btn:
-            inset 0 -3px 4px rgba(0, 0, 0, 0.15),
-            inset 0 3px 4px rgba(255, 255, 255, 0.35),
-            0 6px 14px rgba(147, 104, 183, 0.28);
-    }
-
-    /* Fluid Typography Engine */
-    .fluid-h2 { font-size: clamp(1.15rem, 1.2vw + 0.85rem, 1.5rem); line-height: 1.25; }
-    .fluid-stat-lg { font-size: clamp(1.5rem, 2vw + 0.9rem, 2.25rem); line-height: 1.15; }
-    .fluid-stat-md { font-size: clamp(1.35rem, 1.6vw + 0.8rem, 1.85rem); line-height: 1.2; }
-
-    /* Claymorphism Surfaces */
-    .clay-card {
-        background-color: var(--clay-surface);
-        border: 2px solid #FFFFFF;
-        border-radius: 2rem;
-        box-shadow: var(--clay-shadow-card);
-    }
-    .clay-card-dark {
-        background-color: var(--clay-dark);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2rem;
-        box-shadow: var(--clay-shadow-dark);
-    }
-    .clay-well {
-        background-color: var(--clay-bg);
-        border: 1px solid #FFFFFF;
-        border-radius: 1.25rem;
-        box-shadow: var(--clay-shadow-well);
-    }
-    .clay-btn-primary {
-        background-color: var(--clay-primary);
-        color: #FFFFFF;
-        box-shadow: var(--clay-shadow-btn);
-    }
-    .clay-btn-primary:hover {
-        background-color: var(--clay-primary-hover);
-    }
-
-    /* 5-State Feedback Loop Machine (60fps Transform & Opacity Only) */
-    .ux-interactive {
-        min-height: 44px;
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
-    }
-    .ux-interactive:hover:not(:disabled) {
-        transform: translateY(-3px);
-    }
-    .ux-interactive:active:not(:disabled) {
-        transform: scale(0.95);
-    }
-    .ux-interactive:focus-visible {
-        outline: 3px solid var(--clay-primary);
-        outline-offset: 2px;
-    }
-    .ux-interactive:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-    }
-
-    /* Staggered Entrance Animations */
-    @keyframes clayFadeUp {
-        from { opacity: 0; transform: translateY(14px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .stagger-item {
-        opacity: 0;
-        animation: clayFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .delay-1 { animation-delay: 40ms; }
-    .delay-2 { animation-delay: 90ms; }
-    .delay-3 { animation-delay: 140ms; }
-    .delay-4 { animation-delay: 190ms; }
-    .delay-5 { animation-delay: 240ms; }
-
-    /* Custom Checkbox */
-    .custom-cb {
-        appearance: none;
-        width: 1.25rem;
-        height: 1.25rem;
-        border: 2px solid #CBD5E1;
-        border-radius: 0.4rem;
-        cursor: pointer;
-        position: relative;
-        transition: transform 0.15s ease, opacity 0.15s ease;
-    }
-    .custom-cb:checked {
-        background-color: var(--clay-primary);
-        border-color: var(--clay-primary);
-    }
-    .custom-cb:checked::after {
-        content: '';
-        position: absolute;
-        left: 5px;
-        top: 1px;
-        width: 5px;
-        height: 10px;
-        border: solid #FFFFFF;
-        border-width: 0 2px 2px 0;
-        transform: rotate(45deg);
-    }
-
-    /* Flatpickr Clay Override */
-    .flatpickr-calendar {
-        font-family: inherit;
-        box-shadow: 0 16px 32px -8px rgba(147, 104, 183, 0.25);
-        border: 2px solid #FFFFFF;
-        border-radius: 1.5rem;
-    }
-    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.inRange {
-        background: var(--clay-primary) !important;
-        border-color: var(--clay-primary) !important;
-        color: #FFFFFF !important;
-    }
-
-    /* Respect OS Reduced Motion */
-    @media (prefers-reduced-motion: reduce) {
-        *, ::before, ::after {
-            animation-duration: 0.01ms !important;
-            animation-iteration-count: 1 !important;
-            transition-duration: 0.01ms !important;
-            scroll-behavior: auto !important;
-        }
-    }
-
-    /* Print Mode */
-    @media print {
-        #sidebar, header, .no-print { display: none !important; }
-        #main-content { overflow: visible !important; height: auto !important; }
-        body { overflow: visible !important; background: #FFFFFF !important; }
-        .clay-card, .clay-card-dark { box-shadow: none !important; border: 1px solid #CBD5E1 !important; }
-    }
+:root {
+    --clay-bg: #F5F2F8;
+    --clay-surface: #FFFFFF;
+    --clay-surface-alt: #FAF8FC;
+    --clay-dark: #1E1B24;
+    --clay-primary: #9368B7;
+    --clay-primary-hover: #7E54A3;
+    --clay-accent-soft: #E8D5F6;
+    --clay-border: #EBE4F2;
+    --clay-text-main: #2D2A32;
+    --clay-text-muted: #6E6A75;
+    --clay-shadow-card: inset 0 -4px 6px rgba(147, 104, 183, 0.08), inset 0 4px 6px rgba(255, 255, 255, 0.95), 0 10px 24px -4px rgba(147, 104, 183, 0.1);
+    --clay-shadow-dark: inset 0 -4px 8px rgba(0, 0, 0, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.08), 0 14px 28px -6px rgba(30, 27, 36, 0.28);
+    --clay-shadow-well: inset 0 3px 6px rgba(147, 104, 183, 0.14), inset 0 -2px 4px rgba(255, 255, 255, 0.9);
+    --clay-shadow-btn: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 3px 4px rgba(255, 255, 255, 0.35), 0 6px 14px rgba(147, 104, 183, 0.28);
+}
+.fluid-h2 { font-size: clamp(1.15rem, 1.2vw + 0.85rem, 1.5rem); line-height: 1.25; }
+.fluid-stat-lg { font-size: clamp(1.5rem, 2vw + 0.9rem, 2.25rem); line-height: 1.15; }
+.fluid-stat-md { font-size: clamp(1.35rem, 1.6vw + 0.8rem, 1.85rem); line-height: 1.2; }
+.clay-card { background-color: var(--clay-surface); border: 2px solid #FFFFFF; border-radius: 2rem; box-shadow: var(--clay-shadow-card); }
+.clay-card-dark { background-color: var(--clay-dark); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; box-shadow: var(--clay-shadow-dark); }
+.clay-well { background-color: var(--clay-bg); border: 1px solid #FFFFFF; border-radius: 1.25rem; box-shadow: var(--clay-shadow-well); }
+.clay-btn-primary { background-color: var(--clay-primary); color: #FFFFFF; box-shadow: var(--clay-shadow-btn); }
+.clay-btn-primary:hover { background-color: var(--clay-primary-hover); }
+.ux-interactive { min-height: 44px; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease; }
+.ux-interactive:hover:not(:disabled) { transform: translateY(-3px); }
+.ux-interactive:active:not(:disabled) { transform: scale(0.95); }
+.ux-interactive:focus-visible { outline: 3px solid var(--clay-primary); outline-offset: 2px; }
+.ux-interactive:disabled { opacity: 0.45; cursor: not-allowed; }
+@keyframes clayFadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.stagger-item { opacity: 0; animation: clayFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.delay-1 { animation-delay: 40ms; }
+.delay-2 { animation-delay: 90ms; }
+.delay-3 { animation-delay: 140ms; }
+.delay-4 { animation-delay: 190ms; }
+.delay-5 { animation-delay: 240ms; }
+.custom-cb { appearance: none; width: 1.25rem; height: 1.25rem; border: 2px solid #CBD5E1; border-radius: 0.4rem; cursor: pointer; position: relative; transition: transform 0.15s ease, opacity 0.15s ease; }
+.custom-cb:checked { background-color: var(--clay-primary); border-color: var(--clay-primary); }
+.custom-cb:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid #FFFFFF; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.flatpickr-calendar { font-family: inherit; box-shadow: 0 16px 32px -8px rgba(147, 104, 183, 0.25); border: 2px solid #FFFFFF; border-radius: 1.5rem; }
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.inRange { background: var(--clay-primary) !important; border-color: var(--clay-primary) !important; color: #FFFFFF !important; }
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+@media print {
+    #sidebar, header, .no-print { display: none !important; }
+    #main-content { overflow: visible !important; height: auto !important; }
+    body { overflow: visible !important; background: #FFFFFF !important; }
+    .clay-card, .clay-card-dark { box-shadow: none !important; border: 1px solid #CBD5E1 !important; }
+}
 </style>
 @endsection
 
 @section('content')
 
-    <!-- TOAST NOTIFICATION (Contextual Feedback) -->
+    <!-- TOAST NOTIFICATION -->
     <div id="ux-toast" role="status" aria-live="polite" class="fixed bottom-6 right-6 z-[200] hidden items-center gap-3 px-5 py-3.5 clay-card border-2 border-white shadow-2xl no-print">
         <div id="ux-toast-icon" class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
             <i class="ph ph-check-circle text-xl"></i>
@@ -223,7 +113,7 @@
                     <input type="text" id="universal-date-range" aria-label="Pilih Rentang Tanggal Bebas" placeholder="Pilih Rentang Tanggal" class="ux-interactive w-full pl-11 pr-4 py-2.5 clay-well text-admin-textMain text-xs sm:text-sm font-black cursor-pointer focus:outline-none" readonly>
                 </div>
 
-                <!-- Segmented Channel Filter (100% Vector Icons) -->
+                <!-- Segmented Channel Filter -->
                 <div class="clay-well p-1 flex items-center gap-1" role="group" aria-label="Filter Sumber Pesanan">
                     <button type="button" data-source="all" class="source-filter-btn ux-interactive px-3 py-2 rounded-xl text-xs font-black bg-white text-admin-sideBg shadow-sm flex items-center gap-1.5">
                         <i class="ph ph-stack text-sm"></i>
@@ -475,11 +365,11 @@
                 </div>
                 <div>
                     <h3 class="text-base font-black text-admin-textMain">5 Varian Produk Penyumbang Omzet Terbesar</h3>
-                    <p class="text-xs font-bold text-admin-textMuted">Dihitung khusus dari transaksi pada rentang tanggal & channel terpilih.</p>
+                    <p class="text-xs font-bold text-admin-textMuted">Dihitung dari pesanan sukses (Lunas & DP) pada rentang tanggal & channel terpilih.</p>
                 </div>
             </div>
             <div id="top-products-container" class="space-y-3.5">
-                <!-- Di-inject via JS -->
+                <p class="text-xs font-bold text-admin-textMuted py-4 animate-pulse">Memuat produk terlaris...</p>
             </div>
         </div>
 
@@ -492,7 +382,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-black text-admin-textMain">Distribusi Channel Pesanan</h3>
-                        <p class="text-xs font-bold text-admin-textMuted">Perbandingan asal pesanan pada filter aktif.</p>
+                        <p class="text-xs font-bold text-admin-textMuted">Pesanan aktif (tidak dibatalkan) pada filter terpilih.</p>
                     </div>
                 </div>
 
@@ -655,12 +545,6 @@
     </section>
 @endsection
 
-
-{{-- ========================================================================= --}}
-{{-- BLOK SCRIPT 1 (AKTIF SEKARANG): DYNAMIC DUMMY ENGINE                      --}}
-{{-- Menghitung ulang seluruh metrik, grafik, top 5 produk, channel, dan tabel --}}
-{{-- secara dinamis 100% mengikuti Filter Universal (Tanggal & Channel)!       --}}
-{{-- ========================================================================= --}}
 @push('script')
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
@@ -674,7 +558,6 @@
     let activeAbortController = null;
     let toastTimerId = null;
 
-    // Default: 7 Hari Terakhir dari Tanggal Hari Ini
     const todayDate = new Date();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(todayDate.getDate() - 6);
@@ -701,7 +584,6 @@
 
     const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
 
-    // --- TOAST NOTIFICATION ---
     function showToast(title, message, isSuccess = true) {
         if (toastTimerId) clearTimeout(toastTimerId);
         const toast = document.getElementById('ux-toast');
@@ -725,378 +607,116 @@
         }, 3200);
     }
 
-    // --- MASTER DATABASE DUMMY (140 TRANSAKSI TERSEBAR 400 HARI TERAKHIR) ---
-    // Dibuat deterministik supaya saat difilter tanggal/channel apa pun hasilnya nyata & konsisten!
-    const CATALOG_PRODUCTS = [
-        { id: 1, name: 'Roti Manis - Coklat Keju Spesial', price: 14000 },
-        { id: 2, name: 'Roti Gurih - Abon Sapi Lumer', price: 15000 },
-        { id: 3, name: 'Kue Kering - Nastar Wisman Premium', price: 70000 },
-        { id: 4, name: 'Roti Manis - Pisang Coklat Lumer', price: 12000 },
-        { id: 5, name: 'Roti Gurih - Smoke Beef Cheese', price: 16000 },
-        { id: 6, name: 'Roti Tawar - Gandum Utuh Premium', price: 24000 },
-        { id: 7, name: 'Kue Kering - Kastengel Keju Edam', price: 75000 }
-    ];
-
-    const CUSTOMERS = [
-        { name: 'Budi Santoso', wa: '6281234567801' },
-        { name: 'Siti Aminah', wa: '6281234567802' },
-        { name: 'Andi Wijaya', wa: '6281234567803' },
-        { name: 'Dewi Lestari', wa: '6281234567804' },
-        { name: 'Rizky Pratama', wa: '6281234567805' },
-        { name: 'Hendra Gunawan', wa: '6281234567806' },
-        { name: 'Maya Sari', wa: '6281234567807' },
-        { name: 'Fajar Nugroho', wa: '6281234567808' },
-        { name: 'Nadia Putri', wa: '6281234567809' },
-        { name: 'ika Rahmawati', wa: '6281234567810' }
-    ];
-
-    const MASTER_DUMMY_ORDERS = (function generateMasterDataset() {
-        const list = [];
-        const baseNow = new Date();
-
-        // Buat transaksi tersebar dari 0 hari lalu (hari ini) sampai 420 hari lalu
-        const dayOffsets = [
-            0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, // 7 hari terakhir (padat)
-            7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 22, 24, 26, 28, 29, // 30 hari terakhir
-            32, 35, 40, 45, 50, 55, 60, 70, 80, 95, 110, 130, 155, 180, 210, 250, 300, 340, 380, 410 // bulan & tahun lalu
-        ];
-
-        dayOffsets.forEach((offset, idx) => {
-            const d = new Date(baseNow);
-            d.setDate(baseNow.getDate() - offset);
-            const hour = 8 + ((idx * 3) % 11);
-            const min  = (idx * 7) % 60;
-            d.setHours(hour, min, 0, 0);
-
-            const cust = CUSTOMERS[idx % CUSTOMERS.length];
-            const source = (idx % 2 === 0) ? 'whatsapp' : 'web';
-            const method = (idx % 5 === 0) ? 'cod' : 'transfer';
-
-            let pStatus = 'paid_full';
-            let oStatus = 'selesai';
-            if (idx % 7 === 1) { pStatus = 'paid_dp'; oStatus = 'siap_diambil'; }
-            else if (idx % 7 === 3) { pStatus = 'paid_dp'; oStatus = 'diproses'; }
-            else if (idx % 7 === 5) { pStatus = 'unpaid'; oStatus = 'pending'; }
-            else if (idx % 11 === 0 && idx > 0) { pStatus = 'failed'; oStatus = 'dibatalkan'; }
-
-            // Pilih 2 produk per order
-            const p1 = CATALOG_PRODUCTS[idx % CATALOG_PRODUCTS.length];
-            const p2 = CATALOG_PRODUCTS[(idx + 2) % CATALOG_PRODUCTS.length];
-            const q1 = 5 + ((idx * 2) % 15);
-            const q2 = 4 + (idx % 10);
-
-            const sub1 = p1.price * q1;
-            const sub2 = p2.price * q2;
-            const totalAmount = sub1 + sub2;
-
-            let paidAmount = 0;
-            let remainingAmount = 0;
-
-            if (oStatus !== 'dibatalkan') {
-                if (pStatus === 'paid_full') {
-                    paidAmount = totalAmount;
-                } else if (pStatus === 'paid_dp') {
-                    paidAmount = Math.round(totalAmount * 0.3);
-                    remainingAmount = totalAmount - paidAmount;
-                } else {
-                    remainingAmount = totalAmount;
-                }
-            }
-
-            const ymd = toYMD(d);
-            const hms = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
-
-            list.push({
-                order_number: `RK-${ymd.replace(/-/g, '')}-${1000 + idx}`,
-                created_at: `${ymd} ${hms}`,
-                timestamp: d.getTime(),
-                recipient_name: cust.name,
-                recipient_whatsapp: cust.wa,
-                order_source: source,
-                payment_method: method,
-                payment_status: pStatus,
-                order_status: oStatus,
-                total_amount: totalAmount,
-                paid_amount: paidAmount,
-                remaining_amount: remainingAmount,
-                items_count: q1 + q2,
-                items: [
-                    { id: p1.id, name: p1.name, qty: q1, subtotal: sub1 },
-                    { id: p2.id, name: p2.name, qty: q2, subtotal: sub2 }
-                ]
-            });
-        });
-
-        return list;
-    })();
-
-    // --- FUNGSI KALKULASI METRIK DARI ARRAY ORDER (IDENTIK DENGAN PHP CONTROLLER) ---
-    function computeMetricsFromOrders(orders) {
-        let revenueLunas = 0, revenueDpPaid = 0, unpaidFull = 0, unpaidDpSisa = 0;
-        let paidFullCount = 0, paidDpCount = 0, unpaidCount = 0, cancelledCount = 0;
-
-        orders.forEach(o => {
-            if (o.order_status === 'dibatalkan') {
-                cancelledCount++;
-                return;
-            }
-            if (o.payment_status === 'paid_full') {
-                revenueLunas += o.total_amount;
-                paidFullCount++;
-            } else if (o.payment_status === 'paid_dp') {
-                revenueDpPaid += o.paid_amount;
-                unpaidDpSisa  += o.remaining_amount;
-                paidDpCount++;
-            } else {
-                unpaidFull += o.total_amount;
-                unpaidCount++;
-            }
-        });
-
-        const revenueTotal  = revenueLunas + revenueDpPaid;
-        const unpaidTotal   = unpaidFull + unpaidDpSisa;
-        const successOrders = paidFullCount + paidDpCount;
-
-        return {
-            revenue_total: revenueTotal,
-            revenue_lunas: revenueLunas,
-            revenue_dp_paid: revenueDpPaid,
-            unpaid_total: unpaidTotal,
-            unpaid_full: unpaidFull,
-            unpaid_dp_sisa: unpaidDpSisa,
-            success_orders: successOrders,
-            unpaid_count: unpaidCount,
-            cancelled_count: cancelledCount,
-            avg_order_value: successOrders > 0 ? Math.round(revenueTotal / successOrders) : 0
-        };
-    }
-
-    // --- ENGINE DUMMY DINAMIS YANG PATUH 100% PADA FILTER UNIVERSAL ---
-    function getDummyApiResponse(state) {
-        const startTs = new Date(state.start_date + 'T00:00:00').getTime();
-        const endTs   = new Date(state.end_date + 'T23:59:59').getTime();
-        const diffMs  = Math.max(86400000, endTs - startTs + 1000);
-
-        const prevStartTs = startTs - diffMs;
-        const prevEndTs   = startTs - 1000;
-
-        // 1. ALL-TIME STATS (TIDAK TERPENGARUH FILTER TANGGAL / CHANNEL)
-        const allTimeStats = computeMetricsFromOrders(MASTER_DUMMY_ORDERS);
-
-        // 2. FILTERED ORDERS (SESUAI TANGGAL UNIVERSAL & CHANNEL)
-        const filteredOrders = MASTER_DUMMY_ORDERS.filter(o => {
-            const matchDate   = o.timestamp >= startTs && o.timestamp <= endTs;
-            const matchSource = state.order_source === 'all' || o.order_source === state.order_source;
-            return matchDate && matchSource;
-        });
-
-        const prevOrders = MASTER_DUMMY_ORDERS.filter(o => {
-            const matchDate   = o.timestamp >= prevStartTs && o.timestamp <= prevEndTs;
-            const matchSource = state.order_source === 'all' || o.order_source === state.order_source;
-            return matchDate && matchSource;
-        });
-
-        const filteredStats = computeMetricsFromOrders(filteredOrders);
-        const prevStats     = computeMetricsFromOrders(prevOrders);
-
-        filteredStats.revenue_growth_pct = prevStats.revenue_total > 0
-            ? Number((((filteredStats.revenue_total - prevStats.revenue_total) / prevStats.revenue_total) * 100).toFixed(1))
-            : (filteredStats.revenue_total > 0 ? 100 : 0);
-
-        filteredStats.unpaid_growth_pct = prevStats.unpaid_total > 0
-            ? Number((((filteredStats.unpaid_total - prevStats.unpaid_total) / prevStats.unpaid_total) * 100).toFixed(1))
-            : (filteredStats.unpaid_total > 0 ? 100 : 0);
-
-        const dStart = new Date(startTs).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        const dEnd   = new Date(endTs).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-        filteredStats.period_label = `${dStart} - ${dEnd}`;
-
-        // 3. BANGUN TITIK GRAFIK DARI RENTANG TANGGAL UNIVERSAL [startTs, endTs]
-        const buckets = [];
-        if (state.granularity === 'daily') {
-            let cur = new Date(startTs);
-            while (cur.getTime() <= endTs) {
-                const bStart = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0).getTime();
-                const bEnd   = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 23, 59, 59).getTime();
-                buckets.push({
-                    label: cur.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }),
-                    start: bStart,
-                    end: bEnd
-                });
-                cur.setDate(cur.getDate() + 1);
-            }
-        } else if (state.granularity === 'weekly') {
-            let cur = new Date(startTs);
-            let wIdx = 1;
-            while (cur.getTime() <= endTs) {
-                const bStart = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 0, 0, 0).getTime();
-                const wEndObj = new Date(cur);
-                wEndObj.setDate(wEndObj.getDate() + 6);
-                wEndObj.setHours(23, 59, 59, 999);
-                const bEnd = Math.min(endTs, wEndObj.getTime());
-                buckets.push({
-                    label: `Mgg ${wIdx} (${cur.getDate()}/${cur.getMonth() + 1})`,
-                    start: bStart,
-                    end: bEnd
-                });
-                cur.setDate(cur.getDate() + 7);
-                wIdx++;
-            }
-        } else if (state.granularity === 'monthly') {
-            let cur = new Date(new Date(startTs).getFullYear(), new Date(startTs).getMonth(), 1);
-            while (cur.getTime() <= endTs) {
-                const mStart = new Date(cur.getFullYear(), cur.getMonth(), 1, 0, 0, 0).getTime();
-                const mEnd   = new Date(cur.getFullYear(), cur.getMonth() + 1, 0, 23, 59, 59).getTime();
-                buckets.push({
-                    label: cur.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }),
-                    start: Math.max(startTs, mStart),
-                    end: Math.min(endTs, mEnd)
-                });
-                cur.setMonth(cur.getMonth() + 1);
-            }
-        } else {
-            // yearly
-            let curYear = new Date(startTs).getFullYear();
-            const endYear = new Date(endTs).getFullYear();
-            while (curYear <= endYear) {
-                const yStart = new Date(curYear, 0, 1, 0, 0, 0).getTime();
-                const yEnd   = new Date(curYear, 11, 31, 23, 59, 59).getTime();
-                buckets.push({
-                    label: String(curYear),
-                    start: Math.max(startTs, yStart),
-                    end: Math.min(endTs, yEnd)
-                });
-                curYear++;
-            }
-        }
-
-        const charts = {
-            labels: [],
-            revenue_current: [],
-            revenue_lunas: [],
-            revenue_dp: [],
-            unpaid_current: [],
-            unpaid_dp_sisa: [],
-            unpaid_only: []
-        };
-
-        buckets.forEach(b => {
-            const slice = filteredOrders.filter(o => o.timestamp >= b.start && o.timestamp <= b.end);
-            const m = computeMetricsFromOrders(slice);
-            charts.labels.push(b.label);
-            charts.revenue_current.push(m.revenue_total);
-            charts.revenue_lunas.push(m.revenue_lunas);
-            charts.revenue_dp.push(m.revenue_dp_paid);
-            charts.unpaid_current.push(m.unpaid_total);
-            charts.unpaid_dp_sisa.push(m.unpaid_dp_sisa);
-            charts.unpaid_only.push(m.unpaid_full);
-        });
-
-        // 4. HITUNG TOP 5 PRODUK DARI FILTERED ORDERS
-        const prodMap = {};
-        let totalProdOmzet = 0;
-        filteredOrders.forEach(o => {
-            if (o.order_status === 'dibatalkan') return;
-            o.items.forEach(it => {
-                if (!prodMap[it.id]) {
-                    prodMap[it.id] = { name: it.name, qty: 0, revenue: 0 };
-                }
-                prodMap[it.id].qty += it.qty;
-                prodMap[it.id].revenue += it.subtotal;
-                totalProdOmzet += it.subtotal;
-            });
-        });
-
-        const topProducts = Object.values(prodMap)
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, 5)
-            .map(p => ({
-                ...p,
-                percentage: totalProdOmzet > 0 ? Number(((p.revenue / totalProdOmzet) * 100).toFixed(1)) : 0
-            }));
-
-        // 5. DISTRIBUSI CHANNEL DARI FILTERED ORDERS
-        const channelBreakdown = {
-            web_orders: filteredOrders.filter(o => o.order_source === 'web').length,
-            whatsapp_orders: filteredOrders.filter(o => o.order_source === 'whatsapp').length
-        };
-
-        return {
-            status: 'success',
-            data: {
-                all_time_stats: allTimeStats,
-                filtered_stats: filteredStats,
-                charts: charts,
-                top_products: topProducts,
-                channel_breakdown: channelBreakdown,
-                transactions: filteredOrders
-            }
-        };
-    }
-
-    // --- FETCH / RENDER CONTROLLER ---
+    // --- FETCH DATA REAL DARI CONTROLLER API ---
     function fetchDashboardData() {
-        const res = getDummyApiResponse(filterState);
-        if (res.status === 'success') {
-            renderDashboardUI(res.data);
+        if (activeAbortController) {
+            activeAbortController.abort();
         }
+        activeAbortController = new AbortController();
+
+        $('#global-loader').removeClass('opacity-0 pointer-events-none');
+        $('#loader-bar').css('transform', 'scaleX(0.7)');
+
+        const params = new URLSearchParams({
+            start_date: filterState.start_date,
+            end_date: filterState.end_date,
+            granularity: filterState.granularity,
+            order_source: filterState.order_source
+        });
+
+        fetch(`/api/admin/dashboard-finansial?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            signal: activeAbortController.signal
+        })
+        .then(async response => {
+            const res = await response.json();
+            if (!response.ok || res.status !== 'success') {
+                throw new Error(res.message || `HTTP Error ${response.status}`);
+            }
+            return res;
+        })
+        .then(res => {
+            renderDashboardUI(res.data);
+        })
+        .catch(err => {
+            if (err.name !== 'AbortError') {
+                console.error('Dashboard Finansial Error:', err);
+                showToast('Gagal Memuat Data', err.message || 'Tidak dapat terhubung ke server finansial.', false);
+            }
+        })
+        .finally(() => {
+            $('#loader-bar').css('transform', 'scaleX(1)');
+            setTimeout(() => {
+                $('#global-loader').addClass('opacity-0 pointer-events-none');
+                setTimeout(() => $('#loader-bar').css('transform', 'scaleX(0)'), 200);
+            }, 300);
+        });
     }
 
     function renderDashboardUI(data) {
-        const allTime  = data.all_time_stats;
-        const filtered = data.filtered_stats;
+        const allTime  = data.all_time_stats || {};
+        const filtered = data.filtered_stats || {};
 
-        $('#active-period-badge').text(filtered.period_label);
+        $('#active-period-badge').text(filtered.period_label || `${filterState.start_date} - ${filterState.end_date}`);
         const channelNames = { all: 'Semua Channel', web: 'Khusus Website', whatsapp: 'Khusus WA Bot' };
         $('#active-channel-badge').text(channelNames[filterState.order_source] || 'Semua Channel');
 
-        // All-Time Stats (Tidak berubah saat filter diganti)
+        // 1. All-Time Stats
         $('#alltime-revenue-total').text(formatRupiah(allTime.revenue_total));
         $('#alltime-revenue-lunas').text(formatRupiah(allTime.revenue_lunas));
         $('#alltime-revenue-dp').text(formatRupiah(allTime.revenue_dp_paid));
-        $('#alltime-orders-count').text(`${allTime.success_orders} Order Sukses`);
+        $('#alltime-orders-count').text(`${allTime.success_orders || 0} Order Sukses`);
 
         $('#alltime-unpaid-total').text(formatRupiah(allTime.unpaid_total));
         $('#alltime-unpaid-dp').text(formatRupiah(allTime.unpaid_dp_sisa));
         $('#alltime-unpaid-full').text(formatRupiah(allTime.unpaid_full));
 
-        // Filtered Stats (Berubah mengikuti Filter Universal)
+        // 2. Filtered Stats
         $('#filtered-revenue-total').text(formatRupiah(filtered.revenue_total));
         $('#filtered-revenue-lunas').text(formatRupiah(filtered.revenue_lunas));
         $('#filtered-revenue-dp').text(formatRupiah(filtered.revenue_dp_paid));
 
-        const revSign = filtered.revenue_growth_pct >= 0 ? '+' : '';
+        const revPct = filtered.revenue_growth_pct || 0;
+        const revSign = revPct >= 0 ? '+' : '';
         $('#filtered-rev-growth')
-            .text(`${revSign}${filtered.revenue_growth_pct}% vs periode lalu`)
-            .attr('class', `px-3 py-1 rounded-xl text-xs font-black border ${filtered.revenue_growth_pct >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`);
+            .text(`${revSign}${revPct}% vs periode lalu`)
+            .attr('class', `px-3 py-1 rounded-xl text-xs font-black border ${revPct >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`);
 
         $('#filtered-unpaid-total').text(formatRupiah(filtered.unpaid_total));
         $('#filtered-unpaid-dp').text(formatRupiah(filtered.unpaid_dp_sisa));
         $('#filtered-unpaid-full').text(formatRupiah(filtered.unpaid_full));
 
-        const unpSign = filtered.unpaid_growth_pct >= 0 ? '+' : '';
-        $('#filtered-unpaid-growth').text(`${unpSign}${filtered.unpaid_growth_pct}% vs periode lalu`);
+        const unpPct = filtered.unpaid_growth_pct || 0;
+        const unpSign = unpPct >= 0 ? '+' : '';
+        $('#filtered-unpaid-growth').text(`${unpSign}${unpPct}% vs periode lalu`);
 
-        $('#filtered-success-orders').text(`${filtered.success_orders} Order`);
+        $('#filtered-success-orders').text(`${filtered.success_orders || 0} Order`);
         $('#filtered-aov').text(formatRupiah(filtered.avg_order_value));
-        $('#filtered-unpaid-count').text(`${filtered.unpaid_count} Order`);
-        $('#filtered-cancelled-badge').text(`${filtered.cancelled_count} Dibatalkan`);
+        $('#filtered-unpaid-count').text(`${filtered.unpaid_count || 0} Order`);
+        $('#filtered-cancelled-badge').text(`${filtered.cancelled_count || 0} Dibatalkan`);
 
-        renderBreakdownCharts(data.charts);
-        renderTopProducts(data.top_products);
+        // 3. Render 2 Grafik
+        renderBreakdownCharts(data.charts || {});
 
-        $('#channel-web-count').text(`${data.channel_breakdown.web_orders} Order`);
-        $('#channel-wa-count').text(`${data.channel_breakdown.whatsapp_orders} Order`);
+        // 4. Render Top 5 Produk & Channel
+        renderTopProducts(data.top_products || []);
 
+        $('#channel-web-count').text(`${data.channel_breakdown?.web_orders || 0} Order`);
+        $('#channel-wa-count').text(`${data.channel_breakdown?.whatsapp_orders || 0} Order`);
+
+        // 5. Render Tabel
         allTransactions = data.transactions || [];
         currentPage = 1;
         applyTableFilters();
     }
 
-    // --- ENGINE 2 GRAFIK FOKUS RINCIAN KOMPONEN ---
     function renderBreakdownCharts(c) {
-        const sumRev = (c.revenue_current || []).reduce((a, b) => a + b, 0);
-        const sumUnp = (c.unpaid_current || []).reduce((a, b) => a + b, 0);
+        const sumRev = (c.revenue_current || []).reduce((a, b) => a + Number(b || 0), 0);
+        const sumUnp = (c.unpaid_current || []).reduce((a, b) => a + Number(b || 0), 0);
         $('#chart-rev-sum').text(formatRupiah(sumRev));
         $('#chart-unpaid-sum').text(formatRupiah(sumUnp));
 
@@ -1106,6 +726,9 @@
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
+            elements: {
+                point: { radius: 4, hoverRadius: 6 }
+            },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -1140,11 +763,11 @@
         revChartInstance = new Chart(document.getElementById('revenueChartCanvas').getContext('2d'), {
             type: 'line',
             data: {
-                labels: c.labels,
+                labels: c.labels || [],
                 datasets: [
                     {
                         label: 'Total Kas Masuk (Lunas + DP)',
-                        data: c.revenue_current,
+                        data: c.revenue_current || [],
                         borderColor: '#10B981',
                         backgroundColor: 'rgba(16, 185, 129, 0.14)',
                         fill: true,
@@ -1153,7 +776,7 @@
                     },
                     {
                         label: 'Bayar Penuh (Lunas 100%)',
-                        data: c.revenue_lunas,
+                        data: c.revenue_lunas || [],
                         borderColor: '#9368B7',
                         backgroundColor: 'transparent',
                         fill: false,
@@ -1162,7 +785,7 @@
                     },
                     {
                         label: 'Uang DP Masuk (30%)',
-                        data: c.revenue_dp,
+                        data: c.revenue_dp || [],
                         borderColor: '#0D9488',
                         backgroundColor: 'transparent',
                         borderDash: [5, 5],
@@ -1178,11 +801,11 @@
         unpaidChartInstance = new Chart(document.getElementById('unpaidChartCanvas').getContext('2d'), {
             type: 'line',
             data: {
-                labels: c.labels,
+                labels: c.labels || [],
                 datasets: [
                     {
                         label: 'Total Tagihan Belum Dibayar',
-                        data: c.unpaid_current,
+                        data: c.unpaid_current || [],
                         borderColor: '#F59E0B',
                         backgroundColor: 'rgba(245, 158, 11, 0.14)',
                         fill: true,
@@ -1191,7 +814,7 @@
                     },
                     {
                         label: 'Sisa Pelunasan DP (70%)',
-                        data: c.unpaid_dp_sisa,
+                        data: c.unpaid_dp_sisa || [],
                         borderColor: '#EA580C',
                         backgroundColor: 'transparent',
                         fill: false,
@@ -1200,7 +823,7 @@
                     },
                     {
                         label: 'Belum Bayar Sama Sekali (Unpaid 100%)',
-                        data: c.unpaid_only,
+                        data: c.unpaid_only || [],
                         borderColor: '#F43F5E',
                         backgroundColor: 'transparent',
                         borderDash: [5, 5],
@@ -1214,13 +837,12 @@
         });
     }
 
-    // --- RENDER TOP 5 PRODUK ---
     function renderTopProducts(list) {
         const container = $('#top-products-container');
         container.empty();
 
         if (!list || list.length === 0) {
-            container.html('<p class="text-xs font-bold text-admin-textMuted py-4">Tidak ada produk terjual pada rentang tanggal & channel ini.</p>');
+            container.html('<p class="text-xs font-bold text-admin-textMuted py-4">Belum ada produk terjual (Lunas/DP) pada rentang tanggal & channel ini.</p>');
             return;
         }
 
@@ -1239,7 +861,6 @@
         });
     }
 
-    // --- TABEL FILTER & RENDER ---
     function updateStatusLabel() {
         selectedStatuses = [];
         $('.cb-status:checked').each(function() {
@@ -1259,8 +880,8 @@
         const keyword = ($('#filter-search').val() || '').toLowerCase();
 
         filteredTransactions = allTransactions.filter(item => {
-            const matchSearch = item.order_number.toLowerCase().includes(keyword) ||
-                                item.recipient_name.toLowerCase().includes(keyword) ||
+            const matchSearch = (item.order_number || '').toLowerCase().includes(keyword) ||
+                                (item.recipient_name || '').toLowerCase().includes(keyword) ||
                                 (item.recipient_whatsapp || '').toLowerCase().includes(keyword);
 
             let matchStatus = true;
@@ -1308,8 +929,11 @@
                     ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[10px] font-black"><i class="ph ph-whatsapp-logo"></i> WA BOT</span>'
                     : '<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-admin-sideBg border border-purple-200 rounded text-[10px] font-black"><i class="ph ph-globe"></i> WEB</span>';
 
-                const d = new Date(item.created_at);
-                const dateFormatted = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                const safeDateStr = (item.created_at || '').replace(' ', 'T');
+                const d = new Date(safeDateStr);
+                const dateFormatted = isNaN(d.getTime())
+                    ? item.created_at
+                    : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
                 html += `
                     <tr class="hover:bg-admin-bg/50 transition-colors">
@@ -1351,7 +975,6 @@
         $(`.granularity-btn[data-granularity="${gran}"]`).removeClass('text-admin-textMuted').addClass('bg-admin-sideBg text-white shadow-sm');
     }
 
-    // --- NAMED EVENT HANDLERS (ZERO MEMORY LEAK PROTOCOL) ---
     function handleDocClick(e) {
         if (!e.target.closest('#wrapper-status')) {
             document.getElementById('menu-status')?.classList.add('hidden');
@@ -1381,7 +1004,7 @@
         document.addEventListener('keydown', handleDocKeydown);
         window.addEventListener('beforeunload', cleanupResources, { once: true });
 
-        // 1. KALENDER PILIH TANGGAL BEBAS (MEMATIKAN PRESET TOMBOL SEBELUMNYA)
+        // 1. KALENDER PILIH TANGGAL BEBAS
         fpUniversal = flatpickr("#universal-date-range", {
             mode: "range",
             dateFormat: "Y-m-d",
@@ -1392,10 +1015,8 @@
                     filterState.start_date = flatpickr.formatDate(selectedDates[0], "Y-m-d");
                     filterState.end_date   = flatpickr.formatDate(selectedDates[1], "Y-m-d");
 
-                    // Matikan highlight tombol preset (7 Hari / 30 Hari / Bulan Ini / Tahun Ini)
                     $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
 
-                    // Otomatis sesuaikan pengelompokan grafik agar enak dilihat sesuai lebar rentang tanggal
                     const diffDays = Math.round((selectedDates[1] - selectedDates[0]) / 86400000) + 1;
                     if (diffDays <= 14) setGranularityUI('daily');
                     else if (diffDays <= 62) setGranularityUI('weekly');
@@ -1448,9 +1069,33 @@
             showToast('Filter Channel Diubah', `Menampilkan transaksi dari: ${$(this).find('span').text()}`);
         });
 
-        // 4. KLIK KELOMPOK WAKTU GRAFIK (Per Hari / Minggu / Bulan / Tahun dalam rentang aktif)
+        // 4. KLIK KELOMPOK WAKTU GRAFIK (Otomatis sesuaikan rentang jika terlalu sempit agar garis grafik selalu terbentuk)
         $('.granularity-btn').on('click', function() {
-            setGranularityUI($(this).data('granularity'));
+            const gran = $(this).data('granularity');
+            setGranularityUI(gran);
+
+            const sDate = new Date(filterState.start_date + 'T00:00:00');
+            const eDate = new Date(filterState.end_date + 'T23:59:59');
+            const diffDays = Math.round((eDate - sDate) / 86400000) + 1;
+
+            if (gran === 'weekly' && diffDays < 14) {
+                const newStart = new Date(eDate);
+                newStart.setDate(eDate.getDate() - 27);
+                filterState.start_date = toYMD(newStart);
+                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
+                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+            } else if (gran === 'monthly' && diffDays < 45) {
+                const newStart = new Date(eDate.getFullYear(), eDate.getMonth() - 5, 1);
+                filterState.start_date = toYMD(newStart);
+                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
+                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+            } else if (gran === 'yearly' && diffDays < 366) {
+                const newStart = new Date(eDate.getFullYear() - 3, 0, 1);
+                filterState.start_date = toYMD(newStart);
+                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
+                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+            }
+
             fetchDashboardData();
         });
 
@@ -1534,56 +1179,3 @@
 })();
 </script>
 @endpush
-
-
-{{-- ========================================================================= --}}
-{{-- BLOK SCRIPT 2 (MODE REAL AJAX DATABASE DENGAN ABORTCONTROLLER)            --}}
-{{-- Jika siap menyambungkan ke database, ganti fungsi fetchDashboardData()    --}}
-{{-- pada Blok Script 1 di atas dengan fungsi ber-AbortController di bawah ini:--}}
-{{-- ========================================================================= --}}
-{{--
-@push('script')
-<script>
-    function fetchDashboardData() {
-        if (activeAbortController) {
-            activeAbortController.abort();
-        }
-        activeAbortController = new AbortController();
-
-        $('#global-loader').removeClass('opacity-0 pointer-events-none');
-        $('#loader-bar').css('transform', 'scaleX(0.7)');
-
-        const params = new URLSearchParams({
-            start_date: filterState.start_date,
-            end_date: filterState.end_date,
-            granularity: filterState.granularity,
-            order_source: filterState.order_source
-        });
-
-        fetch(`/api/admin/dashboard-finansial?${params.toString()}`, {
-            method: 'GET',
-            headers: { 'Accept': 'application/json' },
-            signal: activeAbortController.signal
-        })
-        .then(response => response.json())
-        .then(res => {
-            if (res.status === 'success') {
-                renderDashboardUI(res.data);
-            }
-        })
-        .catch(err => {
-            if (err.name !== 'AbortError') {
-                showToast('Gagal Memuat Data', 'Tidak dapat terhubung ke server finansial.', false);
-            }
-        })
-        .finally(() => {
-            $('#loader-bar').css('transform', 'scaleX(1)');
-            setTimeout(() => {
-                $('#global-loader').addClass('opacity-0 pointer-events-none');
-                setTimeout(() => $('#loader-bar').css('transform', 'scaleX(0)'), 200);
-            }, 300);
-        });
-    }
-</script>
-@endpush
---}}

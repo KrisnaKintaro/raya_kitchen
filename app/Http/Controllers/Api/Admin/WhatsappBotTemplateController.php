@@ -9,9 +9,6 @@ use Illuminate\Http\Request;
 
 class WhatsappBotTemplateController extends Controller
 {
-    // Mengambil semua daftar template pesan bot WA.
-    // Otomatis menyinkronkan jika ada state baru atau variabel baru (seperti {link_gambar})
-    // di BotTemplateSeeder yang belum masuk ke DB.
     public function index()
     {
         $defaults = collect(BotTemplateSeeder::getDefaults())->keyBy('session_state');
@@ -26,12 +23,15 @@ class WhatsappBotTemplateController extends Controller
                 ]
             );
 
-            // Auto-sync: Jika di Seeder ada penambahan placeholder baru (misal {link_gambar} pada detail_varian)
-            // yang belum ada di row DB lama, otomatis update ke blueprint terbaru atau sisipkan variabelnya
             preg_match_all('/\{[a-zA-Z0-9_]+\}/', $def['message_text'], $matches);
             $requiredVars = array_unique($matches[0] ?? []);
 
+            preg_match_all('/\{[a-zA-Z0-9_]+\}/', $template->message_text, $dbMatches);
+            $dbVars = array_unique($dbMatches[0] ?? []);
+
             $needsSync = false;
+
+            // Sinkronkan jika ada variabel wajib baru yang belum ada di DB
             foreach ($requiredVars as $var) {
                 if (!str_contains($template->message_text, $var)) {
                     $needsSync = true;
@@ -39,15 +39,22 @@ class WhatsappBotTemplateController extends Controller
                 }
             }
 
-            if ($needsSync) {
+            // Sinkronkan juga jika di DB masih ada variabel lama yang sudah dihapus dari blueprint Seeder
+            foreach ($dbVars as $dbVar) {
+                if (!in_array($dbVar, $requiredVars)) {
+                    $needsSync = true;
+                    break;
+                }
+            }
+
+            if ($needsSync || $template->description !== $def['description']) {
                 $template->update([
                     'description'  => $def['description'],
-                    'message_text' => $def['message_text'],
+                    'message_text' => $needsSync ? $def['message_text'] : $template->message_text,
                 ]);
             }
         }
 
-        // Ambil data dari DB dan urutkan sesuai urutan alur percakapan di Seeder
         $dbTemplates = BotTemplate::all()->keyBy('session_state');
         $result = [];
 
@@ -75,8 +82,6 @@ class WhatsappBotTemplateController extends Controller
         ]);
     }
 
-    // Menyimpan perubahan isi pesan template ke database
-    // disertai validasi ketat variabel dinamis {...} (termasuk {link_gambar})
     public function update(Request $request)
     {
         $request->validate([
@@ -97,7 +102,6 @@ class WhatsappBotTemplateController extends Controller
             ], 404);
         }
 
-        // Ekstrak semua variabel wajib {...} dari blueprint default
         preg_match_all('/\{[a-zA-Z0-9_]+\}/', $defaultConfig['message_text'], $matches);
         $requiredVars = array_values(array_unique($matches[0] ?? []));
 

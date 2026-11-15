@@ -2,27 +2,28 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Pembeli\CheckoutController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use App\Models\User;
-use App\Models\WhatsappSession;
+use App\Http\Controllers\Api\Pembeli\NotificationController;
+use App\Http\Controllers\Controller;
 use App\Models\BotTemplate;
-use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\Cart;
-use App\Models\UserAddress;
+use App\Models\CompanyProfile;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\CompanyProfile;
-use App\Models\StoreSetting;
+use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\StoreHoliday;
+use App\Models\StoreSetting;
+use App\Models\User;
+use App\Models\UserAddress;
+use App\Models\WhatsappSession;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class WhatsAppBotController extends Controller
 {
@@ -212,9 +213,9 @@ class WhatsAppBotController extends Controller
                         $sessionData['co_shipping_cost'] = $pilihan['price'];
                         $sessionData['co_courier_name'] = $pilihan['company'];
                         $sessionData['co_shipping_service'] = "{$pilihan['type']} (Est: {$pilihan['duration']} Hari)";
+                        $sessionData['co_etd'] = $pilihan['duration'];
                         $sessionData['co_tanggal'] = 'auto';
-                        $sessionData['co_jam'] = '15:00:00';
-
+                        $sessionData['co_jam'] = null;
                         unset($sessionData['temp_rates']);
                         $session->update(['session_data' => $sessionData]);
                         $this->stepCheckoutMetodeBayar($waNumber, $session);
@@ -329,18 +330,9 @@ class WhatsAppBotController extends Controller
     // HELPER: TEMPLATE & STORE SETTING
     // ==========================================
 
-    private function getTemplate($state, $placeholders = []): ?string
+    private function getTemplate($state, $placeholders = []): string
     {
-        $template = BotTemplate::where('session_state', $state)->where('is_active', true)->first();
-        if (!$template || empty(trim($template->message_text))) {
-            return null;
-        }
-
-        $text = $template->message_text;
-        foreach ($placeholders as $key => $value) {
-            $text = str_replace('{' . $key . '}', (string) $value, $text);
-        }
-        return $text;
+        return NotificationController::getTemplateMessage($state, $placeholders);
     }
 
     private function getOperationalSettings(): array
@@ -972,7 +964,8 @@ class WhatsAppBotController extends Controller
         if (empty($validTimes)) {
             $session->update(['current_step' => 'checkout_tanggal']);
             $user = User::where('whatsapp_number', $waNumber)->first();
-            $alasanFull = $alasanPenolakan . "\nSayangnya seluruh slot jam pada tanggal *{$tanggalStr}* sudah penuh.";
+            $alasanPenuh = $this->getTemplate('jam_tolak_semua_penuh', ['tanggal' => $tanggalStr]);
+            $alasanFull = $alasanPenolakan . "\n" . $alasanPenuh;
             $this->kirimRekomendasiTanggal($waNumber, $user, $session, Carbon::parse($tanggalStr), $alasanFull);
             return;
         }
@@ -1072,6 +1065,7 @@ class WhatsAppBotController extends Controller
             'shipping_cost'    => $sd['co_shipping_cost'],
             'courier_name'     => $sd['co_courier_name'],
             'shipping_service' => $sd['co_shipping_service'],
+            'etd'              => $sd['co_etd'] ?? null,
             'order_source'     => 'whatsapp',
         ]);
         $req->setUserResolver(fn() => $user);
@@ -1194,22 +1188,32 @@ class WhatsAppBotController extends Controller
             $nomor = $offset + $idx + 1;
             $pStatus = strtoupper($o['payment_status']);
             $metode = strtoupper($o['payment_method']);
-
             $daftar .= "*{$nomor}. #{$o['order_number']}*\n";
-            $daftar .= "📅 Tgl: {$o['date']}\n";
-            $daftar .= "📌 Status: *{$o['display_status']}* ({$metode} - {$o['tipe_bayar']})\n";
-            $daftar .= "💳 Status Bayar: *{$pStatus}*\n";
-            $daftar .= "💰 Total: {$o['total_amount_formatted']}\n";
+            $daftar .= "  Tgl Order: {$o['date']}\n";
+            $daftar .= "  Kurir: {$o['courier_name']} ({$o['shipping_service']})\n";
+            $daftar .= "  {$o['schedule_label']}: *{$o['schedule_text']}*\n";
+            if (!empty($o['tracking_number'])) {
+                $daftar .= "  No. Resi: *{$o['tracking_number']}*\n";
+            }
+            $daftar .= "  Status: *{$o['display_status']}* ({$metode} - {$o['tipe_bayar']})\n";
+            $daftar .= "  Status Bayar: *{$pStatus}*\n";
+            $daftar .= "  Total: {$o['total_amount_formatted']}\n";
 
             if ($o['raw_status'] === 'dibatalkan') {
-                $daftar .= "🧾 Detail Batal: {$appUrl}/nota?order_number={$o['order_number']}\n";
+                $daftar .= "  Detail Batal: {$appUrl}/nota?order_number={$o['order_number']}\n";
             } elseif ($o['payment_status'] === 'unpaid' || $o['payment_status'] === 'failed') {
-                $daftar .= "👉 Link Bayar QRIS: {$appUrl}/pembayaran/{$o['order_number']}\n";
+                $daftar .= "  Link Bayar QRIS: {$appUrl}/pembayaran/{$o['order_number']}\n";
             } else {
                 if ($o['payment_status'] === 'paid_dp' && $o['remaining_amount'] > 0) {
-                    $daftar .= "⏳ Sisa Tagihan: *{$o['sisa_tagihan_formatted']}*\n";
+                    $daftar .= "  Sisa Tagihan: *{$o['sisa_tagihan_formatted']}*\n";
+                    if ($o['raw_status'] === 'siap_diambil' && strtolower($o['payment_method']) === 'transfer') {
+                        $daftar .= "  Link Pelunasan QRIS: {$appUrl}/pembayaran/{$o['order_number']}\n";
+                    }
                 }
-                $daftar .= "🧾 Lihat Nota: {$appUrl}/nota?order_number={$o['order_number']}\n";
+                if (!empty($o['arrival_proof_url'])) {
+                    $daftar .= "Bukti Sampai: {$o['arrival_proof_url']}\n";
+                }
+                $daftar .= "Lihat Nota: {$appUrl}/nota?order_number={$o['order_number']}\n";
             }
             $daftar .= "\n";
         }
@@ -1317,11 +1321,15 @@ class WhatsAppBotController extends Controller
                     'order_number'    => $orderNumber,
                     'total_tagihan'   => $tagihan,
                     'link_pembayaran' => $linkBayar
-                ]) ?? "💳 *Pembayaran Pesanan #{$orderNumber}*\nTagihan: *Rp {$tagihan}*\n\nSilakan klik link berikut untuk scan QRIS:\n👉 {$linkBayar}\n\nKetik *0* untuk kembali ke Menu Utama, atau ketik filter/navigasi untuk lanjut cek pesanan.";
+                ]);
 
                 $this->sendMessage($waNumber, $reply);
             } else {
-                $this->sendMessage($waNumber, "⚠️ " . ($resData['message'] ?? 'Gagal memproses pembayaran pesanan tersebut.'));
+                $reply = $this->getTemplate('riwayat_bayar_gagal', [
+                    'order_number' => $orderNumber,
+                    'pesan_error'  => $resData['message'] ?? 'Gagal memproses pembayaran pesanan tersebut.'
+                ]);
+                $this->sendMessage($waNumber, $reply);
             }
             return;
         }
@@ -1456,18 +1464,23 @@ class WhatsAppBotController extends Controller
         $session->update(['session_data' => $sd]);
 
         if (($resData['status'] ?? 'error') === 'success') {
-            $infoRefund = $bank
-                ? "Dana refund akan segera diproses oleh Admin ke rekening *{$bank} - {$norek} a/n {$nama}* maksimal 1x24 jam."
-                : "Pesanan telah dibatalkan.";
-
-            $reply = $this->getTemplate('batal_pesanan_berhasil', [
-                'order_number' => $orderNumber,
-                'info_refund'  => $infoRefund
-            ]) ?? "✅ Pesanan *#{$orderNumber}* berhasil dibatalkan.\n{$infoRefund}";
-
+            if (!empty($bank)) {
+                $reply = $this->getTemplate('batal_pesanan_berhasil_refund', [
+                    'order_number'    => $orderNumber,
+                    'rekening_refund' => "{$bank} - {$norek} a/n {$nama}",
+                ]);
+            } else {
+                $reply = $this->getTemplate('batal_pesanan_berhasil', [
+                    'order_number' => $orderNumber,
+                ]);
+            }
             $this->sendMessage($waNumber, $reply);
         } else {
-            $this->sendMessage($waNumber, "⚠️ " . ($resData['message'] ?? 'Gagal membatalkan pesanan.'));
+            $reply = $this->getTemplate('batal_pesanan_gagal', [
+                'order_number' => $orderNumber,
+                'pesan_error'  => $resData['message'] ?? 'Gagal membatalkan pesanan.',
+            ]);
+            $this->sendMessage($waNumber, $reply);
         }
 
         $this->stepRiwayatPesanan($waNumber, $user, $session, $sd['riwayat_filter'] ?? 'semua', $sd['riwayat_page'] ?? 1);

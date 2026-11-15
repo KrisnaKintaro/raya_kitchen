@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -60,8 +61,10 @@ class RegisterController extends Controller
             'role' => 'pelanggan',
         ], now()->addMinutes(5));
 
-        $pesan = "Halo *{$request->name}*! 👋\n\nSelamat datang di *Raya Kitchen*!\nIni kode OTP buat verifikasi pendaftaran mu:\n\n*{$otp}*\n\nKode ini hanya berlaku 5 menit ya. Jangan kasih tau siapa-siapa!";
-
+        $pesan = NotificationController::getTemplateMessage('auth_otp_register', [
+            'nama'     => $request->name,
+            'kode_otp' => $otp,
+        ]);
         try {
             $target = $waNumber;
             $randomDelay = rand(2, 6);
@@ -196,8 +199,10 @@ class RegisterController extends Controller
         Cache::put('otp_cooldown_' . $waNumber, true, now()->addSeconds(60));
 
         // 4. Kirim pesan WA via Fonnte
-        $pesan = "Halo *{$registerData['name']}*! 👋\n\nIni kode OTP *BARU* buat verifikasi pendaftaranmu:\n\n*{$newOtp}*\n\nKode ini berlaku 5 menit ya.";
-
+        $pesan = NotificationController::getTemplateMessage('auth_otp_resend', [
+            'nama'     => $registerData['name'],
+            'kode_otp' => $newOtp,
+        ]);
         try {
             $randomDelay = rand(2, 6);
             $response = Http::withHeaders([
@@ -221,4 +226,4 @@ class RegisterController extends Controller
             'message' => 'Sip! Kode OTP baru udah dikirim ke WA kamu.'
         ], 200);
     }
-}   
+}

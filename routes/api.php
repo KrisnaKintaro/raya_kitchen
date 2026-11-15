@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\DashboardFinansialController;
+use App\Http\Controllers\Api\Admin\KelolaPengirimanController;
 use App\Http\Controllers\Api\Admin\PantauanDapurController;
 use App\Http\Controllers\Api\Admin\SystemStoreController;
 use App\Http\Controllers\Api\Admin\WhatsappBotTemplateController;
@@ -47,6 +48,8 @@ Route::prefix('pembeli')->group(function () {
     Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
 });
 
+Route::post('/courier/webhook', [KelolaPengirimanController::class, 'webhookSignalKurir']);
+
 
 
 // BUAT TAMPILAN ADMIN
@@ -71,9 +74,15 @@ Route::prefix('admin')->group(function () {
     // Finansial
     Route::get('/dashboard-finansial', [DashboardFinansialController::class, 'index']);
 
-    // --- PANTAUAN DAPUR (KDS) ---
+    // PANTAUAN DAPUR (KDS)
     Route::get('/pantauan-dapur', [PantauanDapurController::class, 'index']);
     Route::post('/pantauan-dapur/move', [PantauanDapurController::class, 'moveItem']);
+
+    // KELOLA PENGIRIMAN
+    Route::get('/kelola-pengiriman', [KelolaPengirimanController::class, 'index']);
+    Route::post('/kelola-pengiriman/{order_number}/resi', [KelolaPengirimanController::class, 'updateResi']);
+    Route::post('/kelola-pengiriman/{order_number}/cek-status-kurir', [KelolaPengirimanController::class, 'syncCourierStatus']);
+    Route::post('/kelola-pengiriman/{order_number}/selesai', [KelolaPengirimanController::class, 'selesaikanPengiriman']);
 });
 
 // Perlu login untuk akses route di bawah ini
