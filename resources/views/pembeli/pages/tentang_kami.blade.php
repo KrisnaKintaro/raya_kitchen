@@ -97,7 +97,8 @@ $(document).ready(function() {
                 
                 let imageUrl = data.image_url;
                 if (imageUrl && !imageUrl.startsWith('http')) {
-                    imageUrl = "{{ asset('storage/') }}/" + imageUrl;
+                    let cleanImg = imageUrl.replace(/^\/?(storage\/)?(profil\/)?/i, '');
+                    imageUrl = "{{ asset('storage/profil') }}/" + cleanImg;
                 }
                 $('#tk-image').attr('src', imageUrl);
 

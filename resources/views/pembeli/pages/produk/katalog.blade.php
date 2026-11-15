@@ -194,7 +194,8 @@ $(document).ready(function() {
 
             let finalImageUrl = item.image_url;
             if (finalImageUrl && !finalImageUrl.startsWith('http')) {
-                finalImageUrl = "{{ asset('storage/produk/') }}/" + finalImageUrl.replace(/^\//, '');
+                let cleanImg = finalImageUrl.replace(/^\/?(storage\/)?(produk\/)?/i, '');
+                finalImageUrl = "{{ asset('storage/produk') }}/" + cleanImg;
             }
 
             html += `

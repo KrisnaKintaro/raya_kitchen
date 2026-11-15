@@ -16,21 +16,59 @@ class SystemStoreController extends Controller
     // ==========================================
     // PROFIL PERUSAHAAN & LOKASI
     // ==========================================
-    public function getProfil()
+public function getProfil()
     {
         $profil = CompanyProfile::first();
         $setting = StoreSetting::first();
 
-        // Gabungkan data profil perusahaan dengan setting batas ongkir
         $data = $profil ? $profil->toArray() : [];
+        if (!empty($data['image_url']) && !str_starts_with($data['image_url'], 'http')) {
+            $clean = preg_replace('#^/?(storage/)?(profil/)?#i', '', trim($data['image_url']));
+            $data['image_full_url'] = asset('storage/profil/' . $clean);
+        } else {
+            $data['image_full_url'] = $data['image_url'] ?? null;
+        }
         $data['free_delivery_max_distance'] = $setting ? $setting->free_delivery_max_distance : 10;
 
         return response()->json(['status' => 'success', 'data' => $data]);
     }
+    public function updateProfil(Request $request)
+    {
+        $profil = CompanyProfile::first() ?? new CompanyProfile();
+        $data = $request->except(['image_url', 'free_delivery_max_distance']);
 
-    /**
-     * Fungsi Helper untuk Auto-Match ID Destinasi RajaOngkir (Komerce)
-     */
+        if ($request->hasFile('image_url')) {
+            if ($profil->image_url && !str_starts_with($profil->image_url, 'http')) {
+                $oldClean = preg_replace('#^/?(storage/)?(profil/)?#i', '', trim($profil->image_url));
+                if (Storage::disk('public')->exists('profil/' . $oldClean)) {
+                    Storage::disk('public')->delete('profil/' . $oldClean);
+                }
+            }
+
+            $file = $request->file('image_url');
+            $fileName = 'profil_' . time() . '.' . $file->getClientOriginalExtension();
+            // Otomatis membuat folder storage/app/public/profil jika belum ada
+            $file->storeAs('profil', $fileName, 'public');
+            $data['image_url'] = $fileName;
+        }
+
+        if ($request->filled('district') && $request->filled('city')) {
+            $roId = $this->getRajaOngkirId($request->input('district'), $request->input('city'));
+            $data['rajaongkir_destination_id'] = $roId;
+        }
+
+        $profil->fill($data);
+        $profil->save();
+
+        if ($request->has('free_delivery_max_distance')) {
+            $setting = StoreSetting::first() ?? new StoreSetting();
+            $setting->free_delivery_max_distance = $request->input('free_delivery_max_distance');
+            $setting->save();
+        }
+
+        return response()->json(['status' => 'success', 'message' => 'Profil dan Lokasi berhasil diperbarui!']);
+    }
+
     private function getRajaOngkirId($district, $city)
     {
         try {
@@ -55,51 +93,6 @@ class SystemStoreController extends Controller
         } catch (\Exception $e) {}
 
         return null;
-    }
-
-    public function updateProfil(Request $request)
-    {
-        // 1. Simpan Profil & Koordinat (Tabel company_profiles)
-        $profil = CompanyProfile::first();
-        if (!$profil) {
-            $profil = new CompanyProfile();
-        }
-
-        $data = $request->except(['image_url', 'free_delivery_max_distance']);
-
-        if ($request->hasFile('image_url')) {
-            if ($profil->image_url && Storage::disk('public')->exists('profil/' . $profil->image_url)) {
-                Storage::disk('public')->delete('profil/' . $profil->image_url);
-            }
-            $fileName = time() . '_' . $request->file('image_url')->getClientOriginalName();
-            $request->file('image_url')->storeAs('profil', $fileName, 'public');
-            $data['image_url'] = $fileName;
-        }
-
-        // ==========================================
-        // AUTO-MATCH RAJAONGKIR ID UNTUK ADMIN
-        // Pastikan input form admin mengirimkan 'district' dan 'city'
-        // Jika tidak, Anda perlu men-set ID ini manual di DB atau via route khusus
-        // ==========================================
-        if ($request->filled('district') && $request->filled('city')) {
-            $roId = $this->getRajaOngkirId($request->input('district'), $request->input('city'));
-            $data['rajaongkir_destination_id'] = $roId;
-        }
-
-        $profil->fill($data);
-        $profil->save();
-
-        // 2. Simpan Batas Gratis Ongkir (Tabel store_settings)
-        if ($request->has('free_delivery_max_distance')) {
-            $setting = StoreSetting::first();
-            if (!$setting) {
-                $setting = new StoreSetting();
-            }
-            $setting->free_delivery_max_distance = $request->input('free_delivery_max_distance');
-            $setting->save();
-        }
-
-        return response()->json(['status' => 'success', 'message' => 'Profil dan Lokasi berhasil diperbarui!']);
     }
 
     // ==========================================

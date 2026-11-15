@@ -78,7 +78,11 @@ $(document).ready(function() {
         items.forEach(item => {
             totalQty += item.qty;
             subtotal += (item.price * item.qty);
-            let imgUrl = item.image.startsWith('http') ? item.image : `/storage/produk/${item.image}`;
+            let imgUrl = item.image;
+            if (imgUrl && !imgUrl.startsWith('http')) {
+                let cleanImg = imgUrl.replace(/^\/?(storage\/)?(produk\/)?/i, '');
+                imgUrl = `/storage/produk/${cleanImg}`;
+            }
             
             container.append(`
                 <div class="bg-buyer-bg p-4 sm:p-5 rounded-[2rem] shadow-[inset_0_-4px_6px_rgba(192,153,206,0.2),inset_0_4px_6px_rgba(255,255,255,1),0_10px_20px_rgba(192,153,206,0.15)] border border-white flex flex-col sm:flex-row items-center gap-4">
