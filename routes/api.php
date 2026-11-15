@@ -81,6 +81,7 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
     Route::post('/checkout/cek-ongkir', [CheckoutController::class, 'cekOngkir'])->name('checkout.cek_ongkir');
     Route::post('/checkout/process', [CheckoutController::class, 'store']);
     Route::post('/checkout/cancel', [CheckoutController::class, 'cancelOrder']);
+    Route::post('/checkout/refund-account', [CheckoutController::class, 'submitRefundAccount']);
 
     // Riwayat Pesanan & Notifikasi Pelanggan
     Route::get('/riwayat-pesanan-data', [CheckoutController::class, 'index'])->name('pesanan.data');

@@ -157,14 +157,13 @@ class DaftarTransaksiController extends Controller
                 }
                 $toastMessage = "Pesanan #{$order->order_number} kini Siap Dikirim/Diambil & notifikasi dikirim.";
             } elseif ($action === 'dibatalkan') {
-                $reason    = trim((string) $request->input('cancellation_reason')) ?: 'Dibatalkan oleh Admin.';
-                $refundAcc = trim((string) $request->input('refund_account_number')) ?: $order->refund_account_number;
-                $isPaid    = in_array($pStatus, ['paid_dp', 'paid_full']);
+                $reason = trim((string) $request->input('cancellation_reason')) ?: 'Kendala operasional dapur.';
+                $isPaid = in_array($pStatus, ['paid_dp', 'paid_full']) || ((int) round($order->dp_amount ?? 0) > 0 && $pStatus !== 'unpaid');
 
                 $order->update([
                     'status'                => 'dibatalkan',
                     'cancellation_reason'   => $reason,
-                    'refund_account_number' => $isPaid ? ($refundAcc ?: 'Menunggu Konfirmasi Rekening Pelanggan') : null,
+                    'refund_account_number' => $isPaid ? ($order->refund_account_number ?: null) : null,
                     'refund_status'         => $isPaid ? 'pending' : 'none',
                 ]);
 
@@ -172,10 +171,10 @@ class DaftarTransaksiController extends Controller
                     $order->transaction->update(['payment_status' => 'failed']);
                 }
 
-                $notifToTrigger = 'batal_otomatis';
+                $notifToTrigger = $isPaid ? 'batal_admin_refund' : 'batal_admin_unpaid';
                 $toastMessage   = $isPaid
-                    ? "Pesanan #{$order->order_number} dibatalkan dan dimasukkan ke antrean Refund."
-                    : "Pesanan #{$order->order_number} berhasil dibatalkan.";
+                    ? "Pesanan #{$order->order_number} dibatalkan. Notifikasi permintaan rekening refund telah dikirim ke pembeli."
+                    : "Pesanan #{$order->order_number} berhasil dibatalkan & alasan pembatalan telah dikirim ke pembeli.";
             }
 
             DB::commit();

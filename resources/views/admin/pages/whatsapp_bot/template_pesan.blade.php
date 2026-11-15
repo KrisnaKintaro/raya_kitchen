@@ -242,7 +242,11 @@
             "{nominal_dp}": "Rp 7.200",
             "{sisa_tagihan}": "Rp 16.800",
             "{kode_otp}": "849201",
-            "{link_reset}": window.location.origin + "/reset-password?wa=628123456789&token=sampletoken123"
+            "{link_reset}": window.location.origin + "/reset-password?wa=628123456789&token=sampletoken123",
+            "{status_pesanan}": "DIPROSES",
+            "{alasan_batal}": "Mohon maaf, stok bahan baku varian keju hari ini sedang habis.",
+            "{rekening_refund}": "BCA - 1234567890 a/n Budi Santoso",
+            "{nominal_refund}": "Rp 24.000",
         };
 
         function getCategoryInfo(state) {

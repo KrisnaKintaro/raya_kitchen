@@ -487,10 +487,63 @@ class CheckoutController extends Controller
                 'total_amount_formatted' => 'Rp ' . number_format($order->total_amount, 0, ',', '.'),
                 'tagihan_sekarang'       => 'Rp ' . number_format($order->transaction->amount ?? 0, 0, ',', '.'),
                 'sisa_tagihan_formatted' => 'Rp ' . number_format($order->remaining_amount, 0, ',', '.'),
+                'sisa_tagihan_formatted' => 'Rp ' . number_format($order->remaining_amount, 0, ',', '.'),
+                'cancellation_reason'    => $order->cancellation_reason,
+                'refund_status'          => $order->refund_status ?? 'none',
+                'refund_account_number'  => $order->refund_account_number,
+                'refund_proof_url'       => $this->formatProofUrl($order->refund_proof, 'bukti_refund'),
             ], $shippingMeta);
         });
 
         return response()->json(['status' => 'success', 'data' => $mappedOrders]);
+    }
+
+    public function submitRefundAccount(Request $request)
+    {
+    $validated = $request->validate([
+        'order_number' => 'required|string',
+        'refund_bank'  => 'required|string|max:100',
+        'refund_norek' => 'required|string|max:100',
+        'refund_nama'  => 'required|string|max:150',
+    ], [
+        'refund_bank.required'  => 'Nama Bank atau E-Wallet wajib diisi.',
+        'refund_norek.required' => 'Nomor rekening atau nomor tujuan wajib diisi.',
+        'refund_nama.required'  => 'Nama pemilik rekening wajib diisi.',
+    ]);
+
+    $order = Order::where('order_number', $validated['order_number'])
+        ->where('status', 'dibatalkan')
+        ->first();
+
+    if (!$order) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Pesanan batal tidak ditemukan.',
+        ], 404);
+    }
+
+    if ($order->refund_status === 'refunded') {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Pengembalian dana untuk pesanan ini sudah selesai diproses.',
+        ], 422);
+    }
+
+    $rekeningString = trim($validated['refund_bank']) . ' - ' . trim($validated['refund_norek']) . ' - ' . trim($validated['refund_nama']);
+
+    $order->update([
+        'refund_account_number' => $rekeningString,
+        'refund_status'         => 'pending',
+    ]);
+
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'Nomor rekening pengembalian dana berhasil disimpan! Admin akan memproses refund maksimal 1x24 jam.',
+        'data'    => [
+            'refund_account_number' => $rekeningString,
+            'refund_status'         => 'pending',
+        ],
+    ]);
     }
 
     public function showNota(Request $request)

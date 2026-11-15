@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Pembeli;
 use App\Http\Controllers\Controller;
 use App\Models\BotTemplate;
 use App\Models\UserNotification;
+use App\Models\WhatsappSession;
 use Database\Seeders\BotTemplateSeeder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -76,6 +77,26 @@ class NotificationController extends Controller
     }
 
     /**
+     * Hitung nominal dana yang harus direfund (DP 30% atau Lunas 100%)
+     */
+    public static function calculateRefundAmount($order): int
+    {
+        $totalAmt = (int) round($order->total_amount ?? 0);
+        $dpAmt    = (int) round($order->dp_amount ?? 0);
+        $remAmt   = (int) round($order->remaining_amount ?? 0);
+        $trxAmt   = (int) round($order->transaction->amount ?? 0);
+        $pStatus  = strtolower($order->transaction->payment_status ?? 'unpaid');
+
+        $isFullRefund = ($pStatus === 'paid_full')
+            || ($remAmt <= 0 && $totalAmt > 0)
+            || ($trxAmt >= $totalAmt && $totalAmt > 0);
+
+        return $isFullRefund
+            ? $totalAmt
+            : ($dpAmt > 0 ? $dpAmt : ($trxAmt > 0 ? $trxAmt : (int) round($totalAmt * 0.3)));
+    }
+
+    /**
      * FUNGSI SENTRAL TRIGGER NOTIFIKASI (WEB & WHATSAPP BOT)
      */
     public static function send($order, $type)
@@ -91,6 +112,7 @@ class NotificationController extends Controller
         $sisaFormatted  = 'Rp ' . number_format($order->remaining_amount ?? 0, 0, ',', '.');
         $totalFormatted = 'Rp ' . number_format($order->total_amount ?? 0, 0, ',', '.');
         $dpFormatted    = 'Rp ' . number_format($order->dp_amount ?? 0, 0, ',', '.');
+        $alasanBatal    = $order->cancellation_reason ?: 'Kendala operasional dapur.';
 
         $pMethod = strtolower($order->transaction->payment_method ?? 'transfer');
         $pStatus = strtolower($order->transaction->payment_status ?? 'unpaid');
@@ -142,13 +164,66 @@ class NotificationController extends Controller
                 break;
 
             case 'batal_otomatis':
-                $title = 'Pesanan Dibatalkan';
-                $message = 'Waktu pembayaran QRIS habis. Pesanan #' . $order->order_number . ' dibatalkan otomatis.';
+                $title = 'Pesanan Dibatalkan Otomatis';
+                $message = 'Waktu pembayaran QRIS habis (24 jam). Pesanan #' . $order->order_number . ' dibatalkan otomatis.';
                 $waMessage = self::getTemplateMessage('notif_batal_otomatis', [
                     'nama_penerima' => $order->recipient_name,
                     'order_number'  => $order->order_number,
                     'link_nota'     => $linkNota
                 ]);
+                break;
+
+            case 'batal_admin_unpaid':
+                $title = 'Pesanan Dibatalkan oleh Admin';
+                $message = "Mohon maaf, pesanan #{$order->order_number} dibatalkan oleh Admin. Alasan: {$alasanBatal}";
+                $waMessage = self::getTemplateMessage('notif_batal_admin_unpaid', [
+                    'nama_penerima' => $order->recipient_name,
+                    'order_number'  => $order->order_number,
+                    'alasan_batal'  => $alasanBatal,
+                    'link_nota'     => $linkNota,
+                ]);
+                break;
+
+            case 'batal_admin_refund':
+                $nominalRefund   = self::calculateRefundAmount($order);
+                $refundFormatted = 'Rp ' . number_format($nominalRefund, 0, ',', '.');
+
+                $title = 'Pesanan Dibatalkan Admin - Isi Rekening Refund!';
+                $message = "Pesanan #{$order->order_number} dibatalkan Admin ({$alasanBatal}). Klik di sini untuk mengisi nomor rekening refund sebesar {$refundFormatted}.";
+                $waMessage = self::getTemplateMessage('notif_batal_admin_refund', [
+                    'nama_penerima'  => $order->recipient_name,
+                    'order_number'   => $order->order_number,
+                    'alasan_batal'   => $alasanBatal,
+                    'nominal_refund' => $refundFormatted,
+                    'link_nota'      => $linkNota,
+                ]);
+
+                // Arahkan sesi WhatsApp Bot pembeli agar siap menerima balasan nomor rekening langsung
+                if (!empty($order->recipient_whatsapp)) {
+                    $waNorm = preg_replace('/[^0-9]/', '', $order->recipient_whatsapp);
+                    if (str_starts_with($waNorm, '0')) {
+                        $waNorm = '62' . substr($waNorm, 1);
+                    } elseif (!str_starts_with($waNorm, '62')) {
+                        $waNorm = '62' . $waNorm;
+                    }
+
+                    $session = WhatsappSession::firstOrCreate(
+                        ['whatsapp_number' => $waNorm],
+                        [
+                            'current_step'        => 'sapaan',
+                            'session_data'        => [],
+                            'last_interaction_at' => now(),
+                        ]
+                    );
+                    $sd = is_array($session->session_data) ? $session->session_data : [];
+                    $sd['refund_order_number'] = $order->order_number;
+
+                    $session->update([
+                        'current_step'        => 'input_rekening_refund_admin',
+                        'session_data'        => $sd,
+                        'last_interaction_at' => now(),
+                    ]);
+                }
                 break;
 
             case 'diproses':
@@ -208,24 +283,14 @@ class NotificationController extends Controller
                     'link_nota'     => $linkNota
                 ]);
                 break;
+
             case 'refund_selesai':
-                $totalAmt     = (int) round($order->total_amount ?? 0);
-                $dpAmt        = (int) round($order->dp_amount ?? 0);
-                $remAmt       = (int) round($order->remaining_amount ?? 0);
-                $trxAmt       = (int) round($order->transaction->amount ?? 0);
-                $isFullRefund = ($pStatus === 'paid_full')
-                    || ($remAmt <= 0 && $totalAmt > 0)
-                    || ($trxAmt >= $totalAmt && $totalAmt > 0);
-
-                $nominalRefund = $isFullRefund
-                    ? $totalAmt
-                    : ($dpAmt > 0 ? $dpAmt : ($trxAmt > 0 ? $trxAmt : (int) round($totalAmt * 0.3)));
-
+                $nominalRefund   = self::calculateRefundAmount($order);
                 $refundFormatted = 'Rp ' . number_format($nominalRefund, 0, ',', '.');
                 $linkBuktiRefund = !empty($order->refund_proof)
                     ? (str_starts_with($order->refund_proof, 'http')
                         ? $order->refund_proof
-                        : asset('storage/bukti_refund/' . ltrim($order->refund_proof, '/')))
+                        : asset('storage/bukti_refund/' . preg_replace('#^/?(storage/)?(bukti_refund/)?#i', '', trim($order->refund_proof))))
                     : $linkNota;
 
                 $title = 'Pengembalian Dana (Refund) Selesai';

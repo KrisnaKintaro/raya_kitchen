@@ -249,6 +249,43 @@
         setTimeout(() => { $('#pelunasanReminderModal').addClass('hidden'); }, 300);
     }
 
+    function kirimRekeningRefund(e, orderNumber) {
+        e.preventDefault();
+        let bank = $('#input-refund-bank').val().trim();
+        let norek = $('#input-refund-norek').val().trim();
+        let nama = $('#input-refund-nama').val().trim();
+
+        if (!bank || !norek || !nama) {
+            alert('Harap lengkapi Nama Bank/E-Wallet, Nomor Rekening, dan Atas Nama.');
+            return;
+        }
+
+        let btn = $('#btn-submit-rekening-refund');
+        let oriText = btn.html();
+        btn.html('<span class="animate-pulse">Menyimpan Rekening...</span>').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/checkout/refund-account",
+            type: "POST",
+            data: {
+                order_number: orderNumber,
+                refund_bank: bank,
+                refund_norek: norek,
+                refund_nama: nama,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || 'Gagal menyimpan nomor rekening refund.');
+                btn.html(oriText).prop('disabled', false);
+            }
+        });
+    }
+
     function lunasiTagihan(orderNumber) {
         let btn = $('#btn-lunasi, #btn-modal-lunasi-qris');
         let originalText = btn.first().html();
@@ -387,11 +424,30 @@
                                     <svg class="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <div>
                                         <p class="font-bold text-red-800 text-sm mb-1">Pesanan Dibatalkan</p>
-                                        <p class="text-xs text-red-600 font-medium">Alasan: ${order.cancellation_reason}</p>
+                                        <p class="text-xs text-red-600 font-medium">Alasan: ${order.cancellation_reason || '-'}</p>
                                     </div>
                                 </div>
                         `;
-                        if (order.refund_account_number) {
+
+                        if (order.refund_status === 'pending' && !order.refund_account_number) {
+                            // Pesanan berbayar dibatalkan Admin -> Minta pembeli mengisi rekening refund
+                            bottomHtml += `
+                                <div id="form-rekening-refund" class="mt-4 pt-4 border-t border-red-200">
+                                    <div class="bg-white p-4 rounded-2xl border-2 border-amber-300 shadow-sm">
+                                        <p class="text-xs font-black text-amber-800 uppercase tracking-wider mb-1">⚠️ Pengajuan Rekening Pengembalian Dana (Refund)</p>
+                                        <p class="text-xs text-gray-600 font-medium mb-3">Pesanan ini memiliki dana masuk yang perlu dikembalikan. Silakan isi rekening / E-Wallet tujuan transfer refund Anda di bawah ini:</p>
+                                        <form onsubmit="kirimRekeningRefund(event, '${order.order_number}')" class="space-y-3">
+                                            <input type="text" id="input-refund-bank" required placeholder="Nama Bank / E-Wallet (Cth: BCA, Mandiri, GoPay)" class="w-full p-2.5 text-xs font-bold rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <input type="text" id="input-refund-norek" required inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="Nomor Rekening / Nomor E-Wallet" class="w-full p-2.5 text-xs font-bold rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <input type="text" id="input-refund-nama" required placeholder="Atas Nama Pemilik Rekening (A.N)" class="w-full p-2.5 text-xs font-bold rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-purple-400">
+                                            <button type="submit" id="btn-submit-rekening-refund" class="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl shadow-md transition">
+                                                Kirim Nomor Rekening Refund
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (order.refund_account_number || order.refund_status === 'refunded') {
                             bottomHtml += `<div class="mt-4 pt-4 border-t border-red-100"><p class="text-xs font-bold text-red-800 mb-2">Status Pengembalian Dana (Refund)</p>`;
                             if (order.refund_proof) {
                                 let refundUrl = order.refund_proof_url || (order.refund_proof.startsWith('http')
@@ -399,7 +455,7 @@
                                     : '/storage/bukti_refund/' + order.refund_proof.replace(/^\/?(storage\/)?(bukti_refund\/)?/i, ''));
                                 bottomHtml += `
                                     <div class="bg-white p-3 rounded-xl border border-red-100">
-                                        <span class="text-xs font-bold text-green-600 block mb-3">✅ Dana berhasil dikembalikan oleh Admin</span>
+                                        <span class="text-xs font-bold text-green-600 block mb-3">✅ Dana berhasil dikembalikan oleh Admin ke (${order.refund_account_number || '-'})</span>
                                         <div class="rounded-lg overflow-hidden border border-gray-100 mb-3 bg-gray-50 flex justify-center p-2 cursor-pointer" onclick="openImageZoomModal('${refundUrl}', 'Bukti Refund Admin')">
                                             <img src="${refundUrl}" alt="Bukti Refund" class="max-h-48 w-auto object-contain rounded-md shadow-sm">
                                         </div>
@@ -408,8 +464,8 @@
                                 `;
                             } else {
                                 bottomHtml += `
-                                    <div class="flex items-center gap-2 text-xs font-medium text-amber-600 bg-amber-50 p-3 rounded-xl border border-amber-100">
-                                        Refund sedang diproses admin ke rekening (${order.refund_account_number}). Maksimal 1x24 jam.
+                                    <div class="flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
+                                        Refund sedang diproses Admin ke rekening (${order.refund_account_number}). Maksimal 1x24 jam.
                                     </div>
                                 `;
                             }
@@ -417,7 +473,6 @@
                         }
                         bottomHtml += `</div>`;
                         $('#bottom-section').html(bottomHtml).removeClass('hidden');
-
                     } else if (paymentStatus === 'unpaid' || paymentStatus === 'failed') {
                         watermarkHtml = 'BELUM DIBAYAR';
                         $('#watermark-status').addClass('border-red-500 text-red-600 bg-red-50').text(watermarkHtml);

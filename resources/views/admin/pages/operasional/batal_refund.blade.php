@@ -729,15 +729,19 @@
 
             resetFileSelection();
 
+            const btnOpenConfirm = document.getElementById('btn-open-confirm');
             if (order.refund_status === 'pending') {
                 if (areaUpload) areaUpload.classList.remove('hidden');
                 if (areaProof) areaProof.classList.add('hidden');
-            } else {
-                if (areaUpload) areaUpload.classList.add('hidden');
-                if (areaProof) areaProof.classList.remove('hidden');
-                const imgProof = document.getElementById('img-proof');
-                if (imgProof && order.refund_proof_url) {
-                    imgProof.src = order.refund_proof_url;
+
+                if (btnOpenConfirm) {
+                    if (!order.has_valid_account) {
+                        btnOpenConfirm.disabled = true;
+                        btnOpenConfirm.innerHTML = '<i class="ph ph-hourglass-medium text-xl"></i><span>Menunggu Pembeli Mengirim Nomor Rekening...</span>';
+                    } else {
+                        btnOpenConfirm.disabled = false;
+                        btnOpenConfirm.innerHTML = '<i class="ph ph-check-circle text-xl"></i><span>Konfirmasi Selesai Refund</span>';
+                    }
                 }
             }
         }

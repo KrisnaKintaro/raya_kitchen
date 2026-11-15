@@ -258,8 +258,17 @@ $(document).ready(function() {
             let displayStatus = 'DALAM ANTREAN';
 
             if (oStatus === 'dibatalkan') {
-                statusColor = 'bg-red-100 text-red-700 border border-red-200';
-                displayStatus = 'DIBATALKAN';
+                if (order.refund_status === 'pending' && !order.refund_account_number) {
+                    reminderBanner = `
+                        <div class="mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 font-bold flex items-center gap-2">
+                            <span>⚠️</span>
+                            <span>Pesanan dibatalkan oleh Admin (${order.cancellation_reason || '-'}). Silakan klik tombol <strong>Isi Rekening Refund</strong> untuk pengembalian dana Anda.</span>
+                        </div>
+                    `;
+                    actionButtons = `<a href="/nota?order_number=${order.order_number}#form-rekening-refund" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs rounded-xl shadow-md animate-pulse transition-all">Isi Rekening Refund</a>`;
+                } else {
+                    actionButtons = `<a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-sm hover:bg-white transition-all">Detail Pembatalan</a>`;
+                }
             } else if (pStatus === 'unpaid' || pStatus === 'failed') {
                 statusColor = 'bg-red-100 text-red-700 border border-red-200';
                 displayStatus = 'BELUM DIBAYAR';

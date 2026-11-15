@@ -406,6 +406,24 @@ class BotTemplateSeeder extends Seeder
                 'is_active' => true,
                 'message_text' => "🥳 *Pesanan Selesai*\n\nHalo Kak *{nama_penerima}*,\nTransaksi untuk pesanan *#{order_number}* telah *SELESAI* dan barang telah diterima.\n\nTerima kasih banyak sudah berbelanja di Raya Kitchen. Kamu dapat melihat nota digital beserta foto bukti pengiriman kurir pada link berikut:\n\n🧾 *Nota & Bukti Pengiriman:*\n{link_nota}"
             ],
+            [
+                'session_state' => 'notif_batal_admin_unpaid',
+                'description' => 'Notifikasi WA otomatis saat pesanan (belum dibayar) dibatalkan manual oleh Admin',
+                'is_active' => true,
+                'message_text' => "❌ *Pesanan Dibatalkan oleh Admin*\n\nHalo Kak *{nama_penerima}*,\nMohon maaf, pesananmu dengan nomor *#{order_number}* terpaksa dibatalkan oleh Admin.\n\n📌 *Alasan Pembatalan:*\n{alasan_batal}\n\nKarena pesanan ini belum memiliki pembayaran masuk, tidak ada proses pengembalian dana. Silakan membuat pesanan kembali di waktu lain ya Kak.\n\n🧾 *Detail Nota:*\n{link_nota}"
+            ],
+            [
+                'session_state' => 'notif_batal_admin_refund',
+                'description' => 'Notifikasi WA otomatis saat pesanan (sudah DP/Lunas) dibatalkan oleh Admin & meminta nomor rekening refund',
+                'is_active' => true,
+                'message_text' => "⚠️ *Pesanan Dibatalkan Admin - Kirim Rekening Refund*\n\nHalo Kak *{nama_penerima}*,\nMohon maaf, pesananmu dengan nomor *#{order_number}* terpaksa dibatalkan oleh Admin.\n\n📌 *Alasan Pembatalan:*\n{alasan_batal}\n\n💰 *Dana yang Dikembalikan:* *{nominal_refund}*\n\nSilakan *balas pesan ini langsung* dengan data rekening / E-Wallet tujuan refund menggunakan format:\n*Nama Bank/E-Wallet - Nomor Rekening - Atas Nama*\nContoh: `BCA - 1234567890 - Budi Santoso`\n\nAtau kamu juga dapat mengisi nomor rekening melalui halaman Nota Digital berikut:\n🧾 {link_nota}"
+            ],
+            [
+                'session_state' => 'konfirmasi_rekening_refund_admin',
+                'description' => 'Pesan konfirmasi bot setelah pembeli mengirimkan nomor rekening untuk pesanan yang dibatalkan Admin',
+                'is_active' => true,
+                'message_text' => "✅ *Data Rekening Refund Diterima*\n\nTerima kasih Kak! Data rekening *{rekening_refund}* untuk pengembalian dana pesanan *#{order_number}* telah berhasil disimpan.\n\nAdmin kami akan segera memproses transfer pengembalian dana maksimal dalam 1x24 jam. Kamu akan menerima notifikasi beserta bukti transfer setelah dana dikirimkan.\n\nKetik *0* untuk kembali ke Menu Utama."
+            ],
 
             // F. AUTENTIKASI AKUN (OTP PENDAFTARAN & RESET PASSWORD VIA WA)
             [

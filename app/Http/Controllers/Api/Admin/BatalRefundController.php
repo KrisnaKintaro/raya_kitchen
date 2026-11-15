@@ -128,6 +128,13 @@ class BatalRefundController extends Controller
                 }
             }
 
+            if (empty(trim((string) $order->refund_account_number))) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Pembeli belum mengirimkan nomor rekening tujuan refund.',
+                ], 422);
+            }
+
             $file = $request->file('refund_proof');
             $fileName = 'refund_' . $order->order_number . '_' . time() . '.' . $file->getClientOriginalExtension();
             $file->storeAs('bukti_refund', $fileName, 'public');
@@ -165,9 +172,6 @@ class BatalRefundController extends Controller
         ]);
     }
 
-    /**
-     * Format struktur data Order untuk konsumsi UI Batal & Refund
-     */
     private function transformRefundOrder(Order $order): array
     {
         $totalAmount     = (int) round($order->total_amount ?? 0);
@@ -191,12 +195,13 @@ class BatalRefundController extends Controller
         }
 
         // Parsing string "Nama Bank - Nomor Rekening - Atas Nama"
-        $rawAccount = trim((string) ($order->refund_account_number ?? ''));
-        $parts = array_map('trim', explode('-', $rawAccount, 3));
+        $rawAccount      = trim((string) ($order->refund_account_number ?? ''));
+        $hasValidAccount = $rawAccount !== '';
+        $parts           = array_map('trim', explode('-', $rawAccount, 3));
 
-        $bankName      = !empty($parts[0]) ? $parts[0] : 'Rekening / E-Wallet';
-        $accountNumber = !empty($parts[1]) ? $parts[1] : ($rawAccount ?: '-');
-        $accountHolder = !empty($parts[2]) ? $parts[2] : $order->recipient_name;
+        $bankName      = $hasValidAccount ? (!empty($parts[0]) ? $parts[0] : 'Rekening / E-Wallet') : 'Menunggu Input Pembeli';
+        $accountNumber = $hasValidAccount ? (!empty($parts[1]) ? $parts[1] : $rawAccount) : 'Belum Diisi Pembeli';
+        $accountHolder = $hasValidAccount ? (!empty($parts[2]) ? $parts[2] : $order->recipient_name) : $order->recipient_name;
 
         $proofUrl = null;
         if (!empty($order->refund_proof)) {
@@ -229,6 +234,7 @@ class BatalRefundController extends Controller
             'account_number'        => $accountNumber,
             'account_holder'        => $accountHolder,
             'refund_proof_url'      => $proofUrl,
+            'has_valid_account'     => $hasValidAccount,
             'items'                 => $order->items->map(function ($item) {
                 $kategori = $item->productVariant?->product?->name ?? '';
                 $varian   = $item->productVariant?->variant_name ?? 'Produk Roti';

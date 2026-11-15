@@ -440,13 +440,14 @@
                 <textarea id="input-cancel-reason" rows="2" required class="w-full p-3 clay-inset rounded-xl text-xs sm:text-sm font-bold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none" placeholder="Cth: Stok bahan baku varian ini sedang habis..."></textarea>
             </div>
 
-            <div id="cancel-modal-refund-box" class="hidden p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-2">
+            <div id="cancel-modal-refund-box" class="hidden p-3.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5">
                 <p class="text-[11px] font-black text-amber-800 flex items-center gap-1.5">
-                    <i class="ph ph-info text-base"></i>
-                    <span>Pesanan ini sudah memiliki dana masuk!</span>
+                    <i class="ph ph-info text-base shrink-0"></i>
+                    <span>Pesanan ini sudah memiliki pembayaran masuk (DP / Lunas)</span>
                 </p>
-                <input type="text" id="input-cancel-refund-acc" class="w-full p-2.5 bg-white border border-amber-200 rounded-lg text-xs font-bold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-amber-500" placeholder="Bank - No. Rekening - Atas Nama (Opsional)">
-                <p class="text-[10px] font-semibold text-amber-700">Pesanan ini akan otomatis masuk ke menu <strong>Batal & Refund</strong>.</p>
+                <p class="text-[11px] font-semibold text-amber-700 leading-relaxed">
+                    Sistem akan otomatis mengirimkan alasan pembatalan beserta instruksi kepada pembeli (via WhatsApp & Nota Web) untuk mengisi <strong>Nomor Rekening Pengembalian Dana</strong>. Pesanan ini akan langsung masuk ke menu <strong>Batal & Refund</strong>.
+                </p>
             </div>
 
             <div class="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-2">
@@ -1039,7 +1040,6 @@
 
             document.getElementById('cancel-modal-order-id').textContent = '#' + order.order_number;
             document.getElementById('input-cancel-reason').value = '';
-            document.getElementById('input-cancel-refund-acc').value = order.refund_account_number || '';
 
             const refundBox = document.getElementById('cancel-modal-refund-box');
             const isPaid = (order.payment_status === 'paid_dp' || order.payment_status === 'paid_full');
@@ -1171,7 +1171,6 @@
         function onAdminCancelFormSubmit(e) {
             e.preventDefault();
             const reason = document.getElementById('input-cancel-reason').value.trim();
-            const refundAcc = document.getElementById('input-cancel-refund-acc').value.trim();
             const submitBtn = document.getElementById('btn-submit-admin-cancel');
 
             if (!reason) {
@@ -1180,8 +1179,7 @@
             }
 
             executeOrderAction('dibatalkan', {
-                cancellation_reason: reason,
-                refund_account_number: refundAcc
+                cancellation_reason: reason
             }, submitBtn);
         }
 
