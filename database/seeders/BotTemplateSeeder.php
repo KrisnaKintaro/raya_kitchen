@@ -450,6 +450,18 @@ class BotTemplateSeeder extends Seeder
                 'is_active' => true,
                 'message_text' => "💳 *Pengembalian Dana (Refund) Berhasil*\n\nHalo Kak *{nama_penerima}*,\nDana refund untuk pesanan *#{order_number}* telah berhasil ditransfer oleh Admin ke rekening *{rekening_refund}*.\n\nSilakan cek bukti transfer pengembalian dana pada Nota Digital berikut:\n🧾 {link_nota}"
             ],
+            [
+                'session_state' => 'notif_resi_diinput',
+                'description' => 'Notifikasi WA otomatis saat nomor resi ekspedisi telah diinput Admin & paket diserahkan ke kurir',
+                'is_active' => true,
+                'message_text' => "📦 *Nomor Resi Pengiriman Tersedia*\n\nHalo Kak *{nama_penerima}*,\nPesananmu *#{order_number}* telah diserahkan ke pihak ekspedisi dengan rincian berikut:\n\n🚚 *Ekspedisi:* {nama_kurir}\n🔖 *Nomor Resi:* *{nomor_resi}*\n🍞 *Isi Paket:* {rincian_item}\n📅 *Estimasi Tiba:* {estimasi_sampai}\n\nKamu dapat memantau posisi paket dan riwayat pengiriman secara berkala melalui Nota Digital di bawah ini:\n🧾 {link_nota}"
+            ],
+            [
+                'session_state' => 'notif_kurir_update',
+                'description' => 'Notifikasi WA otomatis saat kurir ekspedisi memperbarui status pengiriman / menuju lokasi penerima',
+                'is_active' => true,
+                'message_text' => "🚚 *Update Pengiriman Kurir*\n\nHalo Kak *{nama_penerima}*,\nTerdapat pembaruan status pengiriman untuk pesanan *#{order_number}*:\n\n🚛 *Kurir:* {nama_kurir}\n🔖 *No. Resi:* *{nomor_resi}*\n📍 *Status Terkini:* *{status_kurir}*\n📝 *Keterangan:* _{keterangan_kurir}_\n\nPantau terus detail perjalanan paketmu pada Nota Digital berikut:\n🧾 {link_nota}"
+            ],
         ];
     }
 

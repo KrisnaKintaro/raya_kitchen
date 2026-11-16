@@ -1184,10 +1184,18 @@ class WhatsAppBotController extends Controller
 
         if (empty($pagedOrders)) {
             $reply = $this->getTemplate('riwayat_pesanan_kosong', ['label_filter' => $labelFilter])
-                ?? "📦 *Filter: {$labelFilter}*\n\nBelum ada pesanan di kategori ini Kak.\n\n🔍 *Ketik Filter Lain:*\n`semua` | `unpaid` | `dp` | `lunas` | `pending` | `diproses` | `siap dikirim` | `selesai` | `batal`\n\n0. 🔙 Kembali ke Menu Utama";
+                ?? "*Filter: {$labelFilter}*\n\nBelum ada pesanan di kategori ini Kak.\n\n*Ketik Filter Lain:*\n`semua` | `unpaid` | `dp` | `lunas` | `pending` | `diproses` | `siap dikirim` | `selesai` | `batal`\n\n0. Kembali ke Menu Utama";
             $this->sendMessage($waNumber, $reply);
             return;
         }
+
+        $courierStatusLabelMap = [
+            'waiting_resi' => 'MENUNGGU INPUT RESI',
+            'in_transit'   => 'PAKET DIKIRIM (TRANSIT)',
+            'on_delivery'  => 'KURIR MENUJU LOKASI',
+            'delivered'    => 'PAKET TELAH SAMPAI',
+            'problem'      => 'KENDALA PENGIRIMAN',
+        ];
 
         $appUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
         $daftar = "";
@@ -1196,13 +1204,31 @@ class WhatsAppBotController extends Controller
             $nomor = $offset + $idx + 1;
             $pStatus = strtoupper($o['payment_status']);
             $metode = strtoupper($o['payment_method']);
+
             $daftar .= "*{$nomor}. #{$o['order_number']}*\n";
             $daftar .= "  Tgl Order: {$o['date']}\n";
             $daftar .= "  Kurir: {$o['courier_name']} ({$o['shipping_service']})\n";
             $daftar .= "  {$o['schedule_label']}: *{$o['schedule_text']}*\n";
-            if (!empty($o['tracking_number'])) {
-                $daftar .= "  No. Resi: *{$o['tracking_number']}*\n";
+
+            if (empty($o['is_internal']) && $o['raw_status'] !== 'dibatalkan' && !in_array(strtolower($o['payment_status']), ['unpaid', 'failed'])) {
+                $cStatRaw = strtolower($o['courier_status'] ?? (!empty($o['tracking_number']) ? 'in_transit' : 'waiting_resi'));
+                if ($o['raw_status'] === 'selesai' || !empty($o['arrival_proof_url'])) {
+                    $cStatRaw = 'delivered';
+                }
+                $cStatLabel = $courierStatusLabelMap[$cStatRaw] ?? strtoupper($cStatRaw);
+
+                if (!empty($o['tracking_number'])) {
+                    $daftar .= "  No. Resi: *{$o['tracking_number']}*\n";
+                }
+                $daftar .= "  Posisi Kurir: *{$cStatLabel}*\n";
+
+                if (!empty($o['courier_manifest']) && is_array($o['courier_manifest']) && !empty($o['courier_manifest'][0]['description'])) {
+                    $latestLog = $o['courier_manifest'][0];
+                    $daftar .= "  Update Kurir ({$latestLog['time']}): _{$latestLog['description']}_\n";
+                    $daftar .= "  Ketik `lacak {$nomor}` untuk riwayat lengkap resi\n";
+                }
             }
+
             $daftar .= "  Status: *{$o['display_status']}* ({$metode} - {$o['tipe_bayar']})\n";
             $daftar .= "  Status Bayar: *{$pStatus}*\n";
             $daftar .= "  Total: {$o['total_amount_formatted']}\n";
@@ -1212,7 +1238,7 @@ class WhatsAppBotController extends Controller
                     $daftar .= "  Alasan Batal: _{$o['cancellation_reason']}_\n";
                 }
                 if (($o['refund_status'] ?? 'none') === 'pending' && empty($o['refund_account_number'])) {
-                    $daftar .= "  ⚠️ *Menunggu Rekening Refund!* Ketik: `rekening {$nomor}`\n";
+                    $daftar .= "  *Menunggu Rekening Refund!* Ketik: `rekening {$nomor}`\n";
                 } elseif (!empty($o['refund_account_number'])) {
                     $statusRef = ($o['refund_status'] ?? '') === 'refunded' ? 'SUDAH DITRANSFER' : 'SEDANG DIPROSES ADMIN';
                     $daftar .= "  Refund ({$statusRef}): {$o['refund_account_number']}\n";
@@ -1228,19 +1254,19 @@ class WhatsAppBotController extends Controller
                     }
                 }
                 if (!empty($o['arrival_proof_url'])) {
-                    $daftar .= "Bukti Sampai: {$o['arrival_proof_url']}\n";
+                    $daftar .= "  Bukti Sampai: {$o['arrival_proof_url']}\n";
                 }
-                $daftar .= "Lihat Nota: {$appUrl}/nota?order_number={$o['order_number']}\n";
+                $daftar .= "  Lihat Nota & Lacak: {$appUrl}/nota?order_number={$o['order_number']}\n";
             }
             $daftar .= "\n";
         }
 
         $navigasi = "";
         if ($page < $totalPages) {
-            $navigasi .= "⏭️ Ketik *lanjut* untuk melihat 5 pesanan berikutnya\n";
+            $navigasi .= "Ketik *lanjut* untuk melihat 5 pesanan berikutnya\n";
         }
         if ($page > 1) {
-            $navigasi .= "⏮️ Ketik *prev* untuk halaman sebelumnya\n";
+            $navigasi .= "Ketik *prev* untuk halaman sebelumnya\n";
         }
 
         $reply = $this->getTemplate('riwayat_pesanan', [
@@ -1250,18 +1276,19 @@ class WhatsAppBotController extends Controller
             'total_pesanan'    => $totalOrders,
             'daftar_pesanan'   => trim($daftar),
             'navigasi_halaman' => $navigasi
-        ]) ?? "📦 *Filter: {$labelFilter}*\n📄 *Halaman {$page} dari {$totalPages}* (Total: {$totalOrders} pesanan)\n\n"
-            . trim($daftar) . "\n\n──────────────────\n"
+        ]) ?? "*Filter: {$labelFilter}*\n*Halaman {$page} dari {$totalPages}* (Total: {$totalOrders} pesanan)\n\n"
+            . trim($daftar) . "\n\n"
             . $navigasi
-            . "🔍 *Filter Status:* ketik `semua`, `unpaid`, `dp`, `lunas`, `pending`, `diproses`, `siap dikirim`, `selesai`, atau `batal`\n"
-            . "💳 *Bayar Ulang / Pelunasan Sisa DP:* ketik `bayar [nomor]` (contoh: `bayar 1`)\n"
-            . "❌ *Batalkan Pesanan Pending:* ketik `batalkan [nomor]` (contoh: `batalkan 1`)\n"
-            . "0. 🔙 Kembali ke Menu Utama";
+            . "*Filter Status:* ketik `semua`, `unpaid`, `dp`, `lunas`, `pending`, `diproses`, `siap dikirim`, `selesai`, atau `batal`\n"
+            . "*Lacak Resi Kurir:* ketik `lacak [nomor]` (contoh: `lacak 1`)\n"
+            . "*Bayar Ulang / Pelunasan Sisa DP:* ketik `bayar [nomor]` (contoh: `bayar 1`)\n"
+            . "*Batalkan Pesanan Pending:* ketik `batalkan [nomor]` (contoh: `batalkan 1`)\n"
+            . "0. Kembali ke Menu Utama";
 
         $this->sendMessage($waNumber, $reply);
     }
 
-    private function prosesInteraksiRiwayat($waNumber, $user, $message, $session)
+private function prosesInteraksiRiwayat($waNumber, $user, $message, $session)
     {
         $sd = is_array($session->session_data) ? $session->session_data : [];
         $currentFilter = $sd['riwayat_filter'] ?? 'semua';
@@ -1279,6 +1306,7 @@ class WhatsAppBotController extends Controller
             $this->stepRiwayatPesanan($waNumber, $user, $session, $currentFilter, $currentPage + 1);
             return;
         }
+
         if (in_array($msgLower, ['sebelumnya', 'prev', 'p', 'back'])) {
             $this->stepRiwayatPesanan($waNumber, $user, $session, $currentFilter, max(1, $currentPage - 1));
             return;
@@ -1314,6 +1342,73 @@ class WhatsAppBotController extends Controller
 
         if (isset($filterAliases[$msgLower])) {
             $this->stepRiwayatPesanan($waNumber, $user, $session, $filterAliases[$msgLower], 1);
+            return;
+        }
+
+        // Perintah Lacak Resi & Riwayat Manifest Kurir via Bot (lacak [nomor] / resi [nomor])
+        if (preg_match('/^(lacak|resi|track)\s+(.+)$/i', $message, $matches)) {
+            $targetKey = trim($matches[2]);
+            $orderNumber = $orderMap[$targetKey] ?? strtoupper($targetKey);
+
+            $order = Order::where('order_number', $orderNumber)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (!$order) {
+                $this->sendMessage($waNumber, "Pesanan *#{$orderNumber}* tidak ditemukan Kak.");
+                return;
+            }
+
+            $kurir = $order->courier_name ?: 'Kurir Internal Raya Kitchen';
+            $resi  = $order->tracking_number ?: 'Belum Tersedia';
+            $manifest = is_array($order->courier_manifest) ? $order->courier_manifest : [];
+            $linkNota = rtrim(request()->getSchemeAndHttpHost(), '/') . "/nota?order_number={$order->order_number}";
+
+            $teksLacak = "🚚 *Pelacakan Paket #{$order->order_number}*\n"
+                       . "Kurir: *{$kurir}*\n"
+                       . "No. Resi: *{$resi}*\n"
+                       . "Penerima: {$order->recipient_name}\n\n"
+                       . "*Riwayat Perjalanan Paket:*\n";
+
+            if (!empty($manifest)) {
+                foreach ($manifest as $idx => $m) {
+                    $icon = $idx === 0 ? "🟢" : "⚪";
+                    $teksLacak .= "{$icon} *[{$m['time']}]* ({$m['status']})\n{$m['description']}\n\n";
+                }
+            } else {
+                $teksLacak .= "_Belum ada riwayat manifest perjalanan dari kurir._\n\n";
+            }
+
+            $teksLacak .= "🧾 *Lihat Timeline di Nota Digital:*\n{$linkNota}\n\nKetik *0* untuk ke Menu Utama.";
+            $this->sendMessage($waNumber, $teksLacak);
+            return;
+        }
+
+        // Perintah Input Nomor Rekening Refund untuk Pesanan Batal
+        if (preg_match('/^(rekening|refund)\s+(.+)$/i', $message, $matches)) {
+            $targetKey = trim($matches[2]);
+            $orderNumber = $orderMap[$targetKey] ?? strtoupper($targetKey);
+
+            $order = Order::where('order_number', $orderNumber)
+                ->where('user_id', $user->id)
+                ->where('status', 'dibatalkan')
+                ->first();
+
+            if (!$order) {
+                $this->sendMessage($waNumber, "Pesanan batal *#{$orderNumber}* tidak ditemukan Kak.");
+                return;
+            }
+
+            $sd['refund_order_number'] = $order->order_number;
+            $session->update([
+                'current_step' => 'input_rekening_refund_admin',
+                'session_data' => $sd,
+            ]);
+
+            $reply = $this->getTemplate('batal_pesanan_refund', ['order_number' => $order->order_number])
+                ?? "*Data Pengembalian Dana (Refund)*\nSilakan ketik data rekening/E-Wallet untuk pesanan *#{$order->order_number}* dengan format:\n*Nama Bank/E-Wallet - Nomor Rekening - Atas Nama*\nContoh: `BCA - 1234567890 - Budi Santoso`\n\n0. Batal & Kembali";
+
+            $this->sendMessage($waNumber, $reply);
             return;
         }
 
@@ -1362,7 +1457,7 @@ class WhatsAppBotController extends Controller
 
             if (!$order) {
                 $reply = $this->getTemplate('batal_tidak_ditemukan', ['order_number' => $orderNumber])
-                    ?? "⚠️ Pesanan *#{$orderNumber}* tidak ditemukan Kak.";
+                    ?? "Pesanan *#{$orderNumber}* tidak ditemukan Kak.";
                 $this->sendMessage($waNumber, $reply);
                 return;
             }
@@ -1372,7 +1467,7 @@ class WhatsAppBotController extends Controller
                 $reply = $this->getTemplate('batal_status_tidak_bisa', [
                     'order_number'   => $orderNumber,
                     'status_pesanan' => $statusUpper
-                ]) ?? "⚠️ Maaf Kak, pesanan *#{$orderNumber}* statusnya sudah *{$statusUpper}* sehingga tidak bisa dibatalkan.";
+                ]) ?? "Maaf Kak, pesanan *#{$orderNumber}* statusnya sudah *{$statusUpper}* sehingga tidak bisa dibatalkan.";
                 $this->sendMessage($waNumber, $reply);
                 return;
             }
@@ -1388,14 +1483,13 @@ class WhatsAppBotController extends Controller
             ]);
 
             $reply = $this->getTemplate('batal_pesanan_alasan', ['order_number' => $order->order_number])
-                ?? "⚠️ *Batalkan Pesanan #{$order->order_number}*\n\nPilih alasan pembatalan dengan mengetik angkanya:\n1. Ingin merubah rincian pesanan (alamat/item)\n2. Jadwal pengiriman terlalu lama/tidak sesuai\n3. Berubah pikiran\n\nAtau ketik langsung alasan pembatalanmu.\n0. 🔙 Batal & Kembali ke Daftar Pesanan";
-
+                ?? "*Batalkan Pesanan #{$order->order_number}*\n\nPilih alasan pembatalan dengan mengetik angkanya:\n1. Ingin merubah rincian pesanan (alamat/item)\n2. Jadwal pengiriman terlalu lama/tidak sesuai\n3. Berubah pikiran\n\nAtau ketik langsung alasan pembatalanmu.\n0. Batal & Kembali ke Daftar Pesanan";
             $this->sendMessage($waNumber, $reply);
             return;
         }
 
         $reply = $this->getTemplate('riwayat_perintah_salah')
-            ?? "Perintah tidak dikenali Kak.\n\n- Ketik *lanjut* / *prev* untuk pindah halaman\n- Ketik filter: `semua`, `unpaid`, `dp`, `lunas`, `pending`, `diproses`, `siap dikirim`, `selesai`, `batal`\n- Ketik `bayar [nomor]` untuk bayar/lunasi\n- Ketik `batalkan [nomor]` untuk membatalkan pesanan\n- Ketik *0* untuk ke Menu Utama.";
+            ?? "Perintah tidak dikenali Kak.\n\n- Ketik *lanjut* / *prev* untuk pindah halaman\n- Ketik filter: `semua`, `unpaid`, `dp`, `lunas`, `pending`, `diproses`, `siap dikirim`, `selesai`, `batal`\n- Ketik `lacak [nomor]` untuk lacak resi kurir\n- Ketik `bayar [nomor]` untuk bayar/lunasi\n- Ketik `batalkan [nomor]` untuk membatalkan pesanan\n- Ketik *0* untuk ke Menu Utama.";
         $this->sendMessage($waNumber, $reply);
     }
 

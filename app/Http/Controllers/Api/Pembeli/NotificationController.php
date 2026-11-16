@@ -43,6 +43,7 @@ class NotificationController extends Controller
         } else {
             UserNotification::where('user_id', $userId)->update(['is_read' => true]);
         }
+
         return response()->json(['status' => 'success']);
     }
 
@@ -57,6 +58,7 @@ class NotificationController extends Controller
         if (!$template || empty(trim($template->message_text))) {
             $defaults = collect(BotTemplateSeeder::getDefaults())->keyBy('session_state');
             $def = $defaults->get($state);
+
             if ($def) {
                 $template = BotTemplate::updateOrCreate(
                     ['session_state' => $state],
@@ -73,6 +75,7 @@ class NotificationController extends Controller
         foreach ($placeholders as $key => $value) {
             $text = str_replace('{' . $key . '}', (string) $value, $text);
         }
+
         return $text;
     }
 
@@ -99,9 +102,11 @@ class NotificationController extends Controller
     /**
      * FUNGSI SENTRAL TRIGGER NOTIFIKASI (WEB & WHATSAPP BOT)
      */
-    public static function send($order, $type)
+    public static function send($order, $type, array $extraData = [])
     {
         if (!$order) return;
+
+        $order->loadMissing(['transaction', 'items.productVariant.product']);
 
         $title = '';
         $message = '';
@@ -117,6 +122,22 @@ class NotificationController extends Controller
         $pMethod = strtolower($order->transaction->payment_method ?? 'transfer');
         $pStatus = strtolower($order->transaction->payment_status ?? 'unpaid');
         $isStillDp = ($order->remaining_amount > 0 && $pStatus === 'paid_dp');
+
+        $namaKurir = trim((string) ($order->courier_name ?: 'Kurir Internal Raya Kitchen'));
+        if (!empty($order->shipping_service)) {
+            $namaKurir .= ' (' . $order->shipping_service . ')';
+        }
+        $nomorResi = $order->tracking_number ?: '-';
+
+        $rincianItem = $order->items->map(function ($item) {
+            $kat = $item->productVariant?->product?->name ?? '';
+            $var = $item->productVariant?->variant_name ?? 'Roti';
+            $nama = $kat ? "{$kat} - {$var}" : $var;
+            return "{$nama} ({$item->quantity}x)";
+        })->implode(', ');
+        if ($rincianItem === '') {
+            $rincianItem = 'Produk Raya Kitchen';
+        }
 
         switch ($type) {
             case 'pembayaran_lunas':
@@ -198,7 +219,6 @@ class NotificationController extends Controller
                     'link_nota'      => $linkNota,
                 ]);
 
-                // Arahkan sesi WhatsApp Bot pembeli agar siap menerima balasan nomor rekening langsung
                 if (!empty($order->recipient_whatsapp)) {
                     $waNorm = preg_replace('/[^0-9]/', '', $order->recipient_whatsapp);
                     if (str_starts_with($waNorm, '0')) {
@@ -215,6 +235,7 @@ class NotificationController extends Controller
                             'last_interaction_at' => now(),
                         ]
                     );
+
                     $sd = is_array($session->session_data) ? $session->session_data : [];
                     $sd['refund_order_number'] = $order->order_number;
 
@@ -265,13 +286,55 @@ class NotificationController extends Controller
                     }
                 } else {
                     $title = 'Pesanan Siap Dikirim/Diambil';
-                    $message = 'Pesanan #' . $order->order_number . ' sudah siap dikirim dan sudah lunas!';
+                    $message = 'Pesanan #' . $order->order_number . ' sudah siap dikirim oleh ' . $namaKurir . '!';
                     $waMessage = self::getTemplateMessage('notif_diantar', [
                         'nama_penerima' => $order->recipient_name,
                         'order_number'  => $order->order_number,
                         'link_nota'     => $linkNota
                     ]);
                 }
+                break;
+
+            case 'resi_diinput':
+                $estimasiStr = $order->delivery_date
+                    ? \Carbon\Carbon::parse($order->delivery_date)->locale('id')->isoFormat('D MMMM YYYY')
+                    : 'Mengikuti estimasi ekspedisi';
+
+                $title = 'Nomor Resi Pengiriman Tersedia (' . $nomorResi . ')';
+                $message = "Paket #{$order->order_number} telah diserahkan ke {$namaKurir} dengan No. Resi: {$nomorResi}. Klik untuk melacak paket di Nota Digital.";
+                $waMessage = self::getTemplateMessage('notif_resi_diinput', [
+                    'nama_penerima'   => $order->recipient_name,
+                    'order_number'    => $order->order_number,
+                    'nama_kurir'      => $namaKurir,
+                    'nomor_resi'      => $nomorResi,
+                    'rincian_item'    => $rincianItem,
+                    'estimasi_sampai' => $estimasiStr,
+                    'link_nota'       => $linkNota,
+                ]);
+                break;
+
+            case 'kurir_update':
+                $statusKurirRaw = strtolower($extraData['courier_status'] ?? $order->courier_status ?? 'in_transit');
+                $statusLabelMap = [
+                    'in_transit'  => 'DALAM PERJALANAN (TRANSIT)',
+                    'on_delivery' => 'KURIR MENUJU LOKASI PENERIMA',
+                    'delivered'   => 'PAKET TELAH SAMPAI DI TUJUAN',
+                    'problem'     => 'KENDALA PENGIRIMAN KURIR',
+                ];
+                $statusLabel = $statusLabelMap[$statusKurirRaw] ?? strtoupper($statusKurirRaw);
+                $ketKurir = $extraData['description'] ?? 'Paket sedang diproses oleh pihak ekspedisi.';
+
+                $title = "Update Kurir #{$order->order_number}: {$statusLabel}";
+                $message = "Resi {$nomorResi} ({$namaKurir}): {$ketKurir} Klik untuk melihat detail lacak di Nota.";
+                $waMessage = self::getTemplateMessage('notif_kurir_update', [
+                    'nama_penerima'    => $order->recipient_name,
+                    'order_number'     => $order->order_number,
+                    'nama_kurir'       => $namaKurir,
+                    'nomor_resi'       => $nomorResi,
+                    'status_kurir'     => $statusLabel,
+                    'keterangan_kurir' => $ketKurir,
+                    'link_nota'        => $linkNota,
+                ]);
                 break;
 
             case 'selesai':
@@ -309,10 +372,10 @@ class NotificationController extends Controller
         // 1. Simpan Notifikasi Web
         if ($title !== '' && $order->user_id) {
             UserNotification::create([
-                'user_id' => $order->user_id,
+                'user_id'      => $order->user_id,
                 'order_number' => $order->order_number,
-                'title' => $title,
-                'message' => $message
+                'title'        => $title,
+                'message'      => $message
             ]);
         }
 
@@ -322,6 +385,8 @@ class NotificationController extends Controller
                 $target = preg_replace('/[^0-9]/', '', $order->recipient_whatsapp);
                 if (str_starts_with($target, '0')) {
                     $target = '62' . substr($target, 1);
+                } elseif (!str_starts_with($target, '62')) {
+                    $target = '62' . $target;
                 }
 
                 Http::asForm()->withHeaders([

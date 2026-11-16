@@ -247,6 +247,12 @@
             "{alasan_batal}": "Mohon maaf, stok bahan baku varian keju hari ini sedang habis.",
             "{rekening_refund}": "BCA - 1234567890 a/n Budi Santoso",
             "{nominal_refund}": "Rp 24.000",
+            "{nama_kurir}": "JNE - REG (Estimasi Tiba: 2-3 Hari)",
+            "{nomor_resi}": "11004678609378",
+            "{rincian_item}": "Roti Manis - Coklat Lumer (2x), Roti Gurih - Abon Sapi (1x)",
+            "{estimasi_sampai}": "18 November 2026",
+            "{status_kurir}": "KURIR MENUJU LOKASI PENERIMA",
+            "{keterangan_kurir}": "Kurir JNE (Resi: 11004678609378) sedang membawa paket menuju lokasi penerima (Budi Santoso).",
         };
 
         function getCategoryInfo(state) {

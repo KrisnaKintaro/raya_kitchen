@@ -7,57 +7,221 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 :root {
-    --clay-bg: #F5F2F8;
-    --clay-surface: #FFFFFF;
-    --clay-surface-alt: #FAF8FC;
-    --clay-dark: #1E1B24;
-    --clay-primary: #9368B7;
-    --clay-primary-hover: #7E54A3;
-    --clay-accent-soft: #E8D5F6;
-    --clay-border: #EBE4F2;
+    /* 60-30-10 Claymorphism Token Engine */
+    --clay-bg-60: #F5F2F8;
+    --clay-surface-30: #FFFFFF;
+    --clay-surface-lilac: #F9F6FC;
+    --clay-accent-10: #9368B7;
+    --clay-accent-hover: #7E54A3;
+    --clay-border: #E8DEF5;
     --clay-text-main: #2D2A32;
     --clay-text-muted: #6E6A75;
-    --clay-shadow-card: inset 0 -4px 6px rgba(147, 104, 183, 0.08), inset 0 4px 6px rgba(255, 255, 255, 0.95), 0 10px 24px -4px rgba(147, 104, 183, 0.1);
-    --clay-shadow-dark: inset 0 -4px 8px rgba(0, 0, 0, 0.45), inset 0 2px 4px rgba(255, 255, 255, 0.08), 0 14px 28px -6px rgba(30, 27, 36, 0.28);
-    --clay-shadow-well: inset 0 3px 6px rgba(147, 104, 183, 0.14), inset 0 -2px 4px rgba(255, 255, 255, 0.9);
-    --clay-shadow-btn: inset 0 -3px 4px rgba(0, 0, 0, 0.15), inset 0 3px 4px rgba(255, 255, 255, 0.35), 0 6px 14px rgba(147, 104, 183, 0.28);
+
+    /* Semantic Fintech Accents */
+    --clay-emerald-main: #059669;
+    --clay-emerald-soft: #ECFDF5;
+    --clay-emerald-tint: #D1FAE5;
+    --clay-amber-main: #D97706;
+    --clay-amber-soft: #FFFBEB;
+    --clay-amber-tint: #FEF3C7;
+    --clay-rose-main: #E11D48;
+
+    /* Tactile 3D Clay Shadows */
+    --clay-shadow-card:
+        inset 0 -5px 8px rgba(147, 104, 183, 0.1),
+        inset 0 5px 8px rgba(255, 255, 255, 0.98),
+        0 12px 26px -6px rgba(147, 104, 183, 0.12);
+
+    --clay-shadow-vault-emerald:
+        inset 0 -6px 10px rgba(5, 150, 105, 0.11),
+        inset 0 6px 10px rgba(255, 255, 255, 1),
+        0 14px 30px -8px rgba(5, 150, 105, 0.14);
+
+    --clay-shadow-vault-amber:
+        inset 0 -6px 10px rgba(217, 119, 6, 0.11),
+        inset 0 6px 10px rgba(255, 255, 255, 1),
+        0 14px 30px -8px rgba(217, 119, 6, 0.14);
+
+    --clay-shadow-well:
+        inset 0 3px 6px rgba(147, 104, 183, 0.16),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.95);
+
+    --clay-shadow-btn:
+        inset 0 -3px 5px rgba(0, 0, 0, 0.16),
+        inset 0 3px 5px rgba(255, 255, 255, 0.38),
+        0 6px 14px rgba(147, 104, 183, 0.28);
+
+    --clay-shadow-btn-amber:
+        inset 0 -3px 5px rgba(146, 64, 14, 0.2),
+        inset 0 3px 5px rgba(255, 255, 255, 0.45),
+        0 6px 14px rgba(217, 119, 6, 0.24);
+
+    --clay-radius-lg: clamp(1.5rem, 2vw, 2rem);
+    --clay-radius-md: clamp(1rem, 1.4vw, 1.35rem);
 }
-.fluid-h2 { font-size: clamp(1.15rem, 1.2vw + 0.85rem, 1.5rem); line-height: 1.25; }
-.fluid-stat-lg { font-size: clamp(1.5rem, 2vw + 0.9rem, 2.25rem); line-height: 1.15; }
-.fluid-stat-md { font-size: clamp(1.35rem, 1.6vw + 0.8rem, 1.85rem); line-height: 1.2; }
-.clay-card { background-color: var(--clay-surface); border: 2px solid #FFFFFF; border-radius: 2rem; box-shadow: var(--clay-shadow-card); }
-.clay-card-dark { background-color: var(--clay-dark); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; box-shadow: var(--clay-shadow-dark); }
-.clay-well { background-color: var(--clay-bg); border: 1px solid #FFFFFF; border-radius: 1.25rem; box-shadow: var(--clay-shadow-well); }
-.clay-btn-primary { background-color: var(--clay-primary); color: #FFFFFF; box-shadow: var(--clay-shadow-btn); }
-.clay-btn-primary:hover { background-color: var(--clay-primary-hover); }
-.ux-interactive { min-height: 44px; transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease; }
-.ux-interactive:hover:not(:disabled) { transform: translateY(-3px); }
-.ux-interactive:active:not(:disabled) { transform: scale(0.95); }
-.ux-interactive:focus-visible { outline: 3px solid var(--clay-primary); outline-offset: 2px; }
-.ux-interactive:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Fluid Typography & Tabular Numerals for Financial Precision */
+.fluid-h2 { font-size: clamp(1.125rem, 1.1vw + 0.85rem, 1.45rem); line-height: 1.25; }
+.fluid-stat-lg { font-size: clamp(1.65rem, 2.2vw + 1rem, 2.45rem); line-height: 1.12; font-variant-numeric: tabular-nums; }
+.fluid-stat-md { font-size: clamp(1.35rem, 1.5vw + 0.85rem, 1.85rem); line-height: 1.18; font-variant-numeric: tabular-nums; }
+.num-tabular { font-variant-numeric: tabular-nums; }
+
+/* Claymorphism Surfaces */
+.clay-card {
+    background-color: var(--clay-surface-30);
+    border: 2px solid #FFFFFF;
+    border-radius: var(--clay-radius-lg);
+    box-shadow: var(--clay-shadow-card);
+}
+
+.clay-vault-emerald {
+    background: linear-gradient(145deg, #FFFFFF 0%, #F3FAF7 100%);
+    border: 2px solid #FFFFFF;
+    border-radius: var(--clay-radius-lg);
+    box-shadow: var(--clay-shadow-vault-emerald);
+}
+
+.clay-vault-amber {
+    background: linear-gradient(145deg, #FFFFFF 0%, #FDF9F0 100%);
+    border: 2px solid #FFFFFF;
+    border-radius: var(--clay-radius-lg);
+    box-shadow: var(--clay-shadow-vault-amber);
+}
+
+.clay-well {
+    background-color: var(--clay-bg-60);
+    border: 1.5px solid #FFFFFF;
+    border-radius: var(--clay-radius-md);
+    box-shadow: var(--clay-shadow-well);
+}
+
+.clay-icon-squircle {
+    border: 2px solid #FFFFFF;
+    border-radius: 1.15rem;
+    box-shadow:
+        inset 0 -3px 5px rgba(0, 0, 0, 0.06),
+        inset 0 3px 5px rgba(255, 255, 255, 0.9),
+        0 6px 12px rgba(147, 104, 183, 0.12);
+}
+
+.clay-badge-pill {
+    border: 1.5px solid #FFFFFF;
+    box-shadow:
+        inset 0 -2px 3px rgba(0, 0, 0, 0.05),
+        inset 0 2px 3px rgba(255, 255, 255, 0.9),
+        0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+.clay-btn-primary {
+    background-color: var(--clay-accent-10);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: var(--clay-shadow-btn);
+}
+.clay-btn-primary:hover:not(:disabled) {
+    background-color: var(--clay-accent-hover);
+}
+
+.clay-btn-amber {
+    background-color: var(--clay-amber-main);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: var(--clay-shadow-btn-amber);
+}
+.clay-btn-amber:hover:not(:disabled) {
+    background-color: #B45309;
+}
+
+/* 5-State Feedback Loop & Fitts's Law (Min 44x44px) */
+.ux-interactive {
+    min-height: 44px;
+    min-width: 44px;
+    will-change: transform, opacity;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+.ux-interactive:hover:not(:disabled) {
+    transform: translateY(-3px);
+}
+.ux-interactive:active:not(:disabled) {
+    transform: scale(0.95);
+}
+.ux-interactive:focus-visible {
+    outline: 3px solid var(--clay-accent-10);
+    outline-offset: 2px;
+}
+.ux-interactive:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* Staggered Entrance (60fps transform & opacity only) */
 @keyframes clayFadeUp {
     from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
 }
-.stagger-item { opacity: 0; animation: clayFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.stagger-item {
+    opacity: 0;
+    will-change: transform, opacity;
+    animation: clayFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 .delay-1 { animation-delay: 40ms; }
 .delay-2 { animation-delay: 90ms; }
 .delay-3 { animation-delay: 140ms; }
 .delay-4 { animation-delay: 190ms; }
 .delay-5 { animation-delay: 240ms; }
-.custom-cb { appearance: none; width: 1.25rem; height: 1.25rem; border: 2px solid #CBD5E1; border-radius: 0.4rem; cursor: pointer; position: relative; transition: transform 0.15s ease, opacity 0.15s ease; }
-.custom-cb:checked { background-color: var(--clay-primary); border-color: var(--clay-primary); }
-.custom-cb:checked::after { content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 10px; border: solid #FFFFFF; border-width: 0 2px 2px 0; transform: rotate(45deg); }
-.flatpickr-calendar { font-family: inherit; box-shadow: 0 16px 32px -8px rgba(147, 104, 183, 0.25); border: 2px solid #FFFFFF; border-radius: 1.5rem; }
-.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.inRange { background: var(--clay-primary) !important; border-color: var(--clay-primary) !important; color: #FFFFFF !important; }
-@media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+
+.custom-cb {
+    appearance: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid #CBD5E1;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s ease, opacity 0.15s ease;
 }
+.custom-cb:checked {
+    background-color: var(--clay-accent-10);
+    border-color: var(--clay-accent-10);
+}
+.custom-cb:checked::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid #FFFFFF;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.flatpickr-calendar {
+    font-family: inherit;
+    box-shadow: 0 16px 32px -8px rgba(147, 104, 183, 0.25);
+    border: 2px solid #FFFFFF;
+    border-radius: 1.5rem;
+}
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.inRange {
+    background: var(--clay-accent-10) !important;
+    border-color: var(--clay-accent-10) !important;
+    color: #FFFFFF !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 @media print {
     #sidebar, header, .no-print { display: none !important; }
     #main-content { overflow: visible !important; height: auto !important; }
     body { overflow: visible !important; background: #FFFFFF !important; }
-    .clay-card, .clay-card-dark { box-shadow: none !important; border: 1px solid #CBD5E1 !important; }
+    .clay-card, .clay-vault-emerald, .clay-vault-amber { box-shadow: none !important; border: 1px solid #CBD5E1 !important; }
 }
 </style>
 @endsection
@@ -66,7 +230,7 @@
 
     <!-- TOAST NOTIFICATION -->
     <div id="ux-toast" role="status" aria-live="polite" class="fixed bottom-6 right-6 z-[200] hidden items-center gap-3 px-5 py-3.5 clay-card border-2 border-white shadow-2xl no-print">
-        <div id="ux-toast-icon" class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+        <div id="ux-toast-icon" class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
             <i class="ph ph-check-circle text-xl"></i>
         </div>
         <div>
@@ -99,7 +263,6 @@
 
             <!-- Kanan: Preset Tanggal, Kalender Bebas, Channel & Cetak -->
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Segmented Quick Date Presets -->
                 <div class="clay-well p-1 flex items-center gap-1" role="group" aria-label="Preset Rentang Tanggal">
                     <button type="button" data-preset="7d" class="preset-date-btn ux-interactive px-3.5 py-2 rounded-xl text-xs font-black bg-white text-admin-sideBg shadow-sm">7 Hari</button>
                     <button type="button" data-preset="30d" class="preset-date-btn ux-interactive px-3.5 py-2 rounded-xl text-xs font-black text-admin-textMuted hover:text-admin-textMain">30 Hari</button>
@@ -107,13 +270,11 @@
                     <button type="button" data-preset="year" class="preset-date-btn ux-interactive px-3.5 py-2 rounded-xl text-xs font-black text-admin-textMuted hover:text-admin-textMain">Tahun Ini</button>
                 </div>
 
-                <!-- Flatpickr Custom Date Range Picker -->
                 <div class="relative min-w-[245px] flex-1 sm:flex-none" id="wrapper-custom-date">
                     <i class="ph ph-calendar-blank absolute left-4 top-1/2 -translate-y-1/2 text-lg text-admin-sideBg pointer-events-none"></i>
                     <input type="text" id="universal-date-range" aria-label="Pilih Rentang Tanggal Bebas" placeholder="Pilih Rentang Tanggal" class="ux-interactive w-full pl-11 pr-4 py-2.5 clay-well text-admin-textMain text-xs sm:text-sm font-black cursor-pointer focus:outline-none" readonly>
                 </div>
 
-                <!-- Segmented Channel Filter -->
                 <div class="clay-well p-1 flex items-center gap-1" role="group" aria-label="Filter Sumber Pesanan">
                     <button type="button" data-source="all" class="source-filter-btn ux-interactive px-3 py-2 rounded-xl text-xs font-black bg-white text-admin-sideBg shadow-sm flex items-center gap-1.5">
                         <i class="ph ph-stack text-sm"></i>
@@ -129,7 +290,6 @@
                     </button>
                 </div>
 
-                <!-- Tombol Cetak Laporan -->
                 <button type="button" id="btn-print-report" class="ux-interactive clay-btn-primary px-4 py-2.5 rounded-2xl font-black text-xs sm:text-sm inline-flex items-center gap-2">
                     <i class="ph ph-printer text-lg"></i>
                     <span>Cetak PDF</span>
@@ -139,87 +299,158 @@
     </section>
 
     <!-- ===================================================================== -->
-    <!-- LAPIS 2A: AKUMULASI SEMUA LINI MASA (ALL-TIME / KEBAL FILTER)         -->
+    <!-- LAPIS 2A: AKUMULASI SEMUA LINI MASA (TACTILE CLAY VAULT CARDS)        -->
     <!-- ===================================================================== -->
-    <div class="mb-3 flex items-center justify-between stagger-item delay-2">
-        <div class="flex items-center gap-2">
-            <i class="ph ph-infinity text-lg text-admin-sideBg"></i>
-            <h3 class="text-xs font-black uppercase tracking-widest text-admin-textMuted">Total Akumulasi Sejak Awal Operasional (Tidak Terpengaruh Filter)</h3>
+    <div class="mb-3.5 flex flex-wrap items-center justify-between gap-2 stagger-item delay-2">
+        <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl clay-well flex items-center justify-center text-admin-sideBg">
+                <i class="ph ph-infinity text-base"></i>
+            </span>
+            <div>
+                <h3 class="text-xs font-black uppercase tracking-wider text-admin-textMain">Rekapitulasi Kas & Piutang Sepanjang Waktu</h3>
+                <p class="text-[11px] font-bold text-admin-textMuted">Akumulasi permanen sejak awal toko beroperasi (kebal terhadap filter periode di atas)</p>
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-7 stagger-item delay-2">
-        <!-- All-Time Kas Masuk -->
-        <div class="clay-card-dark text-white p-6 lg:p-7 flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-4 mb-4">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 stagger-item delay-2">
+
+        <!-- KARTU 1: ALL-TIME KAS MASUK (TACTILE EMERALD CLAY VAULT) -->
+        <article class="clay-vault-emerald p-6 lg:p-7 flex flex-col justify-between relative overflow-hidden">
+            <!-- Top Row: Icon Squircle, Label & Order Counter Badge -->
+            <div class="flex flex-wrap justify-between items-start gap-4 mb-5">
                 <div class="flex items-center gap-3.5">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 flex items-center justify-center shrink-0">
+                    <div class="w-13 h-13 p-3 clay-icon-squircle bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
                         <i class="ph ph-vault text-2xl"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">All-Time Kas Masuk</span>
-                        <h4 class="text-sm font-bold text-slate-300 mt-1">Grand Total Pendapatan Diterima</h4>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-emerald-100/90 text-emerald-800 text-[10px] font-black uppercase tracking-wider border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                            <span>Kas Masuk Terverifikasi</span>
+                        </div>
+                        <h4 class="text-sm font-black text-admin-textMain mt-1">Total Pendapatan Diterima</h4>
                     </div>
                 </div>
-                <span class="px-3 py-1 rounded-xl bg-white/10 text-xs font-black text-slate-200" id="alltime-orders-count">0 Order Sukses</span>
+
+                <div class="clay-badge-pill px-3.5 py-1.5 rounded-2xl bg-white/90 flex items-center gap-2">
+                    <i class="ph ph-check-circle text-emerald-600 text-base"></i>
+                    <span class="text-xs font-black text-admin-textMain num-tabular" id="alltime-orders-count">0 Order Sukses</span>
+                </div>
             </div>
 
-            <div>
-                <h3 class="fluid-stat-lg font-black text-white tracking-tight mb-4" id="alltime-revenue-total">Rp 0</h3>
-                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs">
-                    <div>
-                        <span class="text-slate-400 font-bold block mb-0.5">Dari Pesanan Lunas (100%):</span>
-                        <span class="font-black text-emerald-400 text-sm" id="alltime-revenue-lunas">Rp 0</span>
+            <!-- Middle Row: Primary Figure & Live Composition Progress Bar -->
+            <div class="mb-5">
+                <p class="text-[11px] font-bold text-admin-textMuted mb-1">Akumulasi Dana Bersih Masuk (Lunas + DP):</p>
+                <h3 class="fluid-stat-lg font-black text-emerald-700 tracking-tight" id="alltime-revenue-total">Rp 0</h3>
+
+                <!-- Tactile Composition Bar -->
+                <div class="mt-3.5">
+                    <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-admin-textMuted mb-1.5">
+                        <span id="alltime-rev-lunas-pct">Lunas: 100%</span>
+                        <span id="alltime-rev-dp-pct">DP Masuk: 0%</span>
                     </div>
-                    <div>
-                        <span class="text-slate-400 font-bold block mb-0.5">Dari Uang Muka DP (30%):</span>
-                        <span class="font-black text-teal-300 text-sm" id="alltime-revenue-dp">Rp 0</span>
+                    <div class="w-full h-2.5 clay-well rounded-full overflow-hidden flex p-0.5 gap-0.5">
+                        <div id="bar-alltime-lunas" class="h-full bg-emerald-600 rounded-l-full transition-transform duration-300 origin-left" style="width: 100%"></div>
+                        <div id="bar-alltime-dp" class="h-full bg-teal-400 rounded-r-full transition-transform duration-300 origin-right" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- All-Time Piutang / Belum Terbayar -->
-        <div class="clay-card-dark text-white p-6 lg:p-7 flex flex-col justify-between">
-            <div class="flex justify-between items-start gap-4 mb-4">
+            <!-- Bottom Row: Recessed Clay Well Breakdown -->
+            <div class="clay-well p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="bg-white/85 p-3 rounded-xl border border-white flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[11px] font-bold text-admin-textMuted">Pesanan Lunas (100%)</span>
+                        <i class="ph ph-seal-check text-emerald-600 text-sm"></i>
+                    </div>
+                    <span class="text-sm sm:text-base font-black text-emerald-700 num-tabular" id="alltime-revenue-lunas">Rp 0</span>
+                </div>
+
+                <div class="bg-white/85 p-3 rounded-xl border border-white flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[11px] font-bold text-admin-textMuted">Uang Muka DP (30%)</span>
+                        <i class="ph ph-coins text-teal-600 text-sm"></i>
+                    </div>
+                    <span class="text-sm sm:text-base font-black text-teal-700 num-tabular" id="alltime-revenue-dp">Rp 0</span>
+                </div>
+            </div>
+        </article>
+
+        <!-- KARTU 2: ALL-TIME PIUTANG / TAGIHAN GANTUNG (TACTILE AMBER CLAY VAULT) -->
+        <article class="clay-vault-amber p-6 lg:p-7 flex flex-col justify-between relative overflow-hidden">
+            <!-- Top Row: Icon Squircle, Label & Action CTA -->
+            <div class="flex flex-wrap justify-between items-start gap-4 mb-5">
                 <div class="flex items-center gap-3.5">
-                    <div class="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-amber-400 flex items-center justify-center shrink-0">
+                    <div class="w-13 h-13 p-3 clay-icon-squircle bg-amber-50 text-amber-700 flex items-center justify-center shrink-0">
                         <i class="ph ph-hand-coins text-2xl"></i>
                     </div>
                     <div>
-                        <span class="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">All-Time Piutang</span>
-                        <h4 class="text-sm font-bold text-slate-300 mt-1">Grand Total Tagihan Belum Terbayar</h4>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-100/90 text-amber-900 text-[10px] font-black uppercase tracking-wider border border-white">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                            <span>Piutang & Tagihan Aktif</span>
+                        </div>
+                        <h4 class="text-sm font-black text-admin-textMain mt-1">Total Tagihan Belum Terbayar</h4>
                     </div>
                 </div>
-                <button type="button" id="btn-jump-piutang" class="ux-interactive px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/30 text-xs font-black flex items-center gap-1.5 no-print">
-                    <span>Filter Tabel Piutang</span>
+
+                <button type="button" id="btn-jump-piutang" class="ux-interactive clay-btn-amber px-4 py-2 rounded-2xl text-xs font-black inline-flex items-center gap-2 no-print">
+                    <span>Tampilkan di Tabel</span>
                     <i class="ph ph-arrow-down-right text-sm"></i>
                 </button>
             </div>
 
-            <div>
-                <h3 class="fluid-stat-lg font-black text-amber-400 tracking-tight mb-4" id="alltime-unpaid-total">Rp 0</h3>
-                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/10 text-xs">
-                    <div>
-                        <span class="text-slate-400 font-bold block mb-0.5">Sisa Pelunasan DP (70%):</span>
-                        <span class="font-black text-amber-300 text-sm" id="alltime-unpaid-dp">Rp 0</span>
+            <!-- Middle Row: Primary Figure & Live Composition Progress Bar -->
+            <div class="mb-5">
+                <p class="text-[11px] font-bold text-admin-textMuted mb-1">Akumulasi Dana Menunggu Pelunasan Pelanggan:</p>
+                <h3 class="fluid-stat-lg font-black text-amber-700 tracking-tight" id="alltime-unpaid-total">Rp 0</h3>
+
+                <!-- Tactile Composition Bar -->
+                <div class="mt-3.5">
+                    <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-admin-textMuted mb-1.5">
+                        <span id="alltime-unp-dp-pct">Sisa DP (70%): 100%</span>
+                        <span id="alltime-unp-full-pct">Unpaid: 0%</span>
                     </div>
-                    <div>
-                        <span class="text-slate-400 font-bold block mb-0.5">Belum Bayar Sama Sekali (Unpaid):</span>
-                        <span class="font-black text-rose-400 text-sm" id="alltime-unpaid-full">Rp 0</span>
+                    <div class="w-full h-2.5 clay-well rounded-full overflow-hidden flex p-0.5 gap-0.5">
+                        <div id="bar-alltime-unp-dp" class="h-full bg-amber-500 rounded-l-full transition-transform duration-300 origin-left" style="width: 100%"></div>
+                        <div id="bar-alltime-unp-full" class="h-full bg-rose-500 rounded-r-full transition-transform duration-300 origin-right" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Bottom Row: Recessed Clay Well Breakdown -->
+            <div class="clay-well p-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div class="bg-white/85 p-3 rounded-xl border border-white flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[11px] font-bold text-admin-textMuted">Sisa Pelunasan DP (70%)</span>
+                        <i class="ph ph-Split-horizontal text-amber-600 text-sm"></i>
+                    </div>
+                    <span class="text-sm sm:text-base font-black text-amber-700 num-tabular" id="alltime-unpaid-dp">Rp 0</span>
+                </div>
+
+                <div class="bg-white/85 p-3 rounded-xl border border-white flex flex-col justify-between">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[11px] font-bold text-admin-textMuted">Belum Bayar (Unpaid)</span>
+                        <i class="ph ph-warning-circle text-rose-600 text-sm"></i>
+                    </div>
+                    <span class="text-sm sm:text-base font-black text-rose-600 num-tabular" id="alltime-unpaid-full">Rp 0</span>
+                </div>
+            </div>
+        </article>
+
     </div>
 
     <!-- ===================================================================== -->
     <!-- LAPIS 2B: METRIK BERDASARKAN FILTER TANGGAL & CHANNEL                 -->
     <!-- ===================================================================== -->
-    <div class="mb-3 flex items-center justify-between stagger-item delay-3">
-        <div class="flex items-center gap-2">
-            <i class="ph ph-funnel text-lg text-emerald-600"></i>
-            <h3 class="text-xs font-black uppercase tracking-widest text-admin-textMuted">Ringkasan Performa Sesuai Filter Universal Terpilih</h3>
+    <div class="mb-3.5 flex items-center justify-between stagger-item delay-3">
+        <div class="flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-xl clay-well flex items-center justify-center text-emerald-600">
+                <i class="ph ph-funnel text-base"></i>
+            </span>
+            <div>
+                <h3 class="text-xs font-black uppercase tracking-wider text-admin-textMain">Performa Periode & Channel Terpilih</h3>
+                <p class="text-[11px] font-bold text-admin-textMuted">Metrik di bawah otomatis beradaptasi dengan rentang waktu pada Filter Universal</p>
+            </div>
         </div>
     </div>
 
@@ -227,17 +458,17 @@
         <!-- Card 1: Kas Masuk Terfilter -->
         <div class="clay-card p-6 flex flex-col justify-between">
             <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200">
+                <div class="w-12 h-12 clay-icon-squircle bg-emerald-50 text-emerald-600 flex items-center justify-center">
                     <i class="ph ph-wallet text-2xl"></i>
                 </div>
-                <span id="filtered-rev-growth" class="px-3 py-1 rounded-xl text-xs font-black bg-emerald-50 text-emerald-700 border border-emerald-200">+0%</span>
+                <span id="filtered-rev-growth" class="clay-badge-pill px-3 py-1 rounded-xl text-xs font-black bg-emerald-50 text-emerald-700 num-tabular">+0%</span>
             </div>
             <div>
                 <p class="text-[11px] font-black text-admin-textMuted uppercase tracking-wider mb-1">Kas Masuk (Sesuai Filter)</p>
                 <h3 class="fluid-stat-md font-black text-admin-textMain tracking-tight mb-3" id="filtered-revenue-total">Rp 0</h3>
-                <div class="flex justify-between text-xs font-bold text-admin-textMuted pt-3 border-t border-admin-border">
-                    <span>Lunas 100%: <strong class="text-admin-sideBg" id="filtered-revenue-lunas">Rp 0</strong></span>
-                    <span>DP 30%: <strong class="text-teal-600" id="filtered-revenue-dp">Rp 0</strong></span>
+                <div class="clay-well p-3 flex justify-between text-xs font-bold text-admin-textMuted">
+                    <span>Lunas: <strong class="text-admin-sideBg num-tabular" id="filtered-revenue-lunas">Rp 0</strong></span>
+                    <span>DP 30%: <strong class="text-teal-600 num-tabular" id="filtered-revenue-dp">Rp 0</strong></span>
                 </div>
             </div>
         </div>
@@ -245,17 +476,17 @@
         <!-- Card 2: Tagihan Belum Terbayar Terfilter -->
         <div class="clay-card p-6 flex flex-col justify-between">
             <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200">
+                <div class="w-12 h-12 clay-icon-squircle bg-amber-50 text-amber-600 flex items-center justify-center">
                     <i class="ph ph-clock-countdown text-2xl"></i>
                 </div>
-                <span id="filtered-unpaid-growth" class="px-3 py-1 rounded-xl text-xs font-black bg-amber-50 text-amber-700 border border-amber-200">0%</span>
+                <span id="filtered-unpaid-growth" class="clay-badge-pill px-3 py-1 rounded-xl text-xs font-black bg-amber-50 text-amber-700 num-tabular">0%</span>
             </div>
             <div>
                 <p class="text-[11px] font-black text-admin-textMuted uppercase tracking-wider mb-1">Tagihan Gantung (Sesuai Filter)</p>
                 <h3 class="fluid-stat-md font-black text-amber-600 tracking-tight mb-3" id="filtered-unpaid-total">Rp 0</h3>
-                <div class="flex justify-between text-xs font-bold text-admin-textMuted pt-3 border-t border-admin-border">
-                    <span>Sisa DP 70%: <strong class="text-orange-600" id="filtered-unpaid-dp">Rp 0</strong></span>
-                    <span>Unpaid 100%: <strong class="text-rose-600" id="filtered-unpaid-full">Rp 0</strong></span>
+                <div class="clay-well p-3 flex justify-between text-xs font-bold text-admin-textMuted">
+                    <span>Sisa DP: <strong class="text-orange-600 num-tabular" id="filtered-unpaid-dp">Rp 0</strong></span>
+                    <span>Unpaid: <strong class="text-rose-600 num-tabular" id="filtered-unpaid-full">Rp 0</strong></span>
                 </div>
             </div>
         </div>
@@ -263,17 +494,17 @@
         <!-- Card 3: Volume Transaksi & Rata-Rata Order -->
         <div class="clay-card p-6 flex flex-col justify-between">
             <div class="flex justify-between items-start mb-4">
-                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-admin-sideBg flex items-center justify-center border border-purple-200">
+                <div class="w-12 h-12 clay-icon-squircle bg-purple-50 text-admin-sideBg flex items-center justify-center">
                     <i class="ph ph-receipt text-2xl"></i>
                 </div>
-                <span class="px-3 py-1 rounded-xl text-xs font-black bg-rose-50 text-rose-600 border border-rose-200" id="filtered-cancelled-badge">0 Dibatalkan</span>
+                <span class="clay-badge-pill px-3 py-1 rounded-xl text-xs font-black bg-rose-50 text-rose-600 num-tabular" id="filtered-cancelled-badge">0 Dibatalkan</span>
             </div>
             <div>
                 <p class="text-[11px] font-black text-admin-textMuted uppercase tracking-wider mb-1">Transaksi Sukses (Sesuai Filter)</p>
                 <h3 class="fluid-stat-md font-black text-admin-textMain tracking-tight mb-3" id="filtered-success-orders">0 Order</h3>
-                <div class="flex justify-between text-xs font-bold text-admin-textMuted pt-3 border-t border-admin-border">
-                    <span>Rata-rata/Order: <strong class="text-admin-sideBg" id="filtered-aov">Rp 0</strong></span>
-                    <span>Menunggu Bayar: <strong class="text-rose-600" id="filtered-unpaid-count">0 Order</strong></span>
+                <div class="clay-well p-3 flex justify-between text-xs font-bold text-admin-textMuted">
+                    <span>Rata-rata: <strong class="text-admin-sideBg num-tabular" id="filtered-aov">Rp 0</strong></span>
+                    <span>Unpaid: <strong class="text-rose-600 num-tabular" id="filtered-unpaid-count">0 Order</strong></span>
                 </div>
             </div>
         </div>
@@ -285,18 +516,17 @@
     <section aria-label="Grafik Kas Masuk dan Tagihan" class="clay-card p-6 lg:p-7 mb-8 stagger-item delay-4">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 mb-6 border-b border-admin-border">
             <div class="flex items-start gap-3.5">
-                <div class="w-11 h-11 rounded-2xl bg-purple-50 text-admin-sideBg flex items-center justify-center border border-purple-200 shrink-0 mt-0.5">
+                <div class="w-11 h-11 clay-icon-squircle bg-purple-50 text-admin-sideBg flex items-center justify-center shrink-0 mt-0.5">
                     <i class="ph ph-chart-line-up text-xl"></i>
                 </div>
                 <div>
                     <h2 class="fluid-h2 font-black text-admin-textMain">Grafik Rincian Kas Masuk vs Tagihan Belum Dibayar</h2>
                     <p class="text-xs font-bold text-admin-textMuted mt-0.5">
-                        Data grafik di bawah otomatis mengikuti rentang tanggal dan channel yang dipilih pada Filter Universal di atas.
+                        Tren arus kas dan piutang berdasarkan rentang waktu serta channel yang aktif.
                     </p>
                 </div>
             </div>
 
-            <!-- Pengelompokan Titik Waktu di dalam Rentang Tanggal Terpilih -->
             <div class="flex items-center gap-2 self-start lg:self-auto no-print">
                 <span class="text-[11px] font-black text-admin-textMuted uppercase tracking-wider hidden sm:inline">Kelompokkan:</span>
                 <div class="clay-well p-1 flex items-center gap-1" role="group" aria-label="Kelompok Waktu Grafik">
@@ -321,7 +551,7 @@
                     </div>
                     <div class="text-right shrink-0">
                         <span class="text-[10px] font-black uppercase text-admin-textMuted block">Total di Grafik</span>
-                        <span class="text-sm font-black text-emerald-600" id="chart-rev-sum">Rp 0</span>
+                        <span class="text-sm font-black text-emerald-600 num-tabular" id="chart-rev-sum">Rp 0</span>
                     </div>
                 </div>
 
@@ -342,7 +572,7 @@
                     </div>
                     <div class="text-right shrink-0">
                         <span class="text-[10px] font-black uppercase text-admin-textMuted block">Total di Grafik</span>
-                        <span class="text-sm font-black text-amber-600" id="chart-unpaid-sum">Rp 0</span>
+                        <span class="text-sm font-black text-amber-600 num-tabular" id="chart-unpaid-sum">Rp 0</span>
                     </div>
                 </div>
 
@@ -357,10 +587,9 @@
     <!-- LAPIS 4: TOP 5 PRODUK PENYUMBANG OMZET & KOMPOSISI CHANNEL            -->
     <!-- ===================================================================== -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 stagger-item delay-4">
-        <!-- Top 5 Varian Produk -->
         <div class="lg:col-span-2 clay-card p-6 lg:p-7">
             <div class="flex items-center gap-3 mb-5">
-                <div class="w-10 h-10 rounded-xl bg-purple-50 text-admin-sideBg flex items-center justify-center border border-purple-200">
+                <div class="w-10 h-10 clay-icon-squircle bg-purple-50 text-admin-sideBg flex items-center justify-center">
                     <i class="ph ph-trophy text-xl"></i>
                 </div>
                 <div>
@@ -369,15 +598,21 @@
                 </div>
             </div>
             <div id="top-products-container" class="space-y-3.5">
-                <p class="text-xs font-bold text-admin-textMuted py-4 animate-pulse">Memuat produk terlaris...</p>
+                <div class="clay-well p-3.5 animate-pulse flex flex-col gap-2">
+                    <div class="h-3.5 bg-purple-200/60 rounded w-1/2"></div>
+                    <div class="h-2 bg-white rounded-full w-full"></div>
+                </div>
+                <div class="clay-well p-3.5 animate-pulse flex flex-col gap-2">
+                    <div class="h-3.5 bg-purple-200/60 rounded w-2/3"></div>
+                    <div class="h-2 bg-white rounded-full w-full"></div>
+                </div>
             </div>
         </div>
 
-        <!-- Komposisi Channel & Export -->
         <div class="clay-card p-6 lg:p-7 flex flex-col justify-between">
             <div>
                 <div class="flex items-center gap-3 mb-5">
-                    <div class="w-10 h-10 rounded-xl bg-purple-50 text-admin-sideBg flex items-center justify-center border border-purple-200">
+                    <div class="w-10 h-10 clay-icon-squircle bg-purple-50 text-admin-sideBg flex items-center justify-center">
                         <i class="ph ph-share-network text-xl"></i>
                     </div>
                     <div>
@@ -397,7 +632,7 @@
                                 <p class="text-[11px] font-bold text-admin-textMuted">Checkout via Katalog Web</p>
                             </div>
                         </div>
-                        <span class="text-base font-black text-admin-sideBg" id="channel-web-count">0 Order</span>
+                        <span class="text-base font-black text-admin-sideBg num-tabular" id="channel-web-count">0 Order</span>
                     </div>
 
                     <div class="clay-well p-4 flex justify-between items-center">
@@ -410,7 +645,7 @@
                                 <p class="text-[11px] font-bold text-admin-textMuted">Checkout via Chat Otomatis</p>
                             </div>
                         </div>
-                        <span class="text-base font-black text-emerald-600" id="channel-wa-count">0 Order</span>
+                        <span class="text-base font-black text-emerald-600 num-tabular" id="channel-wa-count">0 Order</span>
                     </div>
                 </div>
             </div>
@@ -435,7 +670,7 @@
         <!-- Header & Filter Tabel -->
         <div class="p-6 border-b border-admin-border flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-admin-bg/40">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white text-admin-sideBg flex items-center justify-center border border-admin-border shadow-sm">
+                <div class="w-10 h-10 clay-icon-squircle bg-white text-admin-sideBg flex items-center justify-center">
                     <i class="ph ph-table text-xl"></i>
                 </div>
                 <div>
@@ -445,14 +680,12 @@
             </div>
 
             <div class="flex flex-wrap items-center gap-3 no-print">
-                <!-- Search Input -->
                 <div class="relative min-w-[240px] flex-1 sm:flex-none">
                     <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-base text-admin-textMuted pointer-events-none"></i>
                     <input type="text" id="filter-search" aria-label="Cari pesanan" placeholder="Cari No. Order / Nama / WA..." class="ux-interactive w-full pl-10 pr-4 py-2.5 bg-white border border-admin-border rounded-2xl text-xs sm:text-sm font-bold text-admin-textMain focus:outline-none">
                 </div>
 
-                <!-- Multi-Select Dropdown Status Bayar -->
-                <div class="relative min-w-[190px]" id="wrapper-status">
+                <div class="relative min-w-[195px]" id="wrapper-status">
                     <button type="button" id="btn-status" aria-haspopup="true" aria-expanded="false" class="ux-interactive flex items-center justify-between w-full bg-white border border-admin-border text-admin-textMain text-xs sm:text-sm font-black rounded-2xl pl-4 pr-3 py-2.5">
                         <span id="lbl-status" class="truncate">Semua Status Bayar</span>
                         <i class="ph ph-caret-down text-admin-textMuted ml-2"></i>
@@ -460,8 +693,8 @@
 
                     <div id="menu-status" role="menu" class="absolute right-0 mt-2 w-64 clay-card p-3 hidden z-50 border border-admin-border">
                         <div class="flex justify-between items-center pb-2 mb-2 border-b border-admin-border">
-                            <span class="text-[11px] font-black uppercase text-admin-textMuted">Filter Status (Tekan ESC tutup)</span>
-                            <button type="button" id="btn-close-status-menu" class="w-7 h-7 rounded-lg hover:bg-admin-bg flex items-center justify-center text-admin-textMuted" aria-label="Tutup Menu Filter">
+                            <span class="text-[11px] font-black uppercase text-admin-textMuted">Filter Status (ESC tutup)</span>
+                            <button type="button" id="btn-close-status-menu" class="w-8 h-8 rounded-lg hover:bg-admin-bg flex items-center justify-center text-admin-textMuted" aria-label="Tutup Menu Filter">
                                 <i class="ph ph-x text-sm"></i>
                             </button>
                         </div>
@@ -485,7 +718,6 @@
                     </div>
                 </div>
 
-                <!-- Reset Filter Tabel -->
                 <button type="button" id="btn-reset-table-filter" class="ux-interactive px-4 py-2.5 bg-white hover:bg-admin-bg text-admin-textMuted font-black text-xs rounded-2xl border border-admin-border flex items-center gap-1.5">
                     <i class="ph ph-arrow-counter-clockwise text-sm"></i>
                     <span>Reset</span>
@@ -509,11 +741,7 @@
                         <th scope="col" class="px-6 py-4 font-black tracking-wider text-center no-print">Aksi</th>
                     </tr>
                 </thead>
-                <tbody id="table-body" class="divide-y divide-admin-border">
-                    <tr class="animate-pulse">
-                        <td colspan="9" class="px-6 py-8 text-center text-xs font-bold text-admin-textMuted">Memuat rincian transaksi...</td>
-                    </tr>
-                </tbody>
+                <tbody id="table-body" class="divide-y divide-admin-border"></tbody>
             </table>
         </div>
 
@@ -523,7 +751,7 @@
                 <i class="ph ph-receipt-x text-3xl"></i>
             </div>
             <h3 class="text-base font-black text-admin-textMain mb-1">Tidak Ada Transaksi pada Filter Ini</h3>
-            <p class="text-xs font-bold text-admin-textMuted max-w-xs">Coba perluas rentang tanggal, ganti channel pesanan, atau reset filter status bayar.</p>
+            <p class="text-xs font-bold text-admin-textMuted max-w-xs">Coba perluas rentang tanggal, ganti channel pesanan, atau klik tombol Reset di atas.</p>
         </div>
 
         <!-- Pagination Bar -->
@@ -534,7 +762,7 @@
                     <i class="ph ph-caret-left text-sm"></i>
                     <span>Sebelumnya</span>
                 </button>
-                <span id="page-indicator" class="text-xs font-black px-3 py-2 text-admin-sideBg">Hal 1 / 1</span>
+                <span id="page-indicator" class="text-xs font-black px-3 py-2 text-admin-sideBg num-tabular">Hal 1 / 1</span>
                 <button type="button" id="btn-next-page" class="ux-interactive px-4 py-2 rounded-xl border border-admin-border bg-white text-xs font-black text-admin-textMain flex items-center gap-1.5">
                     <span>Selanjutnya</span>
                     <i class="ph ph-caret-right text-sm"></i>
@@ -552,11 +780,27 @@
 
 <script>
 (function() {
+    'use strict';
+
     let revChartInstance = null;
     let unpaidChartInstance = null;
     let fpUniversal = null;
     let activeAbortController = null;
-    let toastTimerId = null;
+    const activeTimers = new Set();
+
+    function registerTimeout(fn, delay) {
+        const id = window.setTimeout(() => {
+            activeTimers.delete(id);
+            fn();
+        }, delay);
+        activeTimers.add(id);
+        return id;
+    }
+
+    function clearAllTimers() {
+        activeTimers.forEach((id) => window.clearTimeout(id));
+        activeTimers.clear();
+    }
 
     const todayDate = new Date();
     const sevenDaysAgo = new Date();
@@ -582,18 +826,33 @@
     let currentPage = 1;
     const perPage = 6;
 
-    const formatRupiah = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0);
+    const formatRupiah = (num) => new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(Number(num) || 0);
+
+    function escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&' + 'amp;')
+            .replace(/</g, '&' + 'lt;')
+            .replace(/>/g, '&' + 'gt;')
+            .replace(/"/g, '&' + 'quot;')
+            .replace(/'/g, '&' + '#039;');
+    }
 
     function showToast(title, message, isSuccess = true) {
-        if (toastTimerId) clearTimeout(toastTimerId);
         const toast = document.getElementById('ux-toast');
         const icon  = document.getElementById('ux-toast-icon');
+        if (!toast || !icon) return;
+
         document.getElementById('ux-toast-title').textContent = title;
         document.getElementById('ux-toast-msg').textContent = message;
 
         icon.className = isSuccess
-            ? 'w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0'
-            : 'w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0';
+            ? 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0'
+            : 'w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0';
         icon.innerHTML = isSuccess
             ? '<i class="ph ph-check-circle text-xl"></i>'
             : '<i class="ph ph-warning-circle text-xl"></i>';
@@ -601,10 +860,31 @@
         toast.classList.remove('hidden');
         toast.classList.add('flex');
 
-        toastTimerId = setTimeout(() => {
+        registerTimeout(() => {
             toast.classList.remove('flex');
             toast.classList.add('hidden');
         }, 3200);
+    }
+
+    function renderTableSkeleton() {
+        const tbody = document.getElementById('table-body');
+        if (!tbody) return;
+        tbody.innerHTML = [1, 2, 3, 4].map(() => `
+            <tr class="animate-pulse">
+                <td class="px-6 py-4"><div class="h-4 bg-purple-100 rounded w-28"></div></td>
+                <td class="px-6 py-4"><div class="h-3.5 bg-gray-100 rounded w-32"></div></td>
+                <td class="px-6 py-4">
+                    <div class="h-3.5 bg-gray-200 rounded w-28 mb-1.5"></div>
+                    <div class="h-3 bg-gray-100 rounded w-24"></div>
+                </td>
+                <td class="px-6 py-4 text-center"><div class="h-5 bg-purple-50 rounded-lg w-24 mx-auto"></div></td>
+                <td class="px-6 py-4 text-right"><div class="h-4 bg-emerald-50 rounded w-20 ml-auto"></div></td>
+                <td class="px-6 py-4 text-right"><div class="h-4 bg-amber-50 rounded w-20 ml-auto"></div></td>
+                <td class="px-6 py-4 text-right"><div class="h-4 bg-gray-100 rounded w-24 ml-auto"></div></td>
+                <td class="px-6 py-4 text-center"><div class="h-6 bg-gray-100 rounded-lg w-20 mx-auto"></div></td>
+                <td class="px-6 py-4 text-center"><div class="h-9 bg-purple-50 rounded-xl w-20 mx-auto"></div></td>
+            </tr>
+        `).join('');
     }
 
     // --- FETCH DATA REAL DARI CONTROLLER API ---
@@ -614,8 +894,12 @@
         }
         activeAbortController = new AbortController();
 
-        $('#global-loader').removeClass('opacity-0 pointer-events-none');
-        $('#loader-bar').css('transform', 'scaleX(0.7)');
+        renderTableSkeleton();
+
+        const loader = document.getElementById('global-loader');
+        const loaderBar = document.getElementById('loader-bar');
+        if (loader) loader.classList.remove('opacity-0', 'pointer-events-none');
+        if (loaderBar) loaderBar.style.transform = 'scaleX(0.7)';
 
         const params = new URLSearchParams({
             start_date: filterState.start_date,
@@ -632,27 +916,28 @@
             },
             signal: activeAbortController.signal
         })
-        .then(async response => {
+        .then(async (response) => {
             const res = await response.json();
             if (!response.ok || res.status !== 'success') {
                 throw new Error(res.message || `HTTP Error ${response.status}`);
             }
             return res;
         })
-        .then(res => {
+        .then((res) => {
             renderDashboardUI(res.data);
         })
-        .catch(err => {
+        .catch((err) => {
             if (err.name !== 'AbortError') {
-                console.error('Dashboard Finansial Error:', err);
                 showToast('Gagal Memuat Data', err.message || 'Tidak dapat terhubung ke server finansial.', false);
             }
         })
         .finally(() => {
-            $('#loader-bar').css('transform', 'scaleX(1)');
-            setTimeout(() => {
-                $('#global-loader').addClass('opacity-0 pointer-events-none');
-                setTimeout(() => $('#loader-bar').css('transform', 'scaleX(0)'), 200);
+            if (loaderBar) loaderBar.style.transform = 'scaleX(1)';
+            registerTimeout(() => {
+                if (loader) loader.classList.add('opacity-0', 'pointer-events-none');
+                registerTimeout(() => {
+                    if (loaderBar) loaderBar.style.transform = 'scaleX(0)';
+                }, 200);
             }, 300);
         });
     }
@@ -661,43 +946,63 @@
         const allTime  = data.all_time_stats || {};
         const filtered = data.filtered_stats || {};
 
-        $('#active-period-badge').text(filtered.period_label || `${filterState.start_date} - ${filterState.end_date}`);
+        document.getElementById('active-period-badge').textContent = filtered.period_label || `${filterState.start_date} - ${filterState.end_date}`;
         const channelNames = { all: 'Semua Channel', web: 'Khusus Website', whatsapp: 'Khusus WA Bot' };
-        $('#active-channel-badge').text(channelNames[filterState.order_source] || 'Semua Channel');
+        document.getElementById('active-channel-badge').textContent = channelNames[filterState.order_source] || 'Semua Channel';
 
-        // 1. All-Time Stats
-        $('#alltime-revenue-total').text(formatRupiah(allTime.revenue_total));
-        $('#alltime-revenue-lunas').text(formatRupiah(allTime.revenue_lunas));
-        $('#alltime-revenue-dp').text(formatRupiah(allTime.revenue_dp_paid));
-        $('#alltime-orders-count').text(`${allTime.success_orders || 0} Order Sukses`);
+        // 1. All-Time Stats & Dynamic Composition Bars
+        const revTotalAll = Number(allTime.revenue_total || 0);
+        const revLunasAll = Number(allTime.revenue_lunas || 0);
+        const revDpAll    = Number(allTime.revenue_dp_paid || 0);
+        const lunasPct    = revTotalAll > 0 ? Math.round((revLunasAll / revTotalAll) * 100) : 100;
+        const dpPct       = revTotalAll > 0 ? Math.max(0, 100 - lunasPct) : 0;
 
-        $('#alltime-unpaid-total').text(formatRupiah(allTime.unpaid_total));
-        $('#alltime-unpaid-dp').text(formatRupiah(allTime.unpaid_dp_sisa));
-        $('#alltime-unpaid-full').text(formatRupiah(allTime.unpaid_full));
+        document.getElementById('alltime-revenue-total').textContent = formatRupiah(revTotalAll);
+        document.getElementById('alltime-revenue-lunas').textContent = formatRupiah(revLunasAll);
+        document.getElementById('alltime-revenue-dp').textContent    = formatRupiah(revDpAll);
+        document.getElementById('alltime-orders-count').textContent  = `${allTime.success_orders || 0} Order Sukses`;
+        document.getElementById('alltime-rev-lunas-pct').textContent = `Lunas: ${lunasPct}%`;
+        document.getElementById('alltime-rev-dp-pct').textContent    = `DP Masuk: ${dpPct}%`;
+        document.getElementById('bar-alltime-lunas').style.width     = `${lunasPct}%`;
+        document.getElementById('bar-alltime-dp').style.width        = `${dpPct}%`;
+
+        const unpTotalAll = Number(allTime.unpaid_total || 0);
+        const unpDpAll    = Number(allTime.unpaid_dp_sisa || 0);
+        const unpFullAll  = Number(allTime.unpaid_full || 0);
+        const unpDpPct    = unpTotalAll > 0 ? Math.round((unpDpAll / unpTotalAll) * 100) : 100;
+        const unpFullPct  = unpTotalAll > 0 ? Math.max(0, 100 - unpDpPct) : 0;
+
+        document.getElementById('alltime-unpaid-total').textContent   = formatRupiah(unpTotalAll);
+        document.getElementById('alltime-unpaid-dp').textContent      = formatRupiah(unpDpAll);
+        document.getElementById('alltime-unpaid-full').textContent    = formatRupiah(unpFullAll);
+        document.getElementById('alltime-unp-dp-pct').textContent     = `Sisa DP (70%): ${unpDpPct}%`;
+        document.getElementById('alltime-unp-full-pct').textContent   = `Unpaid: ${unpFullPct}%`;
+        document.getElementById('bar-alltime-unp-dp').style.width     = `${unpDpPct}%`;
+        document.getElementById('bar-alltime-unp-full').style.width   = `${unpFullPct}%`;
 
         // 2. Filtered Stats
-        $('#filtered-revenue-total').text(formatRupiah(filtered.revenue_total));
-        $('#filtered-revenue-lunas').text(formatRupiah(filtered.revenue_lunas));
-        $('#filtered-revenue-dp').text(formatRupiah(filtered.revenue_dp_paid));
+        document.getElementById('filtered-revenue-total').textContent = formatRupiah(filtered.revenue_total);
+        document.getElementById('filtered-revenue-lunas').textContent = formatRupiah(filtered.revenue_lunas);
+        document.getElementById('filtered-revenue-dp').textContent    = formatRupiah(filtered.revenue_dp_paid);
 
-        const revPct = filtered.revenue_growth_pct || 0;
+        const revPct = Number(filtered.revenue_growth_pct || 0);
         const revSign = revPct >= 0 ? '+' : '';
-        $('#filtered-rev-growth')
-            .text(`${revSign}${revPct}% vs periode lalu`)
-            .attr('class', `px-3 py-1 rounded-xl text-xs font-black border ${revPct >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'}`);
+        const revGrowthEl = document.getElementById('filtered-rev-growth');
+        revGrowthEl.textContent = `${revSign}${revPct}% vs periode lalu`;
+        revGrowthEl.className = `clay-badge-pill px-3 py-1 rounded-xl text-xs font-black num-tabular ${revPct >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'}`;
 
-        $('#filtered-unpaid-total').text(formatRupiah(filtered.unpaid_total));
-        $('#filtered-unpaid-dp').text(formatRupiah(filtered.unpaid_dp_sisa));
-        $('#filtered-unpaid-full').text(formatRupiah(filtered.unpaid_full));
+        document.getElementById('filtered-unpaid-total').textContent = formatRupiah(filtered.unpaid_total);
+        document.getElementById('filtered-unpaid-dp').textContent    = formatRupiah(filtered.unpaid_dp_sisa);
+        document.getElementById('filtered-unpaid-full').textContent  = formatRupiah(filtered.unpaid_full);
 
-        const unpPct = filtered.unpaid_growth_pct || 0;
+        const unpPct = Number(filtered.unpaid_growth_pct || 0);
         const unpSign = unpPct >= 0 ? '+' : '';
-        $('#filtered-unpaid-growth').text(`${unpSign}${unpPct}% vs periode lalu`);
+        document.getElementById('filtered-unpaid-growth').textContent = `${unpSign}${unpPct}% vs periode lalu`;
 
-        $('#filtered-success-orders').text(`${filtered.success_orders || 0} Order`);
-        $('#filtered-aov').text(formatRupiah(filtered.avg_order_value));
-        $('#filtered-unpaid-count').text(`${filtered.unpaid_count || 0} Order`);
-        $('#filtered-cancelled-badge').text(`${filtered.cancelled_count || 0} Dibatalkan`);
+        document.getElementById('filtered-success-orders').textContent  = `${filtered.success_orders || 0} Order`;
+        document.getElementById('filtered-aov').textContent             = formatRupiah(filtered.avg_order_value);
+        document.getElementById('filtered-unpaid-count').textContent    = `${filtered.unpaid_count || 0} Order`;
+        document.getElementById('filtered-cancelled-badge').textContent = `${filtered.cancelled_count || 0} Dibatalkan`;
 
         // 3. Render 2 Grafik
         renderBreakdownCharts(data.charts || {});
@@ -705,8 +1010,8 @@
         // 4. Render Top 5 Produk & Channel
         renderTopProducts(data.top_products || []);
 
-        $('#channel-web-count').text(`${data.channel_breakdown?.web_orders || 0} Order`);
-        $('#channel-wa-count').text(`${data.channel_breakdown?.whatsapp_orders || 0} Order`);
+        document.getElementById('channel-web-count').textContent = `${data.channel_breakdown?.web_orders || 0} Order`;
+        document.getElementById('channel-wa-count').textContent  = `${data.channel_breakdown?.whatsapp_orders || 0} Order`;
 
         // 5. Render Tabel
         allTransactions = data.transactions || [];
@@ -717,8 +1022,8 @@
     function renderBreakdownCharts(c) {
         const sumRev = (c.revenue_current || []).reduce((a, b) => a + Number(b || 0), 0);
         const sumUnp = (c.unpaid_current || []).reduce((a, b) => a + Number(b || 0), 0);
-        $('#chart-rev-sum').text(formatRupiah(sumRev));
-        $('#chart-unpaid-sum').text(formatRupiah(sumUnp));
+        document.getElementById('chart-rev-sum').textContent    = formatRupiah(sumRev);
+        document.getElementById('chart-unpaid-sum').textContent = formatRupiah(sumUnp);
 
         if (revChartInstance) { revChartInstance.destroy(); revChartInstance = null; }
         if (unpaidChartInstance) { unpaidChartInstance.destroy(); unpaidChartInstance = null; }
@@ -726,9 +1031,7 @@
         const commonOptions = {
             responsive: true,
             maintainAspectRatio: false,
-            elements: {
-                point: { radius: 4, hoverRadius: 6 }
-            },
+            elements: { point: { radius: 4, hoverRadius: 6 } },
             plugins: {
                 legend: {
                     position: 'bottom',
@@ -768,8 +1071,8 @@
                     {
                         label: 'Total Kas Masuk (Lunas + DP)',
                         data: c.revenue_current || [],
-                        borderColor: '#10B981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                        borderColor: '#059669',
+                        backgroundColor: 'rgba(5, 150, 105, 0.14)',
                         fill: true,
                         tension: 0.35,
                         borderWidth: 3
@@ -806,8 +1109,8 @@
                     {
                         label: 'Total Tagihan Belum Dibayar',
                         data: c.unpaid_current || [],
-                        borderColor: '#F59E0B',
-                        backgroundColor: 'rgba(245, 158, 11, 0.14)',
+                        borderColor: '#D97706',
+                        backgroundColor: 'rgba(217, 119, 6, 0.14)',
                         fill: true,
                         tension: 0.35,
                         borderWidth: 3
@@ -824,7 +1127,7 @@
                     {
                         label: 'Belum Bayar Sama Sekali (Unpaid 100%)',
                         data: c.unpaid_only || [],
-                        borderColor: '#F43F5E',
+                        borderColor: '#E11D48',
                         backgroundColor: 'transparent',
                         borderDash: [5, 5],
                         fill: false,
@@ -838,55 +1141,63 @@
     }
 
     function renderTopProducts(list) {
-        const container = $('#top-products-container');
-        container.empty();
+        const container = document.getElementById('top-products-container');
+        if (!container) return;
 
         if (!list || list.length === 0) {
-            container.html('<p class="text-xs font-bold text-admin-textMuted py-4">Belum ada produk terjual (Lunas/DP) pada rentang tanggal & channel ini.</p>');
+            container.innerHTML = `
+                <div class="clay-well p-6 text-center">
+                    <i class="ph ph-package text-2xl text-admin-textMuted mb-1 block"></i>
+                    <p class="text-xs font-bold text-admin-textMuted">Belum ada produk terjual (Lunas/DP) pada rentang tanggal & channel ini.</p>
+                </div>
+            `;
             return;
         }
 
-        list.forEach((p, i) => {
-            container.append(`
-                <div class="clay-well p-3.5">
-                    <div class="flex justify-between items-center text-xs mb-1.5">
-                        <span class="font-black text-admin-textMain">${i + 1}. ${p.name} <span class="text-admin-textMuted font-bold">(${p.qty} pcs)</span></span>
-                        <span class="font-black text-admin-sideBg">${formatRupiah(p.revenue)} (${p.percentage}%)</span>
-                    </div>
-                    <div class="w-full h-2 bg-white rounded-full overflow-hidden">
-                        <div class="h-full bg-admin-sideBg rounded-full" style="width: ${p.percentage}%"></div>
-                    </div>
+        container.innerHTML = list.map((p, i) => `
+            <div class="clay-well p-3.5">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                    <span class="font-black text-admin-textMain">${i + 1}. ${escapeHtml(p.name)} <span class="text-admin-textMuted font-bold">(${Number(p.qty)} pcs)</span></span>
+                    <span class="font-black text-admin-sideBg num-tabular">${formatRupiah(p.revenue)} (${Number(p.percentage)}%)</span>
                 </div>
-            `);
-        });
+                <div class="w-full h-2 bg-white rounded-full overflow-hidden">
+                    <div class="h-full bg-admin-sideBg rounded-full" style="width: ${Math.min(100, Number(p.percentage))}%"></div>
+                </div>
+            </div>
+        `).join('');
     }
 
     function updateStatusLabel() {
-        selectedStatuses = [];
-        $('.cb-status:checked').each(function() {
-            selectedStatuses.push($(this).val());
-        });
+        const checkedBoxes = Array.from(document.querySelectorAll('.cb-status:checked'));
+        selectedStatuses = checkedBoxes.map((cb) => cb.value);
+
+        const lbl = document.getElementById('lbl-status');
+        if (!lbl) return;
 
         if (selectedStatuses.length === 0) {
-            $('#lbl-status').text('Semua Status Bayar');
+            lbl.textContent = 'Semua Status Bayar';
         } else if (selectedStatuses.length === 1) {
-            $('#lbl-status').text($('.cb-status:checked').next('span').text());
+            const nextSpan = checkedBoxes[0].nextElementSibling;
+            lbl.textContent = nextSpan ? nextSpan.textContent : '1 Status Dipilih';
         } else {
-            $('#lbl-status').text(`${selectedStatuses.length} Status Dipilih`);
+            lbl.textContent = `${selectedStatuses.length} Status Dipilih`;
         }
     }
 
     function applyTableFilters() {
-        const keyword = ($('#filter-search').val() || '').toLowerCase();
+        const searchEl = document.getElementById('filter-search');
+        const keyword = (searchEl ? searchEl.value : '').toLowerCase();
 
-        filteredTransactions = allTransactions.filter(item => {
+        filteredTransactions = allTransactions.filter((item) => {
             const matchSearch = (item.order_number || '').toLowerCase().includes(keyword) ||
                                 (item.recipient_name || '').toLowerCase().includes(keyword) ||
                                 (item.recipient_whatsapp || '').toLowerCase().includes(keyword);
 
             let matchStatus = true;
             if (selectedStatuses.length > 0) {
-                const actualStatus = item.order_status === 'dibatalkan' ? 'dibatalkan' : (item.payment_status === 'failed' ? 'unpaid' : item.payment_status);
+                const actualStatus = item.order_status === 'dibatalkan'
+                    ? 'dibatalkan'
+                    : (item.payment_status === 'failed' ? 'unpaid' : item.payment_status);
                 matchStatus = selectedStatuses.includes(actualStatus);
             }
 
@@ -897,9 +1208,9 @@
     }
 
     function renderTable() {
-        const tbody = $('#table-body');
-        const emptyState = $('#empty-state');
-        tbody.empty();
+        const tbody = document.getElementById('table-body');
+        const emptyState = document.getElementById('empty-state');
+        if (!tbody || !emptyState) return;
 
         const totalItems = filteredTransactions.length;
         const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
@@ -908,12 +1219,14 @@
         const slice = filteredTransactions.slice((currentPage - 1) * perPage, currentPage * perPage);
 
         if (slice.length === 0) {
-            emptyState.removeClass('hidden').addClass('flex');
+            tbody.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            emptyState.classList.add('flex');
         } else {
-            emptyState.removeClass('flex').addClass('hidden');
-            let html = '';
+            emptyState.classList.remove('flex');
+            emptyState.classList.add('hidden');
 
-            slice.forEach(item => {
+            tbody.innerHTML = slice.map((item) => {
                 let badge = '';
                 if (item.order_status === 'dibatalkan') {
                     badge = '<span class="px-3 py-1 bg-slate-100 text-slate-600 border border-slate-200 rounded-lg text-[10px] font-black uppercase">Dibatalkan</span>';
@@ -932,109 +1245,72 @@
                 const safeDateStr = (item.created_at || '').replace(' ', 'T');
                 const d = new Date(safeDateStr);
                 const dateFormatted = isNaN(d.getTime())
-                    ? item.created_at
+                    ? escapeHtml(item.created_at)
                     : d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-                html += `
+                return `
                     <tr class="hover:bg-admin-bg/50 transition-colors">
-                        <td class="px-6 py-4 font-black text-admin-sideBg whitespace-nowrap">#${item.order_number}</td>
-                        <td class="px-6 py-4 font-bold text-admin-textMuted whitespace-nowrap text-xs">${dateFormatted} WIB</td>
+                        <td class="px-6 py-4 font-black text-admin-sideBg whitespace-nowrap num-tabular">#${escapeHtml(item.order_number)}</td>
+                        <td class="px-6 py-4 font-bold text-admin-textMuted whitespace-nowrap text-xs num-tabular">${dateFormatted} WIB</td>
                         <td class="px-6 py-4">
-                            <p class="font-black text-admin-textMain text-xs">${item.recipient_name}</p>
-                            <p class="text-[11px] font-semibold text-admin-textMuted">${item.recipient_whatsapp || '-'}</p>
+                            <p class="font-black text-admin-textMain text-xs">${escapeHtml(item.recipient_name)}</p>
+                            <p class="text-[11px] font-semibold text-admin-textMuted num-tabular">${escapeHtml(item.recipient_whatsapp || '-')}</p>
                         </td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">
                             ${channelBadge}
-                            <span class="ml-1 text-[10px] font-black text-admin-textMuted bg-gray-100 px-2 py-0.5 rounded uppercase">${item.payment_method}</span>
+                            <span class="ml-1 text-[10px] font-black text-admin-textMuted bg-gray-100 px-2 py-0.5 rounded uppercase">${escapeHtml(item.payment_method)}</span>
                         </td>
-                        <td class="px-6 py-4 font-black text-emerald-600 text-right whitespace-nowrap">${formatRupiah(item.paid_amount)}</td>
-                        <td class="px-6 py-4 font-black ${item.remaining_amount > 0 ? 'text-amber-600' : 'text-gray-400'} text-right whitespace-nowrap">${formatRupiah(item.remaining_amount)}</td>
-                        <td class="px-6 py-4 font-black text-admin-textMain text-right whitespace-nowrap">${formatRupiah(item.total_amount)}</td>
+                        <td class="px-6 py-4 font-black text-emerald-600 text-right whitespace-nowrap num-tabular">${formatRupiah(item.paid_amount)}</td>
+                        <td class="px-6 py-4 font-black ${item.remaining_amount > 0 ? 'text-amber-600' : 'text-gray-400'} text-right whitespace-nowrap num-tabular">${formatRupiah(item.remaining_amount)}</td>
+                        <td class="px-6 py-4 font-black text-admin-textMain text-right whitespace-nowrap num-tabular">${formatRupiah(item.total_amount)}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap">${badge}</td>
                         <td class="px-6 py-4 text-center whitespace-nowrap no-print">
-                            <a href="/nota?order_number=${item.order_number}" target="_blank" class="ux-interactive inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-admin-bg hover:bg-admin-sideBg hover:text-white text-admin-sideBg font-black text-xs">
+                            <a href="/nota?order_number=${encodeURIComponent(item.order_number)}" target="_blank" class="ux-interactive inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-admin-bg hover:bg-admin-sideBg hover:text-white text-admin-sideBg font-black text-xs">
                                 <i class="ph ph-receipt text-sm"></i>
                                 <span>Nota</span>
                             </a>
                         </td>
                     </tr>
                 `;
-            });
-            tbody.html(html);
+            }).join('');
         }
 
-        $('#pagination-info').text(`Menampilkan ${slice.length} dari ${totalItems} transaksi`);
-        $('#page-indicator').text(`Hal ${currentPage} / ${totalPages}`);
-        $('#btn-prev-page').prop('disabled', currentPage <= 1);
-        $('#btn-next-page').prop('disabled', currentPage >= totalPages);
+        document.getElementById('pagination-info').textContent = `Menampilkan ${slice.length} dari ${totalItems} transaksi`;
+        document.getElementById('page-indicator').textContent  = `Hal ${currentPage} / ${totalPages}`;
+        document.getElementById('btn-prev-page').disabled      = currentPage <= 1;
+        document.getElementById('btn-next-page').disabled      = currentPage >= totalPages;
     }
 
     function setGranularityUI(gran) {
         filterState.granularity = gran;
-        $('.granularity-btn').removeClass('bg-admin-sideBg text-white shadow-sm').addClass('text-admin-textMuted');
-        $(`.granularity-btn[data-granularity="${gran}"]`).removeClass('text-admin-textMuted').addClass('bg-admin-sideBg text-white shadow-sm');
+        document.querySelectorAll('.granularity-btn').forEach((btn) => {
+            if (btn.dataset.granularity === gran) {
+                btn.classList.remove('text-admin-textMuted');
+                btn.classList.add('bg-admin-sideBg', 'text-white', 'shadow-sm');
+            } else {
+                btn.classList.remove('bg-admin-sideBg', 'text-white', 'shadow-sm');
+                btn.classList.add('text-admin-textMuted');
+            }
+        });
     }
 
+    // --- NAMED EVENT HANDLERS FOR ZERO MEMORY LEAK ---
     function handleDocClick(e) {
         if (!e.target.closest('#wrapper-status')) {
             document.getElementById('menu-status')?.classList.add('hidden');
             document.getElementById('btn-status')?.setAttribute('aria-expanded', 'false');
         }
-    }
 
-    function handleDocKeydown(e) {
-        if (e.key === 'Escape') {
-            document.getElementById('menu-status')?.classList.add('hidden');
-            document.getElementById('btn-status')?.setAttribute('aria-expanded', 'false');
-        }
-    }
+        const presetBtn = e.target.closest('.preset-date-btn');
+        if (presetBtn) {
+            document.querySelectorAll('.preset-date-btn').forEach((b) => {
+                b.classList.remove('bg-white', 'text-admin-sideBg', 'shadow-sm');
+                b.classList.add('text-admin-textMuted');
+            });
+            presetBtn.classList.remove('text-admin-textMuted');
+            presetBtn.classList.add('bg-white', 'text-admin-sideBg', 'shadow-sm');
 
-    function cleanupResources() {
-        document.removeEventListener('click', handleDocClick);
-        document.removeEventListener('keydown', handleDocKeydown);
-        if (activeAbortController) activeAbortController.abort();
-        if (toastTimerId) clearTimeout(toastTimerId);
-        if (revChartInstance) revChartInstance.destroy();
-        if (unpaidChartInstance) unpaidChartInstance.destroy();
-        if (fpUniversal) fpUniversal.destroy();
-    }
-
-    $(document).ready(function() {
-        document.addEventListener('click', handleDocClick);
-        document.addEventListener('keydown', handleDocKeydown);
-        window.addEventListener('beforeunload', cleanupResources, { once: true });
-
-        // 1. KALENDER PILIH TANGGAL BEBAS
-        fpUniversal = flatpickr("#universal-date-range", {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            locale: "id",
-            defaultDate: [filterState.start_date, filterState.end_date],
-            onChange: function(selectedDates) {
-                if (selectedDates.length === 2) {
-                    filterState.start_date = flatpickr.formatDate(selectedDates[0], "Y-m-d");
-                    filterState.end_date   = flatpickr.formatDate(selectedDates[1], "Y-m-d");
-
-                    $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
-
-                    const diffDays = Math.round((selectedDates[1] - selectedDates[0]) / 86400000) + 1;
-                    if (diffDays <= 14) setGranularityUI('daily');
-                    else if (diffDays <= 62) setGranularityUI('weekly');
-                    else if (diffDays <= 366) setGranularityUI('monthly');
-                    else setGranularityUI('yearly');
-
-                    fetchDashboardData();
-                    showToast('Filter Tanggal Bebas Aktif', `Seluruh data difilter: ${filterState.start_date} s/d ${filterState.end_date}`);
-                }
-            }
-        });
-
-        // 2. KLIK PRESET TANGGAL (7 Hari, 30 Hari, Bulan Ini, Tahun Ini)
-        $('.preset-date-btn').on('click', function() {
-            $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
-            $(this).removeClass('text-admin-textMuted').addClass('bg-white text-admin-sideBg shadow-sm');
-
-            const preset = $(this).data('preset');
+            const preset = presetBtn.dataset.preset;
             const end = new Date();
             let start = new Date();
 
@@ -1054,24 +1330,30 @@
 
             filterState.start_date = toYMD(start);
             filterState.end_date   = toYMD(end);
-            fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
+            if (fpUniversal) fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
 
             fetchDashboardData();
-            showToast('Preset Rentang Aktif', `Menampilkan data ${$(this).text()} (${filterState.start_date} s/d ${filterState.end_date})`);
-        });
+            showToast('Preset Rentang Aktif', `Menampilkan data ${presetBtn.textContent.trim()} (${filterState.start_date} s/d ${filterState.end_date})`);
+            return;
+        }
 
-        // 3. KLIK FILTER SUMBER TRANSAKSI (Semua / Web / WA Bot)
-        $('.source-filter-btn').on('click', function() {
-            $('.source-filter-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
-            $(this).removeClass('text-admin-textMuted').addClass('bg-white text-admin-sideBg shadow-sm');
-            filterState.order_source = $(this).data('source');
+        const sourceBtn = e.target.closest('.source-filter-btn');
+        if (sourceBtn) {
+            document.querySelectorAll('.source-filter-btn').forEach((b) => {
+                b.classList.remove('bg-white', 'text-admin-sideBg', 'shadow-sm');
+                b.classList.add('text-admin-textMuted');
+            });
+            sourceBtn.classList.remove('text-admin-textMuted');
+            sourceBtn.classList.add('bg-white', 'text-admin-sideBg', 'shadow-sm');
+            filterState.order_source = sourceBtn.dataset.source;
             fetchDashboardData();
-            showToast('Filter Channel Diubah', `Menampilkan transaksi dari: ${$(this).find('span').text()}`);
-        });
+            showToast('Filter Channel Diubah', `Menampilkan transaksi dari: ${sourceBtn.textContent.trim()}`);
+            return;
+        }
 
-        // 4. KLIK KELOMPOK WAKTU GRAFIK (Otomatis sesuaikan rentang jika terlalu sempit agar garis grafik selalu terbentuk)
-        $('.granularity-btn').on('click', function() {
-            const gran = $(this).data('granularity');
+        const granBtn = e.target.closest('.granularity-btn');
+        if (granBtn) {
+            const gran = granBtn.dataset.granularity;
             setGranularityUI(gran);
 
             const sDate = new Date(filterState.start_date + 'T00:00:00');
@@ -1082,100 +1364,188 @@
                 const newStart = new Date(eDate);
                 newStart.setDate(eDate.getDate() - 27);
                 filterState.start_date = toYMD(newStart);
-                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
-                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+                if (fpUniversal) fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
             } else if (gran === 'monthly' && diffDays < 45) {
                 const newStart = new Date(eDate.getFullYear(), eDate.getMonth() - 5, 1);
                 filterState.start_date = toYMD(newStart);
-                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
-                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+                if (fpUniversal) fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
             } else if (gran === 'yearly' && diffDays < 366) {
                 const newStart = new Date(eDate.getFullYear() - 3, 0, 1);
                 filterState.start_date = toYMD(newStart);
-                fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
-                $('.preset-date-btn').removeClass('bg-white text-admin-sideBg shadow-sm').addClass('text-admin-textMuted');
+                if (fpUniversal) fpUniversal.setDate([filterState.start_date, filterState.end_date], false);
             }
 
             fetchDashboardData();
-        });
+            return;
+        }
+    }
 
-        $('#btn-print-report').on('click', function() {
-            window.print();
-        });
+    function handleDocKeydown(e) {
+        if (e.key === 'Escape') {
+            document.getElementById('menu-status')?.classList.add('hidden');
+            document.getElementById('btn-status')?.setAttribute('aria-expanded', 'false');
+        }
+    }
 
-        $('#btn-jump-piutang').on('click', function() {
-            $('.cb-status').prop('checked', false);
-            $('.cb-status[value="paid_dp"], .cb-status[value="unpaid"]').prop('checked', true);
+    function handlePrintClick() {
+        window.print();
+    }
+
+    function handleJumpPiutangClick() {
+        document.querySelectorAll('.cb-status').forEach((cb) => {
+            cb.checked = (cb.value === 'paid_dp' || cb.value === 'unpaid');
+        });
+        updateStatusLabel();
+        currentPage = 1;
+        applyTableFilters();
+        document.getElementById('section-tabel-riwayat')?.scrollIntoView({ behavior: 'smooth' });
+        showToast('Filter Piutang Aktif', 'Menampilkan pesanan yang belum lunas (DP 30% & Unpaid).');
+    }
+
+    function handleStatusBtnClick(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('menu-status');
+        const btn  = document.getElementById('btn-status');
+        if (!menu || !btn) return;
+        const isHidden = menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', !isHidden);
+        btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    }
+
+    function handleCloseStatusMenuClick() {
+        document.getElementById('menu-status')?.classList.add('hidden');
+        document.getElementById('btn-status')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function handleStatusCheckboxChange(e) {
+        if (e.target.classList.contains('cb-status')) {
             updateStatusLabel();
             currentPage = 1;
             applyTableFilters();
-            document.getElementById('section-tabel-riwayat')?.scrollIntoView({ behavior: 'smooth' });
-            showToast('Filter Piutang Aktif', 'Menampilkan pesanan yang belum lunas (DP 30% & Unpaid).');
-        });
+        }
+    }
 
-        $('#btn-status').on('click', function(e) {
-            e.stopPropagation();
-            const menu = $('#menu-status');
-            const isHidden = menu.hasClass('hidden');
-            menu.toggleClass('hidden', !isHidden);
-            $(this).attr('aria-expanded', isHidden ? 'true' : 'false');
-        });
+    function handleResetTableFilterClick() {
+        const searchEl = document.getElementById('filter-search');
+        if (searchEl) searchEl.value = '';
+        document.querySelectorAll('.cb-status').forEach((cb) => { cb.checked = false; });
+        updateStatusLabel();
+        currentPage = 1;
+        applyTableFilters();
+        showToast('Filter Tabel Direset', 'Menampilkan seluruh transaksi pada periode aktif.');
+    }
 
-        $('#btn-close-status-menu').on('click', function() {
-            $('#menu-status').addClass('hidden');
-            $('#btn-status').attr('aria-expanded', 'false');
-        });
+    function handleSearchInput() {
+        currentPage = 1;
+        applyTableFilters();
+    }
 
-        $('.cb-status').on('change', function() {
-            updateStatusLabel();
-            currentPage = 1;
-            applyTableFilters();
-        });
+    function handlePrevPageClick() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+        }
+    }
 
-        $('#btn-reset-table-filter').on('click', function() {
-            $('#filter-search').val('');
-            $('.cb-status').prop('checked', false);
-            updateStatusLabel();
-            currentPage = 1;
-            applyTableFilters();
-            showToast('Filter Tabel Direset', 'Menampilkan seluruh transaksi pada periode aktif.');
-        });
+    function handleNextPageClick() {
+        const totalPages = Math.ceil(filteredTransactions.length / perPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+        }
+    }
 
-        $('#filter-search').on('input', function() {
-            currentPage = 1;
-            applyTableFilters();
+    function handleExportCsvClick() {
+        if (filteredTransactions.length === 0) {
+            showToast('Data Kosong', 'Tidak ada transaksi yang dapat diunduh.', false);
+            return;
+        }
+        let csv = 'No Pesanan,Waktu Checkout,Pelanggan,No WA,Channel,Metode,Kas Masuk,Sisa Tagihan,Total Order,Status Bayar\n';
+        filteredTransactions.forEach((r) => {
+            csv += `"${r.order_number}","${r.created_at}","${r.recipient_name}","${r.recipient_whatsapp}","${r.order_source}","${r.payment_method}",${r.paid_amount},${r.remaining_amount},${r.total_amount},"${r.payment_status}"\n`;
         });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Laporan_Finansial_RayaKitchen_${filterState.start_date}_${filterState.end_date}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV Berhasil Diunduh', `${filteredTransactions.length} baris transaksi berhasil diekspor.`);
+    }
 
-        $('#btn-prev-page').on('click', function() {
-            if (currentPage > 1) { currentPage--; renderTable(); }
-        });
+    function mount() {
+        document.addEventListener('click', handleDocClick);
+        document.addEventListener('keydown', handleDocKeydown);
+        document.addEventListener('change', handleStatusCheckboxChange);
 
-        $('#btn-next-page').on('click', function() {
-            const totalPages = Math.ceil(filteredTransactions.length / perPage);
-            if (currentPage < totalPages) { currentPage++; renderTable(); }
-        });
+        document.getElementById('btn-print-report')?.addEventListener('click', handlePrintClick);
+        document.getElementById('btn-jump-piutang')?.addEventListener('click', handleJumpPiutangClick);
+        document.getElementById('btn-status')?.addEventListener('click', handleStatusBtnClick);
+        document.getElementById('btn-close-status-menu')?.addEventListener('click', handleCloseStatusMenuClick);
+        document.getElementById('btn-reset-table-filter')?.addEventListener('click', handleResetTableFilterClick);
+        document.getElementById('filter-search')?.addEventListener('input', handleSearchInput);
+        document.getElementById('btn-prev-page')?.addEventListener('click', handlePrevPageClick);
+        document.getElementById('btn-next-page')?.addEventListener('click', handleNextPageClick);
+        document.getElementById('btn-export-csv')?.addEventListener('click', handleExportCsvClick);
 
-        $('#btn-export-csv').on('click', function() {
-            if (filteredTransactions.length === 0) {
-                showToast('Data Kosong', 'Tidak ada transaksi yang dapat diunduh.', false);
-                return;
+        window.addEventListener('beforeunload', teardown);
+
+        fpUniversal = flatpickr("#universal-date-range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: "id",
+            defaultDate: [filterState.start_date, filterState.end_date],
+            onChange: function(selectedDates) {
+                if (selectedDates.length === 2) {
+                    filterState.start_date = flatpickr.formatDate(selectedDates[0], "Y-m-d");
+                    filterState.end_date   = flatpickr.formatDate(selectedDates[1], "Y-m-d");
+
+                    document.querySelectorAll('.preset-date-btn').forEach((b) => {
+                        b.classList.remove('bg-white', 'text-admin-sideBg', 'shadow-sm');
+                        b.classList.add('text-admin-textMuted');
+                    });
+
+                    const diffDays = Math.round((selectedDates[1] - selectedDates[0]) / 86400000) + 1;
+                    if (diffDays <= 14) setGranularityUI('daily');
+                    else if (diffDays <= 62) setGranularityUI('weekly');
+                    else if (diffDays <= 366) setGranularityUI('monthly');
+                    else setGranularityUI('yearly');
+
+                    fetchDashboardData();
+                    showToast('Filter Tanggal Bebas Aktif', `Seluruh data difilter: ${filterState.start_date} s/d ${filterState.end_date}`);
+                }
             }
-            let csv = 'No Pesanan,Waktu Checkout,Pelanggan,No WA,Channel,Metode,Kas Masuk,Sisa Tagihan,Total Order,Status Bayar\n';
-            filteredTransactions.forEach(r => {
-                csv += `"${r.order_number}","${r.created_at}","${r.recipient_name}","${r.recipient_whatsapp}","${r.order_source}","${r.payment_method}",${r.paid_amount},${r.remaining_amount},${r.total_amount},"${r.payment_status}"\n`;
-            });
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Laporan_Finansial_RayaKitchen_${filterState.start_date}_${filterState.end_date}.csv`;
-            link.click();
-            URL.revokeObjectURL(url);
-            showToast('CSV Berhasil Diunduh', `${filteredTransactions.length} baris transaksi berhasil diekspor.`);
         });
 
         fetchDashboardData();
-    });
+    }
+
+    function teardown() {
+        document.removeEventListener('click', handleDocClick);
+        document.removeEventListener('keydown', handleDocKeydown);
+        document.removeEventListener('change', handleStatusCheckboxChange);
+
+        document.getElementById('btn-print-report')?.removeEventListener('click', handlePrintClick);
+        document.getElementById('btn-jump-piutang')?.removeEventListener('click', handleJumpPiutangClick);
+        document.getElementById('btn-status')?.removeEventListener('click', handleStatusBtnClick);
+        document.getElementById('btn-close-status-menu')?.removeEventListener('click', handleCloseStatusMenuClick);
+        document.getElementById('btn-reset-table-filter')?.removeEventListener('click', handleResetTableFilterClick);
+        document.getElementById('filter-search')?.removeEventListener('input', handleSearchInput);
+        document.getElementById('btn-prev-page')?.removeEventListener('click', handlePrevPageClick);
+        document.getElementById('btn-next-page')?.removeEventListener('click', handleNextPageClick);
+        document.getElementById('btn-export-csv')?.removeEventListener('click', handleExportCsvClick);
+
+        window.removeEventListener('beforeunload', teardown);
+
+        if (activeAbortController) activeAbortController.abort();
+        clearAllTimers();
+        if (revChartInstance) revChartInstance.destroy();
+        if (unpaidChartInstance) unpaidChartInstance.destroy();
+        if (fpUniversal) fpUniversal.destroy();
+    }
+
+    mount();
 })();
 </script>
 @endpush

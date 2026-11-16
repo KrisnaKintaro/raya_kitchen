@@ -14,7 +14,7 @@
         Riwayat Pesanan Saya
     </h2>
     <p class="text-buyer-textSecondary font-semibold text-sm md:text-base">
-        Pantau status pesanan, estimasi kurir, dan bukti pengiriman roti & kue kamu di sini.
+        Pantau status pesanan, nomor resi, posisi kurir terkini, dan bukti pengiriman roti & kue kamu di sini.
     </p>
 </div>
 
@@ -59,7 +59,7 @@
 
 <!-- Template Kosong -->
 <div id="empty-state" class="hidden bg-buyer-bg p-12 rounded-[2rem] text-center shadow-[inset_0_-4px_6px_rgba(192,153,206,0.2),inset_0_4px_6px_rgba(255,255,255,1),0_10px_20px_rgba(192,153,206,0.15)] border border-white">
-    <div class="w-16 h-16 bg-buyer-primary/10 text-buyer-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-black">🍞</div>
+    <div class="w-16 h-16 bg-buyer-primary/10 text-buyer-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-black">!</div>
     <h3 class="font-extrabold text-buyer-textPrimary text-lg mb-1">Belum Ada Pesanan di Kategori Ini</h3>
     <p class="text-buyer-textSecondary text-sm font-semibold mb-6">Coba cek tab status yang lain atau mulai belanja lagi yuk!</p>
     <a href="{{ route('katalog') }}" class="inline-block py-3 px-6 bg-buyer-primary text-white font-extrabold text-sm rounded-xl shadow-[inset_0_-3px_4px_rgba(0,0,0,0.15),inset_0_3px_4px_rgba(255,255,255,0.4)] hover:-translate-y-[2px] transition-all">Mulai Belanja</a>
@@ -73,7 +73,7 @@
                 <span id="proof-modal-badge" class="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-green-100 text-green-700">Bukti Pengiriman</span>
                 <h3 id="proof-modal-title" class="text-lg font-black text-buyer-textPrimary mt-1">Pesanan #RK-000</h3>
             </div>
-            <button type="button" onclick="closeProofModal()" class="w-9 h-9 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 font-black text-xl rounded-full shadow-sm transition-colors">×</button>
+            <button type="button" onclick="closeProofModal()" class="w-9 h-9 flex items-center justify-center bg-white text-gray-500 hover:text-red-500 font-black text-xl rounded-full shadow-sm transition-colors">&times;</button>
         </div>
 
         <div class="space-y-4">
@@ -92,7 +92,7 @@
                 <div class="rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex justify-center">
                     <img id="proof-modal-arrival-img" src="" alt="Bukti Barang Sampai" class="max-h-72 w-auto object-contain">
                 </div>
-                <a id="proof-modal-arrival-link" href="#" target="_blank" class="mt-2 inline-block w-full text-center text-xs font-bold text-purple-600 hover:underline">Buka Gambar Ukuran Penuh →</a>
+                <a id="proof-modal-arrival-link" href="#" target="_blank" class="mt-2 inline-block w-full text-center text-xs font-bold text-purple-600 hover:underline">Buka Gambar Ukuran Penuh</a>
             </div>
 
             <!-- Foto Bukti Pelunasan COD/DP (Jika Ada) -->
@@ -104,7 +104,7 @@
                 <div class="rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex justify-center">
                     <img id="proof-modal-payment-img" src="" alt="Bukti Pelunasan" class="max-h-72 w-auto object-contain">
                 </div>
-                <a id="proof-modal-payment-link" href="#" target="_blank" class="mt-2 inline-block w-full text-center text-xs font-bold text-purple-600 hover:underline">Buka Bukti Pelunasan Ukuran Penuh →</a>
+                <a id="proof-modal-payment-link" href="#" target="_blank" class="mt-2 inline-block w-full text-center text-xs font-bold text-purple-600 hover:underline">Buka Bukti Pelunasan Ukuran Penuh</a>
             </div>
         </div>
 
@@ -119,7 +119,7 @@
     <div class="bg-buyer-bg rounded-[2rem] max-w-md w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-[inset_0_-4px_8px_rgba(192,153,206,0.3),inset_0_4px_8px_rgba(255,255,255,1),0_20px_40px_-10px_rgba(192,153,206,0.4)] relative transform scale-95 transition-transform duration-300 border-2 border-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-black text-buyer-textPrimary drop-shadow-sm">Batalkan Pesanan</h3>
-            <button type="button" onclick="closeCancelModal()" class="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-red-500 font-bold text-xl rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] transition-colors">×</button>
+            <button type="button" onclick="closeCancelModal()" class="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-red-500 font-bold text-xl rounded-full shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] transition-colors">&times;</button>
         </div>
 
         <form id="form-cancel-order" class="space-y-4">
@@ -169,6 +169,16 @@
 
 @push('script')
 <script>
+window.copyResiRiwayat = function(resi, btnEl) {
+    if (!resi || !navigator.clipboard) return;
+    navigator.clipboard.writeText(resi).then(() => {
+        const span = $(btnEl).find('span');
+        const old = span.text();
+        span.text('Tersalin!');
+        setTimeout(() => span.text(old), 1800);
+    });
+};
+
 $(document).ready(function() {
     let allOrders = [];
     const ordersContainer = $('#orders-container');
@@ -214,14 +224,31 @@ $(document).ready(function() {
         renderOrders($(this).data('filter'));
     });
 
+    function getCourierPositionBadge(order, oStatus, pStatus) {
+        if (oStatus === 'dibatalkan' || pStatus === 'unpaid' || pStatus === 'failed') return '';
+        if (order.is_internal) return '';
+
+        const cStatus = (order.courier_status || (order.tracking_number ? 'in_transit' : 'waiting_resi')).toLowerCase();
+        const map = {
+            waiting_resi: { label: 'Menunggu Input Resi', cls: 'bg-gray-100 text-gray-700 border-gray-300' },
+            in_transit:   { label: 'Paket Dikirim (Transit)', cls: 'bg-blue-100 text-blue-800 border-blue-200' },
+            on_delivery:  { label: 'Kurir Menuju Lokasi', cls: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+            delivered:    { label: 'Paket Telah Sampai', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+            problem:      { label: 'Kendala Kurir', cls: 'bg-red-100 text-red-800 border-red-200' }
+        };
+
+        const active = (oStatus === 'selesai' || order.arrival_proof_url) ? map.delivered : (map[cStatus] || map.waiting_resi);
+        return `<span class="px-2.5 py-0.5 text-[10px] font-black rounded-full border ${active.cls}">${active.label}</span>`;
+    }
+
     function renderOrders(filterType) {
         ordersContainer.empty();
 
         let filteredOrders = allOrders.filter(order => {
             if (filterType === 'semua') return true;
-
             let pStatus = (order.payment_status || '').toLowerCase();
             let oStatus = (order.raw_status || order.status || '').toLowerCase().replace(/\s+/g, '_');
+
             if (['siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'].includes(oStatus)) {
                 oStatus = 'siap_diambil';
             }
@@ -242,8 +269,8 @@ $(document).ready(function() {
             emptyState.removeClass('hidden');
             return;
         }
-
         emptyState.addClass('hidden');
+
         let htmlContent = '';
 
         filteredOrders.forEach(order => {
@@ -255,13 +282,17 @@ $(document).ready(function() {
             }
             let pMethod = (order.payment_method || '').toLowerCase();
             let remainingAmount = parseFloat(order.remaining_amount || 0);
+
             let displayStatus = 'DALAM ANTREAN';
+            let reminderBanner = '';
+            let actionButtons = '';
 
             if (oStatus === 'dibatalkan') {
+                statusColor = 'bg-gray-200 text-gray-700 border border-gray-300';
+                displayStatus = 'DIBATALKAN';
                 if (order.refund_status === 'pending' && !order.refund_account_number) {
                     reminderBanner = `
                         <div class="mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-xs text-amber-900 font-bold flex items-center gap-2">
-                            <span>⚠️</span>
                             <span>Pesanan dibatalkan oleh Admin (${order.cancellation_reason || '-'}). Silakan klik tombol <strong>Isi Rekening Refund</strong> untuk pengembalian dana Anda.</span>
                         </div>
                     `;
@@ -291,43 +322,68 @@ $(document).ready(function() {
             let methodTag = `<span class="px-2.5 py-1 text-[10px] font-black rounded-[12px] border ${methodColor} uppercase tracking-wider">${methodText} (${order.tipe_bayar})</span>`;
 
             let courierBadge = order.is_internal
-                ? `<span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 text-purple-700 border border-purple-200">🛵 ${order.courier_name}</span>`
-                : `<span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">📦 Ekspedisi: ${order.courier_name}</span>`;
+                ? `<span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 text-purple-700 border border-purple-200">${order.courier_name}</span>`
+                : `<span class="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Ekspedisi: ${order.courier_name}</span>`;
 
-            let resiHtml = (!order.is_internal && order.tracking_number)
-                ? `<p><strong class="text-gray-700">No. Resi:</strong> <span class="font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">${order.tracking_number}</span></p>`
-                : '';
+            let courierPosBadge = getCourierPositionBadge(order, oStatus, pStatus);
+
+            // Baris Nomor Resi + Tombol Salin + Box Update Kurir Terkini
+            let resiHtml = '';
+            let latestManifestBanner = '';
+
+            if (!order.is_internal && order.tracking_number) {
+                resiHtml = `
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <strong class="text-gray-700">No. Resi:</strong>
+                        <span class="font-mono font-black text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-100">${order.tracking_number}</span>
+                        <button type="button" onclick="copyResiRiwayat('${order.tracking_number}', this)" class="px-2 py-0.5 bg-white hover:bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-md text-[11px] font-extrabold transition-colors flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                            <span>Salin</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            if (!order.is_internal && Array.isArray(order.courier_manifest) && order.courier_manifest.length > 0 && oStatus !== 'dibatalkan') {
+                const latestLog = order.courier_manifest[0];
+                latestManifestBanner = `
+                    <div class="mt-2.5 p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-indigo-600 animate-ping"></span>
+                                <span class="font-black text-indigo-900 uppercase text-[10px] tracking-wider">Posisi Kurir Terkini (${latestLog.time || '-'})</span>
+                            </div>
+                            <p class="font-semibold text-indigo-800 leading-snug">${latestLog.description || '-'}</p>
+                        </div>
+                        <a href="/nota?order_number=${order.order_number}#live-tracking-section" class="shrink-0 px-3 py-1.5 bg-white hover:bg-indigo-600 hover:text-white text-indigo-700 font-extrabold text-[11px] rounded-xl border border-indigo-200 transition-colors text-center">
+                            Lacak Paket &rarr;
+                        </a>
+                    </div>
+                `;
+            }
 
             // Banner pengingat pelunasan ketika status siap dikirim & masih DP
-            let reminderBanner = '';
             if (oStatus === 'siap_diambil' && pStatus === 'paid_dp' && remainingAmount > 0) {
                 if (pMethod === 'cod') {
                     reminderBanner = `
                         <div class="mt-3 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-800 font-bold flex items-center gap-2">
-                            <span>⚠️</span>
                             <span>Pesanan siap dikirim! Segera siapkan uang tunai pelunasan COD sebesar <strong>${order.sisa_tagihan_formatted}</strong> saat kurir tiba.</span>
                         </div>
                     `;
                 } else {
                     reminderBanner = `
                         <div class="mt-3 p-3 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-bold flex items-center gap-2">
-                            <span>⚠️</span>
                             <span>Pesanan siap dikirim! Segera lunasi sisa pembayaran sebesar <strong>${order.sisa_tagihan_formatted}</strong> via QRIS.</span>
                         </div>
                     `;
                 }
             }
 
-            let actionButtons = '';
-
-            if (oStatus === 'dibatalkan') {
-                actionButtons = `<a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-sm hover:bg-white transition-all">Detail Pembatalan</a>`;
-            } else {
+            if (oStatus !== 'dibatalkan') {
                 if (pStatus !== 'unpaid' && pStatus !== 'failed') {
-                    actionButtons += `<a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-sm hover:bg-white transition-all">Lihat Nota</a>`;
+                    actionButtons += `<a href="/nota?order_number=${order.order_number}" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-buyer-bg text-buyer-primary font-extrabold text-xs rounded-xl shadow-sm hover:bg-white transition-all">${!order.is_internal && order.tracking_number ? 'Nota & Lacak' : 'Lihat Nota'}</a>`;
                 }
 
-                // Tombol Lihat Bukti Pengiriman jika barang sudah sampai (ada arrival_proof_url)
                 if (order.arrival_proof_url) {
                     actionButtons += `
                         <button type="button" onclick="openProofModal('${order.order_number}')" class="flex-1 md:flex-none text-center py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5">
@@ -369,6 +425,7 @@ $(document).ready(function() {
                             </span>
                             ${methodTag}
                             ${courierBadge}
+                            ${courierPosBadge}
                         </div>
                     </div>
                     <h3 class="font-extrabold text-gray-800 text-base md:text-lg">
@@ -380,6 +437,7 @@ $(document).ready(function() {
                         <p><strong class="text-purple-700">${order.schedule_label || 'Jadwal / Estimasi'}:</strong> <span class="font-bold text-gray-800">${order.schedule_text || '-'}</span></p>
                         ${resiHtml}
                     </div>
+                    ${latestManifestBanner}
                     ${reminderBanner}
                 </div>
                 <div class="flex flex-col md:items-end justify-between w-full md:w-auto gap-3 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100 shrink-0">
@@ -463,7 +521,6 @@ $(document).ready(function() {
 
     window.openCancelModal = function(orderNumber, isPaid) {
         $('#cancel_order_number').val(orderNumber);
-
         if(isPaid) {
             $('#refund_info_box').removeClass('hidden');
             $('#refund_bank, #refund_norek, #refund_nama').prop('required', true);
@@ -524,7 +581,6 @@ $(document).ready(function() {
                     closeCancelModal();
                     $('#alert-success').text('Pesanan berhasil dibatalkan.').removeClass('hidden');
                     setTimeout(() => $('#alert-success').addClass('hidden'), 5000);
-
                     let currentFilter = $('.filter-chip.bg-buyer-primary').data('filter') || 'semua';
                     fetchOrders(currentFilter);
                 }

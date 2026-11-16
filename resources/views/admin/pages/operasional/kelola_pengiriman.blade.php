@@ -16,16 +16,13 @@
         --kp-radius-pill: 9999px;
     }
 
-    /* Fluid Typography (Phase 2) */
     .text-fluid-h1 { font-size: clamp(1.35rem, 2vw + 0.5rem, 1.85rem); line-height: 1.2; }
     .text-fluid-h2 { font-size: clamp(1.05rem, 1.2vw + 0.5rem, 1.35rem); line-height: 1.3; }
     .text-fluid-body { font-size: clamp(0.8125rem, 0.4vw + 0.7rem, 0.9375rem); }
 
-    /* Hide Scrollbar */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-    /* Claymorphism Surfaces */
     .clay-card {
         background: var(--kp-bg-60);
         border: 1px solid var(--kp-surface-30);
@@ -36,7 +33,6 @@
         transition: transform 0.2s ease, opacity 0.2s ease;
     }
 
-    /* Ringankan shadow khusus di dalam modal agar komposisi layer GPU super enteng */
     .clay-modal-surface {
         background: var(--kp-bg-60);
         border: 2px solid var(--kp-surface-30);
@@ -52,7 +48,6 @@
         opacity: 1;
     }
 
-    /* 5 Interactive States Buttons */
     .clay-btn {
         background: var(--kp-accent-10);
         color: var(--kp-surface-30);
@@ -64,20 +59,10 @@
         min-width: 44px;
         transition: transform 0.18s ease, opacity 0.18s ease;
     }
-    .clay-btn:hover:not(:disabled) {
-        transform: translateY(-2px);
-    }
-    .clay-btn:focus-visible {
-        outline: 3px solid var(--kp-accent-10);
-        outline-offset: 2px;
-    }
-    .clay-btn:active:not(:disabled) {
-        transform: scale(0.96);
-    }
-    .clay-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .clay-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .clay-btn:focus-visible { outline: 3px solid var(--kp-accent-10); outline-offset: 2px; }
+    .clay-btn:active:not(:disabled) { transform: scale(0.96); }
+    .clay-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .clay-btn-emerald {
         background: #059669;
@@ -90,20 +75,10 @@
         min-width: 44px;
         transition: transform 0.18s ease, opacity 0.18s ease;
     }
-    .clay-btn-emerald:hover:not(:disabled) {
-        transform: translateY(-2px);
-    }
-    .clay-btn-emerald:focus-visible {
-        outline: 3px solid #059669;
-        outline-offset: 2px;
-    }
-    .clay-btn-emerald:active:not(:disabled) {
-        transform: scale(0.96);
-    }
-    .clay-btn-emerald:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .clay-btn-emerald:hover:not(:disabled) { transform: translateY(-2px); }
+    .clay-btn-emerald:focus-visible { outline: 3px solid #059669; outline-offset: 2px; }
+    .clay-btn-emerald:active:not(:disabled) { transform: scale(0.96); }
+    .clay-btn-emerald:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .clay-btn-secondary {
         background: var(--kp-surface-30);
@@ -115,51 +90,28 @@
         min-width: 44px;
         transition: transform 0.18s ease, opacity 0.18s ease;
     }
-    .clay-btn-secondary:hover:not(:disabled) {
-        transform: translateY(-2px);
-    }
-    .clay-btn-secondary:focus-visible {
-        outline: 3px solid var(--kp-accent-10);
-        outline-offset: 2px;
-    }
-    .clay-btn-secondary:active:not(:disabled) {
-        transform: scale(0.96);
-    }
-    .clay-btn-secondary:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+    .clay-btn-secondary:hover:not(:disabled) { transform: translateY(-2px); }
+    .clay-btn-secondary:focus-visible { outline: 3px solid var(--kp-accent-10); outline-offset: 2px; }
+    .clay-btn-secondary:active:not(:disabled) { transform: scale(0.96); }
+    .clay-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Accordion Transition */
     .accordion-content {
         display: grid;
         grid-template-rows: 0fr;
         transition: grid-template-rows 0.25s ease-out;
     }
-    .accordion-content.is-open {
-        grid-template-rows: 1fr;
-    }
-    .accordion-inner {
-        overflow: hidden;
-    }
+    .accordion-content.is-open { grid-template-rows: 1fr; }
+    .accordion-inner { overflow: hidden; }
 
-    /* Staggered Card Entrance (Transform & Opacity Only) */
     @keyframes cardEnter {
-        from {
-            opacity: 0;
-            transform: translateY(12px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     .stagger-card {
         opacity: 0;
         animation: cardEnter 0.28s ease-out forwards;
     }
 
-    /* Slide to Confirm Track */
     .slide-track {
         position: relative;
         background: var(--kp-surface-tint);
@@ -189,13 +141,8 @@
         z-index: 10;
         will-change: transform;
     }
-    .slide-thumb:focus-visible {
-        outline: 3px solid var(--kp-text-main);
-        outline-offset: 2px;
-    }
-    .slide-thumb:active {
-        cursor: grabbing;
-    }
+    .slide-thumb:focus-visible { outline: 3px solid var(--kp-text-main); outline-offset: 2px; }
+    .slide-thumb:active { cursor: grabbing; }
     .slide-text {
         position: absolute;
         inset: 0;
@@ -243,7 +190,7 @@
                 <span>Kelola Pengiriman</span>
             </h1>
             <p class="text-fluid-body font-semibold text-admin-textMuted mt-1">
-                Navigasi kurir internal, pantau status ekspedisi eksternal, dan cek bukti pengiriman kurir.
+                Navigasi kurir internal, validasi keaslian resi & kesesuaian ekspedisi pilihan pembeli, serta verifikasi bukti sampai.
             </p>
         </div>
 
@@ -279,13 +226,12 @@
 </div>
 
 <!-- ========================================================= -->
-<!-- MODAL ENTENG 60FPS (TANPA BACKDROP-BLUR BERAT)            -->
+<!-- MODAL PENYELESAIAN PENGIRIMAN                             -->
 <!-- Mode 1: Upload Bukti (Khusus Kurir Internal)              -->
 <!-- Mode 2: Cek/Inspeksi Bukti Kurir (Khusus Ekspedisi)       -->
 <!-- ========================================================= -->
 <div id="modal-penyelesaian" role="dialog" aria-modal="true" aria-labelledby="modal-title-penyelesaian" class="fixed inset-0 z-50 flex items-center justify-center bg-[#1E1B24]/65 opacity-0 pointer-events-none transition-opacity duration-150 p-4">
     <div id="modal-penyelesaian-card" class="clay-modal-surface w-full max-w-lg p-6 md:p-7 relative max-h-[90dvh] overflow-y-auto hide-scrollbar">
-        <!-- Escape Hatch: Tombol X (Min 44x44px) -->
         <button type="button" id="btn-close-modal" aria-label="Tutup modal" class="min-w-[44px] min-h-[44px] absolute top-5 right-5 rounded-full bg-white text-admin-textMuted shadow-sm hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-admin-sideBg transition-transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
             <i class="ph ph-x text-lg"></i>
         </button>
@@ -303,11 +249,8 @@
         </div>
 
         <form id="form-penyelesaian" class="flex flex-col gap-4" enctype="multipart/form-data">
-            <!-- ===================================================== -->
-            <!-- MODE A: FORM UPLOAD (KHUSUS KURIR INTERNAL TOKO)      -->
-            <!-- ===================================================== -->
+            <!-- MODE A: FORM UPLOAD (KHUSUS KURIR INTERNAL TOKO) -->
             <div id="mode-internal-upload" class="flex flex-col gap-4">
-                <!-- Upload 1: Bukti Barang Sampai -->
                 <div class="p-4 rounded-2xl bg-white border border-admin-accent/40">
                     <div class="flex items-center justify-between mb-1.5">
                         <label for="input-bukti-sampai" class="text-xs font-black uppercase tracking-wider text-admin-textMain flex items-center gap-1.5">
@@ -368,17 +311,13 @@
                 </div>
             </div>
 
-            <!-- ===================================================== -->
-            <!-- MODE B: INSPEKSI BUKTI DARI KURIR EKSTERNAL (READONLY)-->
-            <!-- Admin hanya mengecek foto yang dikirim kurir eksternal-->
-            <!-- ===================================================== -->
+            <!-- MODE B: INSPEKSI BUKTI DARI KURIR EKSTERNAL (READONLY) -->
             <div id="mode-ekspedisi-review" class="hidden flex-col gap-4">
                 <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-start gap-2.5 text-xs font-bold text-emerald-800">
                     <i class="ph ph-shield-check text-lg text-emerald-600 shrink-0 mt-0.5"></i>
-                    <span>Bukti berikut dikirimkan otomatis oleh sistem <strong>Kurir Eksternal</strong>. Silakan periksa keabsahan foto sebelum menyelesaikan pesanan.</span>
+                    <span>Bukti berikut dikirimkan oleh <strong>Kurir Eksternal</strong>. Silakan periksa foto sebelum menyelesaikan pesanan.</span>
                 </div>
 
-                <!-- Preview 1: Foto Bukti Barang Sampai dari Kurir -->
                 <div class="p-4 rounded-2xl bg-white border border-admin-accent/50">
                     <div class="flex items-center justify-between mb-2">
                         <span class="text-xs font-black uppercase tracking-wider text-admin-textMain flex items-center gap-1.5">
@@ -395,7 +334,6 @@
                     </div>
                 </div>
 
-                <!-- Preview 2: Foto Bukti Pelunasan COD dari Kurir (Muncul Jika COD/DP) -->
                 <div id="section-ekspedisi-cod-review" class="hidden flex-col gap-2.5 p-4 rounded-2xl bg-amber-50 border border-amber-200">
                     <div class="flex items-center justify-between">
                         <div>
@@ -431,14 +369,12 @@
 <script>
 /**
  * ===================================================================
- * KELOLA PENGIRIMAN MODULE (v10.0-Ultimate-Chameleon-UX)
- * Ultra-Smooth 60fps Modal + Pemisahan Upload Internal vs Cek Bukti Eksternal
+ * KELOLA PENGIRIMAN MODULE (v13.0 - Clean Anti-Fake & Anti-Cross Courier)
  * ===================================================================
  */
 (function() {
     'use strict';
 
-    // --- STATE & RESOURCE TRACKERS (ZERO MEMORY LEAK) ---
     let fetchAbortController = null;
     let actionAbortController = null;
     const activeTimers = new Set();
@@ -450,7 +386,7 @@
     let activeSlider = null;
     let targetOrderContext = null;
 
-    // --- DOM REFERENCES ---
+    // DOM References
     const tabBtns = document.querySelectorAll('.tab-btn');
     const tabPanes = document.querySelectorAll('.tab-pane');
     const internalList = document.getElementById('internal-list');
@@ -470,13 +406,11 @@
     const modalOrderId = document.getElementById('modal-order-id');
     const modalChannelBadge = document.getElementById('modal-channel-badge');
 
-    // Mode Containers
     const modeInternalUpload = document.getElementById('mode-internal-upload');
     const sectionInternalCod = document.getElementById('section-internal-cod');
     const modeEkspedisiReview = document.getElementById('mode-ekspedisi-review');
     const sectionEkspedisiCodReview = document.getElementById('section-ekspedisi-cod-review');
 
-    // Inputs & Previews (Internal)
     const modalSisaTagihan = document.getElementById('modal-sisa-tagihan');
     const modalMetodeLabel = document.getElementById('modal-metode-label');
     const inputBuktiSampai = document.getElementById('input-bukti-sampai');
@@ -485,7 +419,6 @@
     const inputBuktiBayar = document.getElementById('input-bukti-bayar');
     const previewBuktiBayar = document.getElementById('preview-bukti-bayar');
 
-    // Elements (Ekspedisi Inspection)
     const imgReviewArrival = document.getElementById('img-review-arrival');
     const linkFullArrival = document.getElementById('link-full-arrival');
     const imgReviewPayment = document.getElementById('img-review-payment');
@@ -495,7 +428,6 @@
     const btnSubmitPenyelesaian = document.getElementById('btn-submit-penyelesaian');
     const btnSubmitText = document.getElementById('btn-submit-text');
 
-    // --- SAFE TIMER HELPER ---
     function registerTimeout(fn, delay) {
         const id = window.setTimeout(() => {
             activeTimers.delete(id);
@@ -510,7 +442,6 @@
         activeTimers.clear();
     }
 
-    // --- FORMATTERS ---
     function formatRp(num) {
         return new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -539,11 +470,11 @@
     function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
+            .replace(/&/g, '&' + 'amp;')
+            .replace(/</g, '&' + 'lt;')
+            .replace(/>/g, '&' + 'gt;')
+            .replace(/"/g, '&' + 'quot;')
+            .replace(/'/g, '&' + '#039;');
     }
 
     function getCsrfToken() {
@@ -557,7 +488,6 @@
             || null;
     }
 
-    // --- SKELETON & EMPTY STATES ---
     function renderSkeletons(container) {
         if (!container) return;
         container.innerHTML = [1, 2].map(() => `
@@ -602,19 +532,19 @@
                 step: 1
             },
             in_transit: {
-                label: 'Dalam Perjalanan (Transit)',
+                label: 'Paket Dikirim (Transit)',
                 badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
                 icon: 'ph-truck',
                 step: 2
             },
             on_delivery: {
-                label: 'Kurir Menuju Alamat',
+                label: 'Kurir Menuju Lokasi',
                 badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-300',
                 icon: 'ph-navigation-arrow',
                 step: 3
             },
             delivered: {
-                label: 'Barang Sampai (Bukti Kurir Masuk)',
+                label: 'Barang Sampai (POD Masuk)',
                 badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
                 icon: 'ph-check-circle',
                 step: 4
@@ -645,8 +575,9 @@
 
         const itemsHtml = (order.items || []).map((item) => `
             <div class="flex justify-between items-center py-2.5 border-b border-white last:border-0 text-xs sm:text-sm">
-                <span class="font-bold text-admin-textMain">
-                    ${escapeHtml(item.name)}
+                <span class="font-bold text-admin-textMain flex items-center gap-2">
+                    <i class="ph ph-check-circle text-emerald-600 text-sm"></i>
+                    <span>${escapeHtml(item.name)}</span>
                     <span class="text-admin-sideBg font-black ml-1">x${Number(item.qty)}</span>
                 </span>
                 <span class="font-black text-admin-textMuted">${formatRp(item.subtotal || (item.qty * item.price))}</span>
@@ -740,8 +671,7 @@
 
             actionHtml = `
                 <div class="mt-4 pt-4 border-t border-admin-accent/50">
-                    <div class="slide-track w-full"
-                         data-order-id="${escapeHtml(order.id)}">
+                    <div class="slide-track w-full" data-order-id="${escapeHtml(order.id)}">
                         <div class="slide-fill"></div>
                         <div class="slide-text">
                             <span>${slideLabel}</span>
@@ -754,13 +684,17 @@
                 </div>
             `;
         } else {
-            // === PANEL EKSPEDISI EKSTERNAL (KURIR YANG UPLOAD BUKTI, ADMIN CUMA NGECEK) ===
+            // === PANEL EKSPEDISI EKSTERNAL: SIMPEL, BERSIH (CEK RESI ASLI & ANTI-SILANG KURIR) ===
             const cMeta = getCourierStatusMeta(order.courier_status);
+            const hasResi = Boolean(order.tracking_number && String(order.tracking_number).trim() !== '');
+            const isPermanentlyLocked = hasResi && ['on_delivery', 'delivered'].includes(order.courier_status);
             const isDeliveredByCourier = order.courier_status === 'delivered';
             const manifestList = Array.isArray(order.courier_manifest) ? order.courier_manifest : [];
+            const courierCodeUpper = escapeHtml(order.courier_code || 'JNE');
+            const resiHintText = escapeHtml(order.resi_format_hint || `Wajib format resi ${courierCodeUpper}`);
 
             const manifestHtml = manifestList.length > 0
-                ? `<div class="mt-3 pt-3 border-t border-admin-bg max-h-36 overflow-y-auto space-y-2 pr-1">
+                ? `<div class="mt-3 pt-3 border-t border-admin-bg max-h-40 overflow-y-auto space-y-2 pr-1">
                        ${manifestList.map((m, mIdx) => `
                            <div class="flex items-start gap-2.5 text-xs ${mIdx === 0 ? 'text-admin-textMain font-bold' : 'text-admin-textMuted font-medium'}">
                                <span class="w-2 h-2 rounded-full mt-1.5 shrink-0 ${mIdx === 0 ? 'bg-emerald-500' : 'bg-admin-accent'}"></span>
@@ -774,13 +708,13 @@
                            </div>
                        `).join('')}
                    </div>`
-                : `<p class="text-[11px] font-semibold text-admin-textMuted italic mt-2">Belum ada riwayat manifest dari API kurir.</p>`;
+                : `<p class="text-[11px] font-semibold text-admin-textMuted italic mt-2">Belum ada riwayat pengiriman.</p>`;
 
             const steps = [
                 { num: 1, label: 'Input Resi' },
-                { num: 2, label: 'Transit Kurir' },
-                { num: 3, label: 'Sedang Diantar' },
-                { num: 4, label: 'Bukti Kurir Masuk' }
+                { num: 2, label: 'Paket Dikirim' },
+                { num: 3, label: 'Menuju Lokasi' },
+                { num: 4, label: 'Barang Sampai' }
             ];
             const stepperHtml = `
                 <div class="grid grid-cols-4 gap-2 my-3">
@@ -796,7 +730,89 @@
                 </div>
             `;
 
-            // Ringkasan Bukti Foto yang dikirim oleh Kurir Eksternal langsung di dalam Card
+            const lockedResiBoxHtml = hasResi ? `
+                <div id="box-locked-resi-${escapeHtml(order.id)}" class="mt-3 p-3.5 rounded-2xl bg-admin-bg/70 border border-admin-accent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-admin-textMuted">No. Resi (${courierCodeUpper})</span>
+                            ${isPermanentlyLocked
+                                ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase border border-emerald-200">
+                                       <i class="ph ph-lock-key text-xs"></i> Terkunci Permanen
+                                   </span>`
+                                : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-100 text-admin-sideBg text-[10px] font-black uppercase border border-purple-200">
+                                       <i class="ph ph-shield-check text-xs"></i> Resi Asli & Sesuai Kurir ${courierCodeUpper}
+                                   </span>`
+                            }
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="font-mono text-base font-black text-admin-textMain tracking-wider">${escapeHtml(order.tracking_number)}</span>
+                            <button type="button" class="btn-copy-resi px-2 py-1 rounded-lg bg-white border border-admin-accent text-[11px] font-black text-admin-sideBg hover:bg-admin-navBg transition-colors flex items-center gap-1" data-resi="${escapeHtml(order.tracking_number)}">
+                                <i class="ph ph-copy"></i> Salin
+                            </button>
+                        </div>
+                    </div>
+
+                    ${!isPermanentlyLocked ? `
+                        <div class="flex items-center gap-2 w-full sm:w-auto">
+                            <button type="button"
+                                    class="btn-buka-koreksi-resi clay-btn-secondary px-3.5 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 w-full sm:w-auto"
+                                    data-order-id="${escapeHtml(order.id)}">
+                                <i class="ph ph-pencil-simple text-sm"></i>
+                                <span>Koreksi Resi</span>
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : '';
+
+            const editResiBoxHtml = !isPermanentlyLocked ? `
+                <div id="box-edit-resi-${escapeHtml(order.id)}" class="${hasResi ? 'hidden' : ''} mt-3 p-4 rounded-2xl bg-admin-bg/50 border-2 border-dashed border-admin-accent space-y-3">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-xs font-black text-admin-textMain flex items-center gap-1.5">
+                            <i class="ph ph-barcode text-base text-admin-sideBg"></i>
+                            <span>${hasResi ? 'Koreksi Nomor Resi Pengiriman' : 'Input Nomor Resi Ekspedisi'}</span>
+                        </span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-[10px] font-black uppercase border border-indigo-200">
+                            Pilihan Pembeli: ${escapeHtml(order.courier)}
+                        </span>
+                    </div>
+
+                    <div class="p-3 rounded-xl bg-white border border-admin-accent/50 text-[11px] space-y-1">
+                        <p class="font-bold text-admin-textMain">
+                            <span class="text-admin-sideBg font-black">Format Wajib ${courierCodeUpper}:</span> ${resiHintText}.
+                        </p>
+                        <p class="font-semibold text-admin-textMuted">
+                            Sistem otomatis menolak <strong>resi bohongan/asal ketik</strong> serta menolak <strong>resi dari ekspedisi lain</strong> yang tidak sesuai dengan pilihan checkout pembeli.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="relative flex-1">
+                            <i class="ph ph-barcode absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-textMuted text-base"></i>
+                            <input type="text"
+                                   id="input-resi-${escapeHtml(order.id)}"
+                                   value="${escapeHtml(order.tracking_number || '')}"
+                                   placeholder="Masukkan No. Resi ${courierCodeUpper}..."
+                                   class="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-white border border-admin-accent text-xs font-black text-admin-textMain uppercase focus:outline-none focus:ring-2 focus:ring-admin-sideBg">
+                        </div>
+                        ${hasResi ? `
+                            <button type="button"
+                                    class="btn-batal-koreksi-resi clay-btn-secondary px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shrink-0"
+                                    data-order-id="${escapeHtml(order.id)}">
+                                <i class="ph ph-x text-sm"></i>
+                                <span>Batal</span>
+                            </button>
+                        ` : ''}
+                        <button type="button"
+                                class="btn-simpan-resi clay-btn px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shrink-0"
+                                data-order-id="${escapeHtml(order.id)}">
+                            <i class="ph ph-shield-check text-base"></i>
+                            <span>${hasResi ? 'Simpan Koreksi' : 'Validasi & Kunci Resi'}</span>
+                        </button>
+                    </div>
+                </div>
+            ` : '';
+
             const courierProofPreviewHtml = isDeliveredByCourier && order.arrival_proof_url
                 ? `<div class="mt-3 pt-3 border-t border-emerald-200/70 bg-emerald-50/60 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
                        <div class="flex items-center gap-3">
@@ -814,9 +830,9 @@
             detailedAddressSection = `
                 <div class="mb-4 p-4 rounded-2xl bg-white border border-white text-xs space-y-1.5">
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <span class="text-[10px] font-black uppercase tracking-wider text-admin-textMuted">Alamat Tujuan Ekspedisi</span>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-admin-textMuted">Penerima & Alamat Tujuan</span>
                         <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200">
-                            ${escapeHtml(order.courier)} — ${escapeHtml(order.shipping_service)}
+                            Ekspedisi Checkout: ${escapeHtml(order.courier)}
                         </span>
                     </div>
                     <p class="font-black text-sm text-admin-textMain">${escapeHtml(order.recipient)} <span class="text-admin-textMuted font-bold">(${escapeHtml(order.recipient_whatsapp || '-')})</span></p>
@@ -826,10 +842,10 @@
                 <div class="mb-4 p-4 rounded-2xl bg-white border-2 border-admin-accent/60">
                     <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-admin-bg">
                         <div class="flex items-center gap-2">
-                            <i class="ph ph-broadcast text-lg text-admin-sideBg"></i>
+                            <i class="ph ph-truck text-lg text-admin-sideBg"></i>
                             <div>
-                                <h5 class="text-xs font-black uppercase tracking-wider text-admin-textMain">Status Pelacakan & Bukti Kurir Eksternal</h5>
-                                <p class="text-[11px] font-semibold text-admin-textMuted">Kurir eksternal mengirimkan status & foto bukti otomatis via API/Webhook</p>
+                                <h5 class="text-xs font-black uppercase tracking-wider text-admin-textMain">Status Resi & Pengiriman Ekspedisi</h5>
+                                <p class="text-[11px] font-semibold text-admin-textMuted">Filter keaslian resi & kecocokan ekspedisi (${courierCodeUpper})</p>
                             </div>
                         </div>
                         <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-wider ${cMeta.badgeClass}">
@@ -839,61 +855,56 @@
                     </div>
 
                     ${stepperHtml}
-
-                    <div class="flex flex-col sm:flex-row gap-2 mt-3">
-                        <div class="relative flex-1">
-                            <i class="ph ph-barcode absolute left-3.5 top-1/2 -translate-y-1/2 text-admin-textMuted text-base"></i>
-                            <input type="text"
-                                   id="input-resi-${escapeHtml(order.id)}"
-                                   value="${escapeHtml(order.tracking_number || '')}"
-                                   placeholder="Masukkan No. Resi (AWB)..."
-                                   class="w-full min-h-[44px] pl-10 pr-3 py-2 rounded-xl bg-admin-bg border border-admin-accent text-xs font-black text-admin-textMain uppercase focus:outline-none focus:ring-2 focus:ring-admin-sideBg">
-                        </div>
-                        <button type="button"
-                                class="btn-simpan-resi clay-btn-secondary px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shrink-0"
-                                data-order-id="${escapeHtml(order.id)}">
-                            <i class="ph ph-floppy-disk text-base"></i>
-                            <span>Simpan Resi</span>
-                        </button>
-                        <button type="button"
-                                class="btn-sync-kurir clay-btn px-4 py-2 rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shrink-0"
-                                data-order-id="${escapeHtml(order.id)}">
-                            <i class="ph ph-arrows-clockwise text-base"></i>
-                            <span>Cek API Kurir</span>
-                        </button>
-                    </div>
-
+                    ${lockedResiBoxHtml}
+                    ${editResiBoxHtml}
                     ${courierProofPreviewHtml}
                     ${manifestHtml}
                 </div>
             `;
 
-            const statusNoticeHtml = isDeliveredByCourier
-                ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-emerald-800 font-bold text-xs flex-1">
-                       <i class="ph ph-check-circle text-lg text-emerald-600 shrink-0"></i>
-                       <span><strong>Kurir Eksternal</strong> telah mengirim signal barang sampai beserta foto buktinya. Admin silakan mengecek bukti tersebut.</span>
+            const statusNoticeHtml = !hasResi
+                ? `<div class="bg-gray-100 border border-gray-300 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-gray-700 font-bold text-xs flex-1">
+                       <i class="ph ph-lock-simple text-lg text-gray-600 shrink-0"></i>
+                       <span>Masukkan <strong>Nomor Resi ${courierCodeUpper}</strong> yang valid di atas untuk mengirim notifikasi resi ke WA & Web pembeli.</span>
                    </div>`
-                : `<div class="bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-amber-800 font-bold text-xs flex-1">
-                       <i class="ph ph-clock-countdown text-lg text-amber-600 shrink-0"></i>
-                       <span>Menunggu signal & unggahan foto bukti dari <strong>Kurir Eksternal</strong> sebelum dapat diverifikasi Admin.</span>
-                   </div>`;
+                : (isDeliveredByCourier
+                    ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-emerald-800 font-bold text-xs flex-1">
+                           <i class="ph ph-check-circle text-lg text-emerald-600 shrink-0"></i>
+                           <span><strong>Paket Telah Sampai (POD Masuk)</strong>. Silakan klik tombol hijau di bawah untuk menyelesaikan pesanan.</span>
+                       </div>`
+                    : `<div class="bg-amber-50 border border-amber-200 rounded-xl px-3.5 py-2.5 flex items-center gap-2.5 text-amber-800 font-bold text-xs flex-1">
+                           <i class="ph ph-clock-countdown text-lg text-amber-600 shrink-0"></i>
+                           <span>Resi <strong>${escapeHtml(order.tracking_number)}</strong> aktif. Gunakan tombol di bawah untuk memperbarui tahapan kurir ke pembeli.</span>
+                       </div>`);
 
             actionHtml = `
                 <div class="mt-4 pt-4 border-t border-admin-accent/50 flex flex-col gap-3">
                     ${statusNoticeHtml}
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
-                        ${!isDeliveredByCourier ? `
+                    <div class="flex flex-wrap items-center justify-end gap-2.5">
+                        ${hasResi && order.courier_status === 'in_transit' ? `
                             <button type="button"
-                                    class="btn-simulasi-signal clay-btn-secondary px-4 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2"
-                                    data-order-id="${escapeHtml(order.id)}">
-                                <i class="ph ph-broadcast text-base text-admin-sideBg"></i>
-                                <span>Simulasi Signal & Bukti dari Kurir</span>
+                                    class="btn-simulasi-signal clay-btn-secondary px-3.5 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5"
+                                    data-order-id="${escapeHtml(order.id)}"
+                                    data-signal-status="on_delivery">
+                                <i class="ph ph-navigation-arrow text-base text-indigo-600"></i>
+                                <span>1. Update: Kurir Menuju Lokasi</span>
                             </button>
                         ` : ''}
+
+                        ${hasResi && !isDeliveredByCourier ? `
+                            <button type="button"
+                                    class="btn-simulasi-signal clay-btn-secondary px-3.5 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-1.5"
+                                    data-order-id="${escapeHtml(order.id)}"
+                                    data-signal-status="delivered">
+                                <i class="ph ph-broadcast text-base text-emerald-600"></i>
+                                <span>${order.courier_status === 'in_transit' ? '2. ' : ''}Update: Barang Sampai & Bukti POD</span>
+                            </button>
+                        ` : ''}
+
                         <button type="button"
                                 class="btn-cek-bukti-ekspedisi ${isDeliveredByCourier ? 'clay-btn-emerald' : 'clay-btn'} px-5 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2"
                                 data-order-id="${escapeHtml(order.id)}"
-                                ${!isDeliveredByCourier ? 'disabled title="Menunggu kurir eksternal mengirim bukti pengiriman"' : ''}>
+                                ${!isDeliveredByCourier ? 'disabled title="Menunggu status Barang Sampai & POD"' : ''}>
                             <i class="ph ph-eye text-base"></i>
                             <span>Cek Bukti Kurir & Selesaikan</span>
                         </button>
@@ -910,12 +921,11 @@
 
         return `
             <div class="clay-card stagger-card p-5 md:p-6" id="card-${escapeHtml(order.id)}" style="animation-delay: ${staggerDelay}ms;">
-                <!-- Header Card -->
                 <button type="button" class="accordion-toggle w-full text-left cursor-pointer select-none flex flex-col md:flex-row justify-between items-start md:items-center gap-4 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-admin-sideBg rounded-xl">
                     <div class="flex gap-4 items-start sm:items-center w-full md:w-auto">
                         <div class="w-14 h-14 rounded-2xl bg-admin-navBg text-admin-sideBg flex flex-col items-center justify-center shadow-inner shrink-0">
                             <i class="ph ${isInternal ? 'ph-clock' : 'ph-truck'} text-lg"></i>
-                            <span class="text-xs font-black">${escapeHtml(formatTime(order.delivery_time))}</span>
+                            <span class="text-xs font-black">${escapeHtml(isInternal ? formatTime(order.delivery_time) : (order.courier_code || 'EKS'))}</span>
                         </div>
                         <div class="min-w-0 flex-1">
                             <div class="flex flex-wrap items-center gap-2 mb-0.5">
@@ -946,15 +956,17 @@
                     </div>
                 </button>
 
-                <!-- Accordion Content -->
                 <div class="accordion-content">
                     <div class="accordion-inner">
                         <div class="pt-4 mt-4 border-t border-admin-accent/50">
                             ${detailedAddressSection}
 
-                            <h4 class="text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2 flex items-center gap-1.5">
-                                <i class="ph ph-receipt text-admin-sideBg"></i>
-                                <span>Rincian Item Pesanan (#${escapeHtml(order.id)})</span>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <i class="ph ph-receipt text-admin-sideBg"></i>
+                                    <span>Rincian Item Pesanan (#${escapeHtml(order.id)})</span>
+                                </span>
+                                <span class="text-[11px] font-black text-admin-sideBg">${Number(order.items_count || 0)} Pcs Roti</span>
                             </h4>
                             <div class="bg-admin-bg p-3.5 rounded-2xl border border-white">
                                 ${itemsHtml}
@@ -963,7 +975,7 @@
                                     <span>${order.shipping_cost > 0 ? formatRp(order.shipping_cost) : 'GRATIS'}</span>
                                 </div>
                                 <div class="flex justify-between items-center pt-2 mt-2 border-t border-white">
-                                    <span class="text-xs font-black uppercase text-admin-textMuted">Total Keseluruhan</span>
+                                    <span class="text-xs font-black uppercase text-admin-textMuted">Total Transaksi</span>
                                     <span class="text-base font-black text-admin-sideBg">${formatRp(order.total_amount)}</span>
                                 </div>
                             </div>
@@ -976,11 +988,8 @@
         `;
     }
 
-    // --- FETCH DATA DARI DATABASE VIA API ---
     function fetchDeliveryData() {
-        if (fetchAbortController) {
-            fetchAbortController.abort();
-        }
+        if (fetchAbortController) fetchAbortController.abort();
         fetchAbortController = new AbortController();
 
         renderSkeletons(internalList);
@@ -1052,13 +1061,16 @@
         }
     }
 
-    // --- API ACTIONS ---
+    // --- SIMPAN & VALIDASI RESI ---
     function saveTrackingResi(orderNumber, btnEl) {
+        const order = findOrderById(orderNumber);
+        if (!order) return;
+
         const inputEl = document.getElementById('input-resi-' + orderNumber);
-        const resiVal = inputEl ? inputEl.value.trim() : '';
+        const resiVal = inputEl ? inputEl.value.trim().toUpperCase() : '';
 
         if (!resiVal) {
-            showToast('Resi Kosong', 'Masukkan nomor resi pengiriman terlebih dahulu.', 'warning');
+            showToast('Resi Kosong', `Masukkan nomor resi ${order.courier_code || 'ekspedisi'} terlebih dahulu.`, 'warning');
             if (inputEl) inputEl.focus();
             return;
         }
@@ -1068,7 +1080,7 @@
 
         const ogHtml = btnEl.innerHTML;
         btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Menyimpan...</span>';
+        btnEl.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Memvalidasi...</span>';
 
         fetch(`/api/admin/kelola-pengiriman/${encodeURIComponent(orderNumber)}/resi`, {
             method: 'POST',
@@ -1078,7 +1090,9 @@
                 'X-CSRF-TOKEN': getCsrfToken(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ tracking_number: resiVal }),
+            body: JSON.stringify({
+                tracking_number: resiVal
+            }),
             signal: actionAbortController.signal
         })
         .then(async (res) => {
@@ -1087,7 +1101,7 @@
             return data;
         })
         .then((data) => {
-            showToast('Resi Tersimpan', data.message, 'success');
+            showToast('Resi Valid & Dikunci', data.message, 'success');
             updateEkspedisiOrderInState(orderNumber, {
                 tracking_number: data.data.tracking_number,
                 courier_status: data.data.courier_status,
@@ -1096,7 +1110,7 @@
         })
         .catch((err) => {
             if (err.name === 'AbortError') return;
-            showToast('Gagal Simpan Resi', err.message, 'error');
+            showToast('Validasi Resi Ditolak', err.message, 'error');
         })
         .finally(() => {
             btnEl.disabled = false;
@@ -1104,26 +1118,39 @@
         });
     }
 
-    function syncCourierStatusApi(orderNumber, btnEl) {
+    function triggerCourierSignal(orderNumber, targetStatus, btnEl) {
+        const order = findOrderById(orderNumber);
+        if (!order || !order.tracking_number) {
+            showToast('Resi Belum Diinput', 'Simpan nomor resi yang valid terlebih dahulu.', 'warning');
+            return;
+        }
+
         if (actionAbortController) actionAbortController.abort();
         actionAbortController = new AbortController();
 
         const ogHtml = btnEl.innerHTML;
         btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Mengecek API...</span>';
+        btnEl.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Memperbarui...</span>';
 
-        fetch(`/api/admin/kelola-pengiriman/${encodeURIComponent(orderNumber)}/cek-status-kurir`, {
+        fetch('/api/courier/webhook', {
             method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'Accept': 'application/json',
                 'X-CSRF-TOKEN': getCsrfToken(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
+            body: JSON.stringify({
+                order_number: orderNumber,
+                tracking_number: order.tracking_number,
+                courier_status: targetStatus,
+                cod_amount_paid: order.remaining_amount > 0 ? order.remaining_amount : null
+            }),
             signal: actionAbortController.signal
         })
         .then(async (res) => {
             const data = await res.json();
-            if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Gagal mengecek API kurir.');
+            if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Gagal memperbarui status kurir.');
             return data;
         })
         .then((data) => {
@@ -1137,53 +1164,7 @@
         })
         .catch((err) => {
             if (err.name === 'AbortError') return;
-            showToast('Peringatan Pelacakan', err.message, 'warning');
-        })
-        .finally(() => {
-            btnEl.disabled = false;
-            btnEl.innerHTML = ogHtml;
-        });
-    }
-
-    function triggerCourierDeliveredSignal(orderNumber, btnEl) {
-        if (actionAbortController) actionAbortController.abort();
-        actionAbortController = new AbortController();
-
-        const ogHtml = btnEl.innerHTML;
-        btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Menerima Bukti Kurir...</span>';
-
-        fetch('/api/courier/webhook', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                order_number: orderNumber,
-                courier_status: 'delivered'
-            }),
-            signal: actionAbortController.signal
-        })
-        .then(async (res) => {
-            const data = await res.json();
-            if (!res.ok || data.status !== 'success') throw new Error(data.message || 'Gagal memproses signal kurir.');
-            return data;
-        })
-        .then((data) => {
-            showToast('Bukti Kurir Masuk', data.message, 'success');
-            updateEkspedisiOrderInState(orderNumber, {
-                courier_status: data.data.courier_status,
-                courier_manifest: data.data.courier_manifest,
-                arrival_proof_url: data.data.arrival_proof_url,
-                payment_proof_url: data.data.payment_proof_url
-            });
-        })
-        .catch((err) => {
-            if (err.name === 'AbortError') return;
-            showToast('Gagal Signal Kurir', err.message, 'error');
+            showToast('Gagal Update Kurir', err.message, 'error');
         })
         .finally(() => {
             btnEl.disabled = false;
@@ -1209,9 +1190,7 @@
     }
 
     function executeCompleteOrder(orderNumber, formData, triggerBtn) {
-        if (actionAbortController) {
-            actionAbortController.abort();
-        }
+        if (actionAbortController) actionAbortController.abort();
         actionAbortController = new AbortController();
 
         let originalBtnHtml = '';
@@ -1289,7 +1268,7 @@
         }
     }
 
-    // --- MODAL CONTROL (60FPS ZERO-REFLOW) ---
+    // --- MODAL CONTROL ---
     function openModalForOrder(orderId) {
         const order = findOrderById(orderId);
         if (!order) return;
@@ -1313,7 +1292,6 @@
         modalChannelBadge.textContent = isInternal ? 'Kurir Internal' : `Ekspedisi (${order.courier})`;
 
         if (isInternal) {
-            // MODE A: KURIR INTERNAL (UPLOAD BUKTI)
             modeInternalUpload.classList.remove('hidden');
             modeInternalUpload.classList.add('flex');
             modeEkspedisiReview.classList.add('hidden');
@@ -1337,7 +1315,6 @@
                 modalSisaTagihan.dataset.raw = '0';
             }
         } else {
-            // MODE B: EKSPEDISI EKSTERNAL (ADMIN HANYA CEK BUKTI DARI KURIR)
             modeInternalUpload.classList.add('hidden');
             modeInternalUpload.classList.remove('flex');
             modeEkspedisiReview.classList.remove('hidden');
@@ -1392,7 +1369,7 @@
         });
     }
 
-    // --- NAMED EVENT HANDLERS (ZERO MEMORY LEAK) ---
+    // --- EVENT HANDLERS ---
     function handleTabClick(e) {
         const btn = e.currentTarget;
         tabBtns.forEach((b) => {
@@ -1423,21 +1400,56 @@
             return;
         }
 
+        const btnCopy = e.target.closest('.btn-copy-resi');
+        if (btnCopy) {
+            const resiText = btnCopy.dataset.resi || '';
+            if (resiText && navigator.clipboard) {
+                navigator.clipboard.writeText(resiText).then(() => {
+                    showToast('Resi Disalin', `Nomor resi ${resiText} berhasil disalin ke clipboard.`, 'success');
+                });
+            }
+            return;
+        }
+
+        const btnOpenKoreksi = e.target.closest('.btn-buka-koreksi-resi');
+        if (btnOpenKoreksi) {
+            const orderId = btnOpenKoreksi.dataset.orderId;
+            const lockedBox = document.getElementById('box-locked-resi-' + orderId);
+            const editBox = document.getElementById('box-edit-resi-' + orderId);
+            const inputEl = document.getElementById('input-resi-' + orderId);
+            if (lockedBox && editBox) {
+                lockedBox.classList.add('hidden');
+                editBox.classList.remove('hidden');
+                if (inputEl) inputEl.focus();
+            }
+            return;
+        }
+
+        const btnCancelKoreksi = e.target.closest('.btn-batal-koreksi-resi');
+        if (btnCancelKoreksi) {
+            const orderId = btnCancelKoreksi.dataset.orderId;
+            const order = findOrderById(orderId);
+            const lockedBox = document.getElementById('box-locked-resi-' + orderId);
+            const editBox = document.getElementById('box-edit-resi-' + orderId);
+            const inputEl = document.getElementById('input-resi-' + orderId);
+            if (inputEl && order) inputEl.value = order.tracking_number || '';
+            if (lockedBox && editBox) {
+                editBox.classList.add('hidden');
+                lockedBox.classList.remove('hidden');
+            }
+            return;
+        }
+
         const btnResi = e.target.closest('.btn-simpan-resi');
         if (btnResi) {
             saveTrackingResi(btnResi.dataset.orderId, btnResi);
             return;
         }
 
-        const btnSync = e.target.closest('.btn-sync-kurir');
-        if (btnSync) {
-            syncCourierStatusApi(btnSync.dataset.orderId, btnSync);
-            return;
-        }
-
         const btnSignal = e.target.closest('.btn-simulasi-signal');
         if (btnSignal) {
-            triggerCourierDeliveredSignal(btnSignal.dataset.orderId, btnSignal);
+            const targetStatus = btnSignal.dataset.signalStatus || 'delivered';
+            triggerCourierSignal(btnSignal.dataset.orderId, targetStatus, btnSignal);
             return;
         }
 
@@ -1448,9 +1460,7 @@
     }
 
     function handleModalBackdropClick(e) {
-        if (e.target === modalPenyelesaian) {
-            toggleModal(false);
-        }
+        if (e.target === modalPenyelesaian) toggleModal(false);
     }
 
     function handleKeyDown(e) {
@@ -1490,7 +1500,6 @@
         e.preventDefault();
         if (!targetOrderContext) return;
 
-        // Jika Kurir Internal, wajib validasi input file
         if (targetOrderContext.isInternal) {
             if (!inputBuktiSampai.files || !inputBuktiSampai.files[0]) {
                 showToast('Bukti Sampai Wajib', 'Unggah foto bukti barang sudah sampai terlebih dahulu.', 'warning');
@@ -1569,13 +1578,12 @@
         activeSlider = null;
     }
 
-    // --- TOAST NOTIFICATION ---
     function showToast(title, message, type = 'success') {
         let container = document.getElementById('toast-container');
         if (!container) {
             container = document.createElement('div');
             container.id = 'toast-container';
-            container.className = 'fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none w-full max-w-sm px-4';
+            container.className = 'fixed top-6 right-6 z-[200] flex flex-col gap-3 pointer-events-none w-full max-w-md px-4';
             document.body.appendChild(container);
         }
 
@@ -1606,10 +1614,9 @@
         registerTimeout(() => {
             toast.classList.add('-translate-y-4', 'opacity-0');
             registerTimeout(() => toast.remove(), 220);
-        }, 3200);
+        }, 4000);
     }
 
-    // --- LIFECYCLE MOUNT & TEARDOWN ---
     function mount() {
         tabBtns.forEach((btn) => btn.addEventListener('click', handleTabClick));
         document.addEventListener('click', handleDocumentClick);
