@@ -317,7 +317,7 @@ class WhatsAppBotController extends Controller
             case 'batal_pesanan_refund':
                 $this->prosesRefundBatalPesanan($waNumber, $user, $message, $session);
                 break;
-            
+
             case 'batal_pesanan_refund':
                 $this->prosesRefundBatalPesanan($waNumber, $user, $message, $session);
                 break;
@@ -1318,28 +1318,34 @@ class WhatsAppBotController extends Controller
         }
 
         // Perintah Bayar Ulang / Pelunasan DP
-        if (preg_match('/^(rekening|refund)\s+(.+)$/i', $message, $matches)) {
+        if (preg_match('/^(bayar|lunasi)\s+(.+)$/i', $message, $matches)) {
             $targetKey = trim($matches[2]);
             $orderNumber = $orderMap[$targetKey] ?? strtoupper($targetKey);
 
-            $order = Order::where('order_number', $orderNumber)
-                ->where('user_id', $user->id)
-                ->where('status', 'dibatalkan')
-                ->first();
+            $req = Request::create('/api/pembeli/checkout/pay-remaining', 'POST', [
+                'order_number' => $orderNumber,
+            ]);
+            $req->setUserResolver(fn() => $user);
 
-            if (!$order) {
-                $reply = $this->getTemplate('batal_tidak_ditemukan', ['order_number' => $orderNumber]);
-                $this->sendMessage($waNumber, $reply);
-                return;
+            $res = app(CheckoutController::class)->payRemaining($req);
+            $resData = $res->getData(true);
+
+            if (($resData['status'] ?? 'error') === 'success') {
+                $amountToPay = $resData['data']['amount_to_pay'] ?? 0;
+                $linkBayar   = $resData['data']['redirect_url'] ?? url('/pembayaran/' . $orderNumber);
+
+                $reply = $this->getTemplate('riwayat_bayar_ulang', [
+                    'order_number'    => $orderNumber,
+                    'total_tagihan'   => number_format($amountToPay, 0, ',', '.'),
+                    'link_pembayaran' => $linkBayar,
+                ]);
+            } else {
+                $reply = $this->getTemplate('riwayat_bayar_gagal', [
+                    'order_number' => $orderNumber,
+                    'pesan_error'  => $resData['message'] ?? 'Tidak dapat memproses pembayaran.',
+                ]);
             }
 
-            $sd['refund_order_number'] = $order->order_number;
-            $session->update([
-                'current_step' => 'input_rekening_refund_admin',
-                'session_data' => $sd,
-            ]);
-
-            $reply = $this->getTemplate('batal_pesanan_refund', ['order_number' => $order->order_number]);
             $this->sendMessage($waNumber, $reply);
             return;
         }

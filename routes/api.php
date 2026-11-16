@@ -52,6 +52,7 @@ Route::prefix('pembeli')->group(function () {
     Route::get('/nota', [CheckoutController::class, 'showNota']);
     Route::get('/pembayaran/{order_number}', [CheckoutController::class, 'showPembayaran']);
     Route::get('/pembayaran/status/{order_number}', [CheckoutController::class, 'cekStatusPembayaran']);
+    Route::post('/pembayaran/simulasi/{order_number}', [CheckoutController::class, 'simulasiBayarSandbox']);
     Route::post('/checkout/pay-remaining', [CheckoutController::class, 'payRemaining']);
 });
 
@@ -140,23 +141,92 @@ Route::post('/fonnte/webhook', [WhatsAppBotController::class, 'webhook']);
 Route::post('/courier/webhook', [KelolaPengirimanController::class, 'webhookSignalKurir']);
 
 // Simulator Webhook Pembayaran Duitku (Khusus Pengujian Lokal)
-Route::get('/test-webhook/{orderNumber}/{amount}', function ($orderNumber, $amount) {
-    $merchantCode = env('DUITKU_MERCHANT_CODE');
-    $merchantKey  = env('DUITKU_MERCHANT_KEY');
-    $signature    = md5($merchantCode . $amount . $orderNumber . $merchantKey);
-    $urlCallback  = url('/api/duitku/callback');
+Route::get('/test-webhook/{orderNumber}/{amount}', function (\Illuminate\Http\Request $request, $orderNumber, $amount) {
+    $merchantCode    = env('DUITKU_MERCHANT_CODE');
+    $merchantKey     = env('DUITKU_MERCHANT_KEY');
+    $signature       = md5($merchantCode . $amount . $orderNumber . $merchantKey);
+    $urlCallback     = url('/api/duitku/callback');
+    $amountFormatted = number_format((int) $amount, 0, ',', '.');
+    $autoTrigger     = $request->query('auto') == '1' ? 'true' : 'false';
 
     return "
-        <html>
-        <body onload=\"document.getElementById('formWebhook').submit();\" style=\"font-family: sans-serif; padding: 2rem;\">
-            <h3>Memproses simulasi webhook pembayaran...</h3>
-            <form id=\"formWebhook\" action=\"{$urlCallback}\" method=\"POST\" style=\"display: none;\">
-                <input type=\"text\" name=\"merchantOrderId\" value=\"{$orderNumber}\">
-                <input type=\"text\" name=\"amount\" value=\"{$amount}\">
-                <input type=\"text\" name=\"merchantCode\" value=\"{$merchantCode}\">
-                <input type=\"text\" name=\"resultCode\" value=\"00\">
-                <input type=\"text\" name=\"signature\" value=\"{$signature}\">
-            </form>
+        <!DOCTYPE html>
+        <html lang='id'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Simulasi QRIS - Raya Kitchen</title>
+            <script src='https://cdn.tailwindcss.com'></script>
+        </head>
+        <body class='bg-[#F8F7FA] min-h-screen flex items-center justify-center p-4 font-sans'>
+            <div class='bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl border border-purple-100 text-center'>
+                <div id='confirm-box'>
+                    <div class='w-16 h-16 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 font-black text-xl'>
+                        QRIS
+                    </div>
+                    <p class='text-xs font-bold text-gray-400 uppercase tracking-wider'>Merchant Tujuan</p>
+                    <h2 class='text-xl font-black text-gray-800 mb-4'>Raya Kitchen (Sandbox)</h2>
+
+                    <div class='bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 text-left space-y-2 text-sm'>
+                        <div class='flex justify-between'>
+                            <span class='text-gray-500 font-medium'>No. Pesanan</span>
+                            <span class='font-bold text-gray-800'>#{$orderNumber}</span>
+                        </div>
+                        <div class='flex justify-between border-t border-gray-200 pt-2'>
+                            <span class='text-gray-500 font-bold'>Total Bayar</span>
+                            <span class='font-black text-purple-600 text-lg'>Rp {$amountFormatted}</span>
+                        </div>
+                    </div>
+
+                    <button id='btnBayar' onclick='prosesBayar()' class='w-full py-4 bg-[#C099CE] hover:bg-[#9B72AB] text-white font-black rounded-2xl shadow-lg transition-all'>
+                        Konfirmasi Bayar Sekarang
+                    </button>
+                </div>
+
+                <div id='success-box' class='hidden py-4'>
+                    <div class='w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl font-bold'>
+                        ✓
+                    </div>
+                    <h3 class='text-xl font-black text-gray-800 mb-1'>Pembayaran Berhasil!</h3>
+                    <p class='text-xs text-gray-500 font-medium'>Halaman pembayaran di layar utama akan otomatis beralih ke Nota Digital.</p>
+                </div>
+            </div>
+
+            <script>
+                function prosesBayar() {
+                    const btn = document.getElementById('btnBayar');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerText = 'Memproses Pembayaran...';
+                    }
+
+                    const formData = new URLSearchParams();
+                    formData.append('merchantOrderId', '{$orderNumber}');
+                    formData.append('amount', '{$amount}');
+                    formData.append('merchantCode', '{$merchantCode}');
+                    formData.append('resultCode', '00');
+                    formData.append('signature', '{$signature}');
+
+                    fetch('{$urlCallback}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: formData.toString()
+                    }).then(() => {
+                        document.getElementById('confirm-box').classList.add('hidden');
+                        document.getElementById('success-box').classList.remove('hidden');
+                    }).catch(() => {
+                        alert('Gagal menghubungi server callback.');
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerText = 'Konfirmasi Bayar Sekarang';
+                        }
+                    });
+                }
+
+                if ({$autoTrigger}) {
+                    prosesBayar();
+                }
+            </script>
         </body>
         </html>
     ";

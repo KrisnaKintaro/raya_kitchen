@@ -637,20 +637,21 @@ class CheckoutController extends Controller
     public function showPembayaran($orderNumber)
     {
         $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
+
         if (!$order || !$order->transaction) {
             return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
         }
 
         $pStatus = strtolower($order->transaction->payment_status);
-
         $expiredAt = $order->created_at->addMinutes(1440);
+
         if ($order->status === 'pending' && $pStatus === 'unpaid' && now()->greaterThanOrEqualTo($expiredAt)) {
             $order->update(['status' => 'dibatalkan', 'cancellation_reason' => 'Otomatis dibatalkan: Waktu pembayaran habis (24 jam).']);
             $order->transaction->update(['payment_status' => 'failed']);
             NotificationController::send($order, 'batal_otomatis');
         }
 
-        if ($pStatus === 'paid_dp' && $order->remaining_amount > 0 && $order->transaction->amount < $order->total_amount && !in_array($order->status, ['selesai', 'dibatalkan'])) {
+        if ($pStatus === 'paid_dp' && $order->remaining_amount > 0 && !in_array($order->status, ['selesai', 'dibatalkan'])) {
             $this->generatePelunasanInvoice($order);
             $order->load('transaction');
         }
@@ -658,10 +659,11 @@ class CheckoutController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'order' => $order,
-                'expired_at' => $expiredAt->toIso8601String(),
+                'order'        => $order,
+                'expired_at'   => $expiredAt->toIso8601String(),
                 'is_pelunasan' => ($pStatus === 'paid_dp' && $order->remaining_amount > 0),
-                'is_lunas' => ($pStatus === 'paid_full' || ($pStatus !== 'unpaid' && $pStatus !== 'failed' && $order->remaining_amount <= 0)),
+                'is_lunas'     => ($pStatus === 'paid_full' || ($pStatus !== 'unpaid' && $pStatus !== 'failed' && $order->remaining_amount <= 0)),
+                'is_sandbox'   => (bool) env('DUITKU_SANDBOX', true),
             ]
         ]);
     }
@@ -742,16 +744,113 @@ class CheckoutController extends Controller
         }
     }
 
+    public function simulasiBayarSandbox(Request $request, $orderNumber)
+    {
+        if (!env('DUITKU_SANDBOX', true)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Simulasi klik QRIS hanya aktif pada mode Sandbox.'
+            ], 403);
+        }
+
+        $order = Order::with('transaction')->where('order_number', $orderNumber)->first();
+
+        if (!$order || !$order->transaction) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Data pesanan atau transaksi tidak ditemukan.'
+            ], 404);
+        }
+
+        if ($order->status === 'dibatalkan') {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Pesanan sudah dibatalkan sehingga tidak dapat dibayar.'
+            ], 422);
+        }
+
+        $prevPaymentStatus = strtolower($order->transaction->payment_status ?? 'unpaid');
+
+        if ($prevPaymentStatus === 'paid_full') {
+            return response()->json([
+                'status'         => 'success',
+                'message'        => 'Pesanan ini sudah lunas sebelumnya.',
+                'payment_status' => 'paid_full',
+                'order_status'   => $order->status,
+            ]);
+        }
+
+        // Deteksi otomatis apakah ini Pelunasan Sisa DP (70%) atau Pembayaran Awal (Lunas 100% / DP 30%)
+        $isPelunasan = ($prevPaymentStatus === 'paid_dp' && (float) $order->remaining_amount > 0);
+        $simulatedAmount = $isPelunasan
+            ? (int) round($order->remaining_amount)
+            : (int) round($order->transaction->amount);
+
+        DB::beginTransaction();
+        try {
+            if ($isPelunasan || $simulatedAmount >= (int) round($order->total_amount) || (int) round($order->remaining_amount) === 0) {
+                $updateOrderData = ['remaining_amount' => 0];
+                $normalizedStatus = strtolower(str_replace(' ', '_', $order->status));
+                $hasArrivalProof = !empty($order->arrival_proof) || !empty($order->delivery_proof);
+
+                if (in_array($normalizedStatus, ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar']) && $hasArrivalProof) {
+                    $updateOrderData['status'] = 'selesai';
+                }
+
+                $order->update($updateOrderData);
+
+                $order->transaction->update([
+                    'amount'         => $order->total_amount,
+                    'payment_status' => 'paid_full',
+                    'paid_at'        => now(),
+                ]);
+
+                DB::commit();
+                $order->refresh();
+
+                if ($isPelunasan) {
+                    NotificationController::send($order, 'pelunasan_berhasil');
+                } else {
+                    NotificationController::send($order, 'pembayaran_lunas');
+                }
+            } else {
+                $order->transaction->update([
+                    'payment_status' => 'paid_dp',
+                    'paid_at'        => now(),
+                ]);
+
+                DB::commit();
+                $order->refresh();
+                NotificationController::send($order, 'pembayaran_dp');
+            }
+
+            return response()->json([
+                'status'         => 'success',
+                'message'        => 'Simulasi pembayaran QRIS Sandbox berhasil diproses!',
+                'payment_status' => $order->transaction->payment_status,
+                'order_status'   => $order->status,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal memproses simulasi pembayaran: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function duitkuCallback(Request $request)
     {
         $merchantCode = env('DUITKU_MERCHANT_CODE');
         $merchantKey = env('DUITKU_MERCHANT_KEY');
+
         $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
         $duitkuConfig->setSandboxMode(true);
 
         try {
             $callback = \Duitku\Api::callback($duitkuConfig);
             $notif = json_decode($callback);
+
             $rawMerchantOrderId = $notif->merchantOrderId ?? '';
             $isPelunasanInvoice = str_contains($rawMerchantOrderId, '-LUNAS');
             $cleanOrderId = preg_replace('/(-LUNAS.*|-R\d+)$/', '', $rawMerchantOrderId);
@@ -764,7 +863,6 @@ class CheckoutController extends Controller
 
                     if ($isPelunasanInvoice || $prevPaymentStatus === 'paid_dp' || $notif->amount >= $order->total_amount || $order->remaining_amount == 0) {
                         $updateOrderData = ['remaining_amount' => 0];
-
                         $normalizedStatus = strtolower(str_replace(' ', '_', $order->status));
                         $hasArrivalProof = !empty($order->arrival_proof) || !empty($order->delivery_proof);
 
@@ -773,9 +871,11 @@ class CheckoutController extends Controller
                         }
 
                         $order->update($updateOrderData);
+
                         $order->transaction->update([
+                            'amount'         => $order->total_amount,
                             'payment_status' => 'paid_full',
-                            'paid_at' => now()
+                            'paid_at'        => now()
                         ]);
 
                         $order->refresh();
@@ -788,7 +888,7 @@ class CheckoutController extends Controller
                     } else {
                         $order->transaction->update([
                             'payment_status' => 'paid_dp',
-                            'paid_at' => now()
+                            'paid_at'        => now()
                         ]);
                         $order->refresh();
                         NotificationController::send($order, 'pembayaran_dp');
@@ -800,6 +900,7 @@ class CheckoutController extends Controller
                     NotificationController::send($order, 'pembayaran_gagal');
                 }
             }
+
             return response()->json(['message' => 'Callback Processed']);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
@@ -810,6 +911,7 @@ class CheckoutController extends Controller
     {
         $merchantCode = env('DUITKU_MERCHANT_CODE');
         $merchantKey = env('DUITKU_MERCHANT_KEY');
+
         $duitkuConfig = new \Duitku\Config($merchantKey, $merchantCode);
         $duitkuConfig->setSandboxMode(true);
         $duitkuConfig->setSanitizedMode(true);
@@ -818,24 +920,24 @@ class CheckoutController extends Controller
         $pelunasanOrderId = $order->order_number . '-LUNAS-' . rand(10, 99);
 
         $params = [
-            'paymentAmount'     => (int) $order->remaining_amount,
-            'paymentMethod'     => "SP",
-            'merchantOrderId'   => $pelunasanOrderId,
-            'productDetails'    => 'Pelunasan Pesanan ' . $order->order_number,
-            'email'             => 'customer@rayakitchen.com',
-            'phoneNumber'       => $order->recipient_whatsapp,
-            'customerVaName'    => $order->recipient_name,
-            'callbackUrl'       => url('/api/duitku/callback'),
-            'returnUrl'         => url('/riwayat-pesanan?success=true'),
-            'expiryPeriod'      => 1440
+            'paymentAmount'   => (int) $order->remaining_amount,
+            'paymentMethod'   => "SP",
+            'merchantOrderId' => $pelunasanOrderId,
+            'productDetails'  => 'Pelunasan Pesanan ' . $order->order_number,
+            'email'           => 'customer@rayakitchen.com',
+            'phoneNumber'     => $order->recipient_whatsapp,
+            'customerVaName'  => $order->recipient_name,
+            'callbackUrl'     => url('/api/duitku/callback'),
+            'returnUrl'       => url('/riwayat-pesanan?success=true'),
+            'expiryPeriod'    => 1440
         ];
 
         $responseDuitkuApi = \Duitku\Api::createInvoice($params, $duitkuConfig);
         $result = json_decode($responseDuitkuApi, true);
 
         if (isset($result['statusCode']) && $result['statusCode'] == '00') {
+            // Jangan ubah 'amount' ke total_amount sebelum pelunasan benar-benar dibayar
             $order->transaction->update([
-                'amount' => $order->total_amount,
                 'reference' => $result['reference'] ?? null,
                 'qr_string' => $result['qrString'] ?? null
             ]);
