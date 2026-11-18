@@ -97,6 +97,8 @@
 
     <script>
         $(document).ready(function() {
+            $('main [id*="modal"], main .fixed.inset-0').appendTo('body').css('z-index', '9999');
+
             const sidebar = $('#sidebar');
             const backdrop = $('#sidebar-backdrop');
             let isSidebarOpen = false;

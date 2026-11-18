@@ -32,7 +32,7 @@
     <form id="form-profil" enctype="multipart/form-data" class="space-y-8">
         @csrf
 
-        <!-- Bagean 1: Informasi Dasar -->
+        <!-- Bagian 1: Informasi Dasar -->
         <div class="clay-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
             <div class="absolute top-0 left-0 w-2 h-full bg-admin-sideBg"></div>
             <h3 class="text-xl font-black text-admin-textMain mb-6 flex items-center gap-2">
@@ -51,6 +51,9 @@
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Foto Sampul / Dapur</label>
+                    <div id="preview-cover-wrapper" class="hidden mb-3">
+                        <img id="preview-cover-img" src="" alt="Foto Sampul Dapur" class="h-40 w-full md:w-72 object-cover rounded-2xl border-2 border-white shadow-sm">
+                    </div>
                     <div class="relative flex items-center w-full p-2 border-2 border-dashed border-admin-accent rounded-2xl bg-white/50 hover:bg-white transition-colors">
                         <input type="file" name="image_url" id="image_url" accept="image/*" class="w-full text-sm text-admin-textMuted file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-black file:bg-admin-navBg file:text-admin-sideBg hover:file:bg-admin-accent cursor-pointer transition-all">
                     </div>
@@ -58,7 +61,7 @@
             </div>
         </div>
 
-        <!-- Bagean 2: Kontak & Sosial Media -->
+        <!-- Bagian 2: Kontak & Sosial Media -->
         <div class="clay-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
             <div class="absolute top-0 left-0 w-2 h-full bg-blue-400"></div>
             <h3 class="text-xl font-black text-admin-textMain mb-6 flex items-center gap-2">
@@ -91,7 +94,7 @@
             </div>
         </div>
 
-        <!-- Bagean 3: Deskripsi & Lokasi (MAPS) -->
+        <!-- Bagian 3: Deskripsi & Lokasi (LEAFLET MAPS) -->
         <div class="clay-card p-6 md:p-8 rounded-[2.5rem] relative overflow-hidden">
             <div class="absolute top-0 left-0 w-2 h-full bg-pink-400"></div>
             <h3 class="text-xl font-black text-admin-textMain mb-6 flex items-center gap-2">
@@ -109,32 +112,32 @@
                     <textarea name="background_history" id="background_history" rows="4" class="clay-input w-full p-4 rounded-2xl text-sm font-bold text-admin-textMain resize-none"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Alamat Lengkap (Jalan, RT/RW, Kota)</label>
-                    <textarea name="address" id="address" rows="2" class="clay-input w-full p-4 rounded-2xl text-sm font-bold text-admin-textMain resize-none"></textarea>
+                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Alamat Lengkap (Jalan, RT/RW, Kecamatan, Kota)</label>
+                    <textarea name="address" id="address" rows="2" required class="clay-input w-full p-4 rounded-2xl text-sm font-bold text-admin-textMain resize-none"></textarea>
                 </div>
 
-                <!-- GOOGLE MAPS LINK CONVERTER -->
-                <div class="p-5 bg-white/50 border border-white rounded-[2rem] shadow-sm">
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Link Google Maps (Share URL)</label>
-                    <input type="text" id="map_url_input" placeholder="Paste link Google Maps dari HP (Cth: https://maps.app.goo.gl/...)" class="clay-input w-full p-3.5 rounded-2xl text-sm font-bold text-admin-textMain mb-4">
-
-                    <!-- Hidden inputs untuk dikirim ke backend -->
-                    <input type="hidden" name="map_external_url" id="map_external_url">
-                    <input type="hidden" name="map_embed_url" id="map_embed_url">
-
-                    <!-- Preview Iframe -->
-                    <p class="text-xs font-bold text-admin-textMuted mb-2">Live Preview Widget Footer:</p>
-                    <div id="map-preview" class="w-full h-48 rounded-2xl overflow-hidden bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center text-sm font-bold text-gray-400">
-                        Preview Peta Belum Tersedia
+                <!-- Wilayah Asal RajaOngkir -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Kecamatan / Kota Asal Ongkir</label>
+                        <input type="text" name="rajaongkir_keyword" id="rajaongkir_keyword" placeholder="Cth: Mojoroto / Jatiasih" class="clay-input w-full p-3.5 rounded-2xl text-sm font-bold text-admin-textMain">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">ID Destinasi RajaOngkir (Otomatis)</label>
+                        <input type="text" name="rajaongkir_destination_id" id="rajaongkir_destination_id" readonly class="clay-input w-full p-3.5 rounded-2xl text-sm font-bold text-admin-textMuted bg-gray-100" placeholder="Terisi otomatis saat disimpan">
                     </div>
                 </div>
 
-                <!-- LEAFLET MAPS (Penentuan Jarak Ongkir) -->
-                <div class="p-5 bg-white/50 border border-white rounded-[2rem] shadow-sm">
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Pusat Acuan Ongkir (Koordinat Dapur)</label>
-                    <p class="text-[11px] font-medium text-admin-textMuted mb-3 leading-relaxed">Geser pin merah di peta atau gunakan kotak pencarian untuk menetapkan titik akurat Dapur Raya Kitchen. Titik ini wajib ada agar sistem API kurir bisa menghitung ongkos kirim ke rumah pelanggan.</p>
+                <!-- Hidden inputs otomatis terisi dari titik koordinat Leaflet -->
+                <input type="hidden" name="map_external_url" id="map_external_url">
+                <input type="hidden" name="map_embed_url" id="map_embed_url">
 
-                    <div id="admin-map" class="w-full h-[350px] rounded-2xl border-2 border-white shadow-[0_4px_15px_rgba(147,104,183,0.15)] z-10 mb-4"></div>
+                <!-- LEAFLET MAPS (Satu-satunya Peta Lokasi & Pusat Acuan Ongkir) -->
+                <div class="p-5 bg-white/50 border border-white rounded-[2rem] shadow-sm">
+                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMuted mb-2">Lokasi Dapur & Pusat Acuan Ongkir</label>
+                    <p class="text-[11px] font-medium text-admin-textMuted mb-3 leading-relaxed">Geser pin biru di peta atau gunakan kotak pencarian di pojok kanan peta untuk menetapkan titik akurat Dapur Raya Kitchen. Koordinat dan link peta untuk tampilan toko akan otomatis diperbarui.</p>
+
+                    <div id="admin-map" class="w-full h-[380px] rounded-2xl border-2 border-white shadow-[0_4px_15px_rgba(147,104,183,0.15)] z-10 mb-4"></div>
 
                     <!-- Dynamic Lat Lng Inputs -->
                     <div class="grid grid-cols-2 gap-4">
@@ -148,7 +151,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -168,45 +170,19 @@
 
 <script>
 $(document).ready(function() {
-    // --- 1. DUMMY DATA INISIALISASI ---
-    // Dipakai buat nge-render halaman karena API GET belum ada controllernya
-    const dummyProfilData = {
-        company_name: "Raya Kitchen",
-        established_year: 2020,
-        whatsapp_number: "6281234567890",
-        email_address: "hello@rayakitchen.com",
-        instagram_handle: "@rayakitchen.id",
-        short_description: "Menghadirkan roti dan kue kering fresh dari oven setiap harinya.",
-        background_history: "Berawal dari kecintaan terhadap pastry rumahan...",
-        address: "Perum BDP, Jl. Husein Sastranegara Blok BE No. 26",
-        map_external_url: "https://maps.app.goo.gl/dummy",
-        map_embed_url: "<iframe src='https://maps.google.com/maps?q=Raya+Kitchen+Bekasi&output=embed' width='100%' height='100%' style='border:0;' loading='lazy'></iframe>",
-        latitude: -6.3262657,
-        longitude: 106.9419131
-    };
-
-    // --- 2. LOAD DATA KE DALAM FORM ---
-    $('#company_name').val(dummyProfilData.company_name);
-    $('#established_year').val(dummyProfilData.established_year);
-    $('#whatsapp_number').val(dummyProfilData.whatsapp_number);
-    $('#email_address').val(dummyProfilData.email_address);
-    $('#instagram_handle').val(dummyProfilData.instagram_handle);
-    $('#short_description').val(dummyProfilData.short_description);
-    $('#background_history').val(dummyProfilData.background_history);
-    $('#address').val(dummyProfilData.address);
-    $('#map_external_url').val(dummyProfilData.map_external_url);
-    $('#map_embed_url').val(dummyProfilData.map_embed_url);
-
-    // Tampilkan preview awal jika ada
-    if(dummyProfilData.map_embed_url) {
-        $('#map_url_input').val(dummyProfilData.map_external_url);
-        $('#map-preview').html(dummyProfilData.map_embed_url);
-    }
-
-    // --- 3. INISIALISASI LEAFLET MAP ---
     let adminMap, adminMarker;
-    let defaultLat = dummyProfilData.latitude || -6.200000;
-    let defaultLng = dummyProfilData.longitude || 106.816666;
+    let defaultLat = -7.816600;
+    let defaultLng = 112.011400;
+
+    // Sinkronkan input koordinat & URL peta otomatis dari titik Leaflet
+    function syncLocationFields(lat, lng) {
+        const latFixed = parseFloat(lat).toFixed(7);
+        const lngFixed = parseFloat(lng).toFixed(7);
+        $('#latitude').val(latFixed);
+        $('#longitude').val(lngFixed);
+        $('#map_external_url').val(`https://www.google.com/maps?q=${latFixed},${lngFixed}`);
+        $('#map_embed_url').val(`https://maps.google.com/maps?q=${latFixed},${lngFixed}&z=15&output=embed`);
+    }
 
     function initAdminMap(lat, lng) {
         if (!adminMap) {
@@ -214,21 +190,16 @@ $(document).ready(function() {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(adminMap);
             adminMarker = L.marker([lat, lng], {draggable: true}).addTo(adminMap);
 
-            // Update input pas pin digeser
-            adminMarker.on('dragend', function (e) {
+            adminMarker.on('dragend', function () {
                 let pos = adminMarker.getLatLng();
-                $('#latitude').val(pos.lat.toFixed(7));
-                $('#longitude').val(pos.lng.toFixed(7));
+                syncLocationFields(pos.lat, pos.lng);
             });
 
-            // Update pin pas peta di-klik
             adminMap.on('click', function(e) {
                 adminMarker.setLatLng(e.latlng);
-                $('#latitude').val(e.latlng.lat.toFixed(7));
-                $('#longitude').val(e.latlng.lng.toFixed(7));
+                syncLocationFields(e.latlng.lat, e.latlng.lng);
             });
 
-            // Fitur Pencarian (Geocoder)
             L.Control.geocoder({
                 defaultMarkGeocoder: false,
                 placeholder: 'Cari wilayah dapur...',
@@ -239,56 +210,79 @@ $(document).ready(function() {
                 let center = e.geocode.center;
                 adminMap.setView(center, 16);
                 adminMarker.setLatLng(center);
-                $('#latitude').val(center.lat.toFixed(7));
-                $('#longitude').val(center.lng.toFixed(7));
+                syncLocationFields(center.lat, center.lng);
             }).addTo(adminMap);
         } else {
             adminMarker.setLatLng([lat, lng]);
             adminMap.setView([lat, lng], 15);
         }
-        $('#latitude').val(lat);
-        $('#longitude').val(lng);
+        syncLocationFields(lat, lng);
     }
 
-    // Panggil peta
-    initAdminMap(defaultLat, defaultLng);
+    // --- 1. LOAD DATA ASLI DARI API ---
+    $.ajax({
+        url: '/api/admin/profil-perusahaan',
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        success: function(res) {
+            if (res.status === 'success' && res.data) {
+                const d = res.data;
+                $('#company_name').val(d.company_name || '');
+                $('#established_year').val(d.established_year || '');
+                $('#whatsapp_number').val(d.whatsapp_number || '');
+                $('#email_address').val(d.email_address || '');
+                $('#instagram_handle').val(d.instagram_handle || '');
+                $('#short_description').val(d.short_description || '');
+                $('#background_history').val(d.background_history || '');
+                $('#address').val(d.address || '');
+                $('#rajaongkir_destination_id').val(d.rajaongkir_destination_id || '');
+
+                if (d.image_full_url) {
+                    $('#preview-cover-img').attr('src', d.image_full_url);
+                    $('#preview-cover-wrapper').removeClass('hidden');
+                }
+
+                let lat = parseFloat(d.latitude) || defaultLat;
+                let lng = parseFloat(d.longitude) || defaultLng;
+                initAdminMap(lat, lng);
+
+                if (d.map_external_url) $('#map_external_url').val(d.map_external_url);
+                if (d.map_embed_url) $('#map_embed_url').val(d.map_embed_url);
+            } else {
+                initAdminMap(defaultLat, defaultLng);
+            }
+        },
+        error: function() {
+            initAdminMap(defaultLat, defaultLng);
+        }
+    });
+
+    // Preview gambar lokal sebelum diupload
+    $('#image_url').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#preview-cover-img').attr('src', e.target.result);
+                $('#preview-cover-wrapper').removeClass('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
 
     // Update peta pas admin ngetik koordinat manual di Input
     $('#latitude, #longitude').on('input', function() {
         let lat = parseFloat($('#latitude').val());
         let lng = parseFloat($('#longitude').val());
-        if(!isNaN(lat) && !isNaN(lng)) {
+        if (!isNaN(lat) && !isNaN(lng) && adminMarker) {
             adminMarker.setLatLng([lat, lng]);
             adminMap.setView([lat, lng], adminMap.getZoom());
+            $('#map_external_url').val(`https://www.google.com/maps?q=${lat.toFixed(7)},${lng.toFixed(7)}`);
+            $('#map_embed_url').val(`https://maps.google.com/maps?q=${lat.toFixed(7)},${lng.toFixed(7)}&z=15&output=embed`);
         }
     });
 
-    // --- 4. CONVERTER GOOGLE MAPS LINK KE IFRAME ---
-    $('#map_url_input').on('input', function() {
-        let val = $(this).val();
-        $('#map_external_url').val(val); // Simpan link asli ke DB
-
-        if(val.trim() !== '') {
-            // Logika Converter URL ke Embed
-            let embedSrc = `https://maps.google.com/maps?q=${encodeURIComponent(val)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-
-            // Ekstrak kalau linknya mengandung koordinat (@lat,lng)
-            let coordMatch = val.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-            if (coordMatch) {
-                embedSrc = `https://maps.google.com/maps?q=${coordMatch[1]},${coordMatch[2]}&z=15&output=embed`;
-            }
-
-            let iframeTag = `<iframe src="${embedSrc}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>`;
-
-            $('#map_embed_url').val(iframeTag);
-            $('#map-preview').html(iframeTag).removeClass('border-dashed border-gray-300 text-gray-400 bg-gray-200');
-        } else {
-            $('#map_embed_url').val('');
-            $('#map-preview').html('Preview Peta Belum Tersedia').addClass('border-dashed border-gray-300 text-gray-400 bg-gray-200');
-        }
-    });
-
-    // --- 5. DUMMY FORM SUBMISSION ---
+    // --- 2. SUBMIT FORM KE API ASLI ---
     $('#form-profil').submit(function(e) {
         e.preventDefault();
         let formData = new FormData(this);
@@ -296,21 +290,47 @@ $(document).ready(function() {
 
         btn.html('<i class="ph ph-spinner animate-spin text-xl"></i> Menyimpan...').prop('disabled', true);
 
-        // Simulasi Loading 1 Detik
-        setTimeout(function() {
-            // Ngeskrip hasil FormData ke console buat diintip backend
-            console.log("=== Data Siap Kirim ke API ===");
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
+        $.ajax({
+            url: '/api/admin/profil-perusahaan',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || ''
+            },
+            success: function(res) {
+                if (res.data && res.data.rajaongkir_destination_id) {
+                    $('#rajaongkir_destination_id').val(res.data.rajaongkir_destination_id);
+                }
+                if (res.data && res.data.image_full_url) {
+                    $('#preview-cover-img').attr('src', res.data.image_full_url);
+                    $('#preview-cover-wrapper').removeClass('hidden');
+                }
+
+                $('#alert-profil').removeClass('hidden bg-red-50 border-red-200 text-red-600')
+                    .addClass('bg-green-50 border-green-200 text-green-600')
+                    .html(`<i class="ph ph-check-circle mr-1"></i> ${res.message}`);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            error: function(xhr) {
+                let msg = 'Terjadi kesalahan saat menyimpan profil.';
+                if (xhr.responseJSON && xhr.responseJSON.errors) {
+                    msg = Object.values(xhr.responseJSON.errors)[0][0];
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    msg = xhr.responseJSON.message;
+                }
+
+                $('#alert-profil').removeClass('hidden bg-green-50 border-green-200 text-green-600')
+                    .addClass('bg-red-50 border-red-200 text-red-600')
+                    .html(`<i class="ph ph-warning-circle mr-1"></i> ${msg}`);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+            complete: function() {
+                btn.html('<i class="ph ph-floppy-disk text-xl"></i> Simpan Profil Perusahaan').prop('disabled', false);
             }
-
-            $('#alert-profil').removeClass('hidden bg-red-50 border-red-200 text-red-600')
-                .addClass('bg-green-50 border-green-200 text-green-600')
-                .html('<i class="ph ph-check-circle mr-1"></i> Data profil, lokasi, dan setting peta berhasil di-generate secara DUMMY. Cek Console F12.');
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            btn.html('<i class="ph ph-floppy-disk text-xl"></i> Simpan Profil Perusahaan').prop('disabled', false);
-        }, 1000);
+        });
     });
 });
 </script>
