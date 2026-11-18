@@ -159,7 +159,7 @@
                             <span class="text-[10px] font-extrabold uppercase tracking-wider text-gray-400 block">Nomor Resi Ekspedisi</span>
                             <span id="tracking-resi-number" class="font-mono text-base font-black text-indigo-700 tracking-wider">-</span>
                         </div>
-                        <button type="button" onclick="copyResiNota()" class="print:hidden px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-black rounded-xl transition-all flex items-center gap-1.5">
+                        <button type="button" onclick="copyResiNota()" class="print:hidden px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-black rounded-xl transition-colors flex items-center gap-1.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                             <span class="btn-copy-resi-text">Salin Nomor Resi</span>
                         </button>
@@ -195,20 +195,22 @@
                     <div id="proof-images-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
                         <div id="card-arrival-proof" class="hidden bg-white p-3 rounded-xl border border-emerald-100 shadow-sm">
                             <p class="text-xs font-extrabold text-gray-700 mb-2">Foto Barang Sampai (POD)</p>
-                            <div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex justify-center p-1 cursor-pointer hover:opacity-90 transition" onclick="openImageZoomModal($('#img-arrival-proof').attr('src'), 'Bukti Barang Sampai (POD)')">
-                                <img id="img-arrival-proof" src="" alt="Bukti Barang Sampai" class="max-h-48 w-auto object-contain rounded">
+                            <div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex justify-center p-1 cursor-pointer hover:opacity-90 transition"
+                                 data-zoom-target="#img-arrival-proof" data-zoom-caption="Bukti Barang Sampai (POD)">
+                                <img id="img-arrival-proof" loading="lazy" decoding="async" alt="Bukti Barang Sampai" class="max-h-48 w-auto object-contain rounded">
                             </div>
-                            <button type="button" onclick="openImageZoomModal($('#img-arrival-proof').attr('src'), 'Bukti Barang Sampai (POD)')" class="mt-2 w-full text-[11px] font-bold text-emerald-700 hover:underline text-center block print:hidden">
+                            <button type="button" data-zoom-target="#img-arrival-proof" data-zoom-caption="Bukti Barang Sampai (POD)" class="mt-2 w-full text-[11px] font-bold text-emerald-700 hover:underline text-center block print:hidden">
                                 Klik untuk memperbesar
                             </button>
                         </div>
 
                         <div id="card-payment-proof" class="hidden bg-white p-3 rounded-xl border border-emerald-100 shadow-sm">
                             <p class="text-xs font-extrabold text-gray-700 mb-2">Foto Bukti Pelunasan Kurir</p>
-                            <div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex justify-center p-1 cursor-pointer hover:opacity-90 transition" onclick="openImageZoomModal($('#img-payment-proof').attr('src'), 'Bukti Pelunasan Kurir')">
-                                <img id="img-payment-proof" src="" alt="Bukti Pelunasan" class="max-h-48 w-auto object-contain rounded">
+                            <div class="rounded-lg overflow-hidden bg-gray-50 border border-gray-100 flex justify-center p-1 cursor-pointer hover:opacity-90 transition"
+                                 data-zoom-target="#img-payment-proof" data-zoom-caption="Bukti Pelunasan Kurir">
+                                <img id="img-payment-proof" loading="lazy" decoding="async" alt="Bukti Pelunasan" class="max-h-48 w-auto object-contain rounded">
                             </div>
-                            <button type="button" onclick="openImageZoomModal($('#img-payment-proof').attr('src'), 'Bukti Pelunasan Kurir')" class="mt-2 w-full text-[11px] font-bold text-emerald-700 hover:underline text-center block print:hidden">
+                            <button type="button" data-zoom-target="#img-payment-proof" data-zoom-caption="Bukti Pelunasan Kurir" class="mt-2 w-full text-[11px] font-bold text-emerald-700 hover:underline text-center block print:hidden">
                                 Klik untuk memperbesar
                             </button>
                         </div>
@@ -224,21 +226,74 @@
 </div>
 
 <!-- Modal Zoom Gambar Universal (Bukti Pengiriman & Bukti Refund) -->
-<div id="imageZoomModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 print:hidden p-4" onclick="closeImageZoomModal()">
-    <div class="relative bg-white p-4 rounded-3xl max-w-[90vw] max-h-[90vh] shadow-2xl transform scale-95 transition-transform duration-300" onclick="event.stopPropagation()">
+<div id="imageZoomModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-gray-900/80 hidden opacity-0 transition-opacity duration-200 print:hidden p-4" onclick="closeImageZoomModal()">
+    <div class="relative bg-white p-4 rounded-3xl max-w-[90vw] max-h-[90vh] shadow-2xl transform scale-95 transition-transform duration-200" onclick="event.stopPropagation()">
         <div class="flex justify-between items-center mb-2 px-1">
             <p id="zoom-modal-caption" class="text-xs font-black text-gray-700 uppercase tracking-wider">Preview Gambar</p>
-            <button type="button" onclick="closeImageZoomModal()" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow font-bold hover:scale-105 transition-transform">&times;</button>
+            <button type="button" onclick="closeImageZoomModal()" class="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center shadow font-bold hover:scale-105 transition-transform">×</button>
         </div>
-        <img id="zoom-modal-img" src="" alt="Preview Besar" class="w-full h-full object-contain max-h-[78vh] rounded-2xl">
+        <img id="zoom-modal-img" alt="Preview Besar" decoding="async" class="w-full h-full object-contain max-h-[78vh] rounded-2xl">
+    </div>
+</div>
+
+<!-- Modal Pembatalan Pesanan -->
+<div id="cancelModal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-buyer-bg rounded-[2rem] max-w-md w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 shadow-[0_20px_40px_-10px_rgba(192,153,206,0.4)] relative transform scale-95 transition-transform duration-200 border-2 border-white [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-black text-buyer-textPrimary drop-shadow-sm">Batalkan Pesanan</h3>
+            <button type="button" onclick="closeCancelModal()" class="w-8 h-8 flex items-center justify-center bg-white text-gray-400 hover:text-red-500 font-bold text-xl rounded-full shadow-sm transition-colors">×</button>
+        </div>
+
+        <form id="form-cancel-order" class="space-y-4">
+            <input type="hidden" id="cancel_order_number" name="order_number">
+
+            <div>
+                <label class="text-sm font-bold text-buyer-textPrimary block mb-3">Pilih Alasan Pembatalan</label>
+                <div class="space-y-2">
+                    <label class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-red-300 transition-colors">
+                        <input type="radio" name="cancellation_reason" value="Ingin merubah rincian pesanan (alamat/item)" class="accent-red-500 w-4 h-4" required>
+                        <span class="text-sm text-gray-600 font-medium leading-tight">Ingin merubah rincian pesanan (alamat/item)</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-red-300 transition-colors">
+                        <input type="radio" name="cancellation_reason" value="Jadwal pengiriman terlalu lama/tidak sesuai" class="accent-red-500 w-4 h-4">
+                        <span class="text-sm text-gray-600 font-medium leading-tight">Jadwal pengiriman terlalu lama/tidak sesuai</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-red-300 transition-colors">
+                        <input type="radio" name="cancellation_reason" value="Berubah pikiran" class="accent-red-500 w-4 h-4">
+                        <span class="text-sm text-gray-600 font-medium leading-tight">Berubah pikiran</span>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl cursor-pointer hover:border-red-300 transition-colors">
+                        <input type="radio" name="cancellation_reason" value="Lainnya" id="radio-lainnya" class="accent-red-500 w-4 h-4">
+                        <span class="text-sm text-gray-600 font-medium leading-tight">Lainnya...</span>
+                    </label>
+                </div>
+                <textarea id="cancel_reason_other" name="cancel_reason_other" rows="2" class="w-full mt-3 p-3 bg-white border border-gray-200 rounded-xl text-sm hidden focus:ring-2 focus:ring-red-400 focus:outline-none" placeholder="Tulis alasanmu di sini..."></textarea>
+            </div>
+
+            <!-- Box Form Refund -->
+            <div id="refund_info_box" class="hidden bg-amber-50 border-2 border-amber-200 p-4 rounded-xl mt-2">
+                <p class="text-xs font-bold text-amber-800 mb-3">Dana Sudah Masuk. Form Pengembalian (Refund):</p>
+                <div class="space-y-3">
+                    <input type="text" name="refund_bank" id="refund_bank" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Nama Bank / E-Wallet (Cth: BCA, GoPay)">
+                    <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" name="refund_norek" id="refund_norek" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Nomor Rekening / No. HP">
+                    <input type="text" name="refund_nama" id="refund_nama" class="w-full p-2.5 border border-amber-200 rounded-lg text-sm focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400 bg-white" placeholder="Atas Nama (A.N)">
+                </div>
+                <p class="text-[10px] text-amber-700 mt-2 font-medium leading-tight">*Admin akan mengecek dan mentransfer balik danamu dalam 1x24 jam.</p>
+            </div>
+
+            <div class="pt-4 flex gap-3">
+                <button type="button" onclick="closeCancelModal()" class="flex-1 py-3.5 bg-white text-gray-500 font-extrabold rounded-2xl shadow-sm border-2 border-gray-100 hover:text-gray-700 transition-colors">Kembali</button>
+                <button type="submit" id="btn-submit-cancel" class="flex-1 py-3.5 bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl shadow-md active:scale-95 transition">Ya, Batalkan</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <!-- POP-UP MODAL PENGINGAT PELUNASAN SAAT STATUS SIAP DIKIRIM -->
-<div id="pelunasanReminderModal" class="fixed inset-0 z-[65] flex items-center justify-center bg-buyer-textPrimary/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300 print:hidden p-4">
-    <div class="bg-buyer-bg border-2 border-white rounded-[2.5rem] max-w-md w-full p-7 text-center shadow-[inset_0_-4px_8px_rgba(192,153,206,0.3),inset_0_4px_8px_rgba(255,255,255,1),0_20px_40px_rgba(0,0,0,0.25)] transform scale-95 transition-transform duration-300 relative">
-        <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border-4 border-white">
-            <svg class="w-10 h-10 text-amber-500 animate-bounce" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+<div id="pelunasanReminderModal" class="fixed inset-0 z-[65] flex items-center justify-center bg-gray-900/60 hidden opacity-0 transition-opacity duration-200 print:hidden p-4">
+    <div class="bg-buyer-bg border-2 border-white rounded-[2.5rem] max-w-md w-full p-7 text-center shadow-2xl transform scale-95 transition-transform duration-200 relative">
+        <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white">
+            <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
         </div>
@@ -253,11 +308,11 @@
             <p id="reminder-modal-method" class="text-[11px] font-bold text-purple-700 mt-1">-</p>
         </div>
         <div class="flex flex-col gap-2.5">
-            <button type="button" id="btn-modal-lunasi-qris" class="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2">
+            <button type="button" id="btn-modal-lunasi-qris" class="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-sm rounded-2xl shadow-lg transition-colors flex items-center justify-center gap-2">
                 <span>Bayar Pelunasan QRIS Sekarang</span>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
             </button>
-            <button type="button" onclick="closePelunasanReminderModal()" class="w-full py-3 bg-white hover:bg-gray-50 text-gray-600 font-extrabold text-xs rounded-2xl border border-gray-200 transition-all">
+            <button type="button" onclick="closePelunasanReminderModal()" class="w-full py-3 bg-white hover:bg-gray-50 text-gray-600 font-extrabold text-xs rounded-2xl border border-gray-200 transition-colors">
                 Lihat Detail Nota
             </button>
         </div>
@@ -268,6 +323,14 @@
 @push('script')
 <script>
     let currentNotaResi = '';
+    let shouldShowReminder = false;
+
+    // Escape HTML biar data dari API aman dimasukin ke innerHTML
+    function esc(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[c]));
+    }
 
     function copyResiNota() {
         if (!currentNotaResi) return;
@@ -281,36 +344,139 @@
         }
     }
 
+    // ---------- Helper modal (satu fungsi buat semua modal) ----------
+    const modalTimers = {};
+
+    function showModal(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        clearTimeout(modalTimers[id]);          // batalin timer hide kalau user spam klik
+        el.classList.remove('hidden');
+        void el.offsetWidth;                    // paksa reflow biar transisi jalan, tanpa setTimeout
+        el.classList.remove('opacity-0');
+        el.firstElementChild.classList.remove('scale-95');
+    }
+
+    function hideModal(id, onDone) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.add('opacity-0');
+        el.firstElementChild.classList.add('scale-95');
+        clearTimeout(modalTimers[id]);
+        modalTimers[id] = setTimeout(() => {
+            el.classList.add('hidden');
+            if (onDone) onDone();
+        }, 200);                                // samain dengan duration-200 di CSS
+    }
+
     function openImageZoomModal(imgUrl, captionText = 'Preview Gambar') {
         if (!imgUrl) return;
-        $('#zoom-modal-img').attr('src', imgUrl);
-        $('#zoom-modal-caption').text(captionText);
-        $('#imageZoomModal').removeClass('hidden');
-        setTimeout(() => {
-            $('#imageZoomModal').removeClass('opacity-0');
-            $('#imageZoomModal > div').removeClass('scale-95');
-        }, 10);
+        document.getElementById('zoom-modal-img').src = imgUrl;
+        document.getElementById('zoom-modal-caption').textContent = captionText;
+        showModal('imageZoomModal');
+    }
+    function closeImageZoomModal() { hideModal('imageZoomModal'); }
+
+    function openPelunasanReminderModal() { showModal('pelunasanReminderModal'); }
+    function closePelunasanReminderModal() { hideModal('pelunasanReminderModal'); }
+
+    function openCancelModal(isPaid) {
+        const orderNumber = new URLSearchParams(window.location.search).get('order_number');
+        if (!orderNumber) return;
+
+        $('#cancel_order_number').val(orderNumber);
+        $('#refund_info_box').toggleClass('hidden', !isPaid);
+        $('#refund_bank, #refund_norek, #refund_nama').prop('required', !!isPaid).val('');
+
+        showModal('cancelModal');
     }
 
-    function closeImageZoomModal() {
-        $('#imageZoomModal').addClass('opacity-0');
-        $('#imageZoomModal > div').addClass('scale-95');
-        setTimeout(() => { $('#imageZoomModal').addClass('hidden'); }, 300);
+    function closeCancelModal() {
+        hideModal('cancelModal', () => {
+            $('#form-cancel-order')[0].reset();
+            $('#cancel_reason_other').addClass('hidden').prop('required', false);
+        });
     }
 
-    function openPelunasanReminderModal() {
-        $('#pelunasanReminderModal').removeClass('hidden');
-        setTimeout(() => {
-            $('#pelunasanReminderModal').removeClass('opacity-0');
-            $('#pelunasanReminderModal > div').removeClass('scale-95');
-        }, 50);
-    }
+    // Delegasi klik buat zoom gambar (gantiin inline onclick)
+    $(document).on('click', '[data-zoom-target], [data-zoom-src]', function () {
+        const target = this.dataset.zoomTarget;
+        const src = target ? $(target).attr('src') : this.dataset.zoomSrc;
+        openImageZoomModal(src, this.dataset.zoomCaption);
+    });
 
-    function closePelunasanReminderModal() {
-        $('#pelunasanReminderModal').addClass('opacity-0');
-        $('#pelunasanReminderModal > div').addClass('scale-95');
-        setTimeout(() => { $('#pelunasanReminderModal').addClass('hidden'); }, 300);
-    }
+    $('input[name="cancellation_reason"]').change(function() {
+        if ($('#radio-lainnya').is(':checked')) {
+            $('#cancel_reason_other').removeClass('hidden').prop('required', true);
+        } else {
+            $('#cancel_reason_other').addClass('hidden').prop('required', false);
+        }
+    });
+
+    $('#form-cancel-order').submit(function(e) {
+        e.preventDefault();
+
+        let reason = $('input[name="cancellation_reason"]:checked').val();
+        if (reason === 'Lainnya') {
+            reason = 'Lainnya: ' + $('#cancel_reason_other').val();
+        }
+
+        if (!reason) {
+            alert('Alasan pembatalan wajib diisi.');
+            return;
+        }
+
+        let orderNumber = $('#cancel_order_number').val();
+        let btn = $('#btn-submit-cancel');
+        let oriText = btn.html();
+        btn.html('<span class="animate-pulse">Memproses...</span>').prop('disabled', true);
+
+        $.ajax({
+            url: "/api/pembeli/checkout/cancel",
+            type: "POST",
+            data: {
+                order_number: orderNumber,
+                cancellation_reason: reason,
+                _token: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if (res.status === 'success') {
+                    let isRefundFormVisible = !$('#refund_info_box').hasClass('hidden');
+                    let bankValue = $('#refund_bank').val();
+
+                    if (isRefundFormVisible && bankValue) {
+                        $.ajax({
+                            url: "/api/pembeli/checkout/refund-account",
+                            type: "POST",
+                            data: {
+                                order_number: orderNumber,
+                                refund_bank: bankValue,
+                                refund_norek: $('#refund_norek').val(),
+                                refund_nama: $('#refund_nama').val(),
+                                _token: $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function() {
+                                window.location.reload();
+                            },
+                            error: function() {
+                                alert('Pesanan dibatalkan, namun gagal menyimpan data rekening refund otomatis. Silakan atur manual di halaman Nota.');
+                                window.location.reload();
+                            }
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert(res.message || 'Gagal membatalkan pesanan.');
+                    btn.html(oriText).prop('disabled', false);
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON?.message || 'Terjadi kesalahan saat membatalkan pesanan.');
+                btn.html(oriText).prop('disabled', false);
+            }
+        });
+    });
 
     function kirimRekeningRefund(e, orderNumber) {
         e.preventDefault();
@@ -350,9 +516,15 @@
     }
 
     function lunasiTagihan(orderNumber) {
-        let btn = $('#btn-lunasi, #btn-modal-lunasi-qris');
-        let originalText = btn.first().html();
-        btn.html('<span class="animate-pulse">Menyiapkan QRIS...</span>').prop('disabled', true);
+        const $btns = $('#btn-lunasi, #btn-modal-lunasi-qris');
+
+        // Simpan isi asli tiap tombol (dua tombol ini isinya beda)
+        $btns.each(function () { $(this).data('ori', $(this).html()); });
+        const restore = () => $btns.each(function () {
+            $(this).html($(this).data('ori')).prop('disabled', false);
+        });
+
+        $btns.html('<span class="animate-pulse">Menyiapkan QRIS...</span>').prop('disabled', true);
 
         $.ajax({
             url: "/api/pembeli/checkout/pay-remaining",
@@ -362,13 +534,16 @@
                 _token: $('meta[name="csrf-token"]').attr('content')
             },
             success: function(res) {
-                if(res.status === 'success') {
+                if (res.status === 'success') {
                     window.location.href = res.data.redirect_url;
+                } else {
+                    alert(res.message || 'Gagal memproses pelunasan.');
+                    restore();
                 }
             },
             error: function(xhr) {
                 alert(xhr.responseJSON?.message || 'Gagal memproses pelunasan.');
-                btn.html(originalText).prop('disabled', false);
+                restore();
             }
         });
     }
@@ -382,9 +557,11 @@
         const trackingNumber = meta.tracking_number || order.tracking_number || '';
         const courierStatus = (meta.courier_status || order.courier_status || (trackingNumber ? 'in_transit' : 'waiting_resi')).toLowerCase();
         const manifest = Array.isArray(meta.courier_manifest) ? meta.courier_manifest : [];
+
+        // Pengecekan master untuk mencegah pelacakan render di status 'pending' / 'diproses'
         const isSiapDikirim = ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar', 'selesai'].includes(rawOrderStatus);
 
-        if (isInternal && !isSiapDikirim) {
+        if (!isSiapDikirim) {
             return;
         }
 
@@ -461,9 +638,9 @@
                 : 'bg-gray-100 text-gray-400';
 
             return `
-                <div class="p-2.5 rounded-xl border ${boxStyle} flex items-center gap-2.5 transition-all">
+                <div class="p-2.5 rounded-xl border ${boxStyle} flex items-center gap-2.5">
                     <span class="w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center shrink-0 ${circleStyle}">
-                        ${isDone && !isCurrent ? '&#10003;' : s.num}
+                        ${isDone && !isCurrent ? '✓' : s.num}
                     </span>
                     <span class="text-[11px] font-extrabold leading-tight">${s.title}</span>
                 </div>
@@ -485,10 +662,10 @@
                         <span class="absolute -left-[7px] top-1 w-3 h-3 rounded-full ${dotClass}"></span>
                         <div class="bg-white p-3 rounded-xl border ${isLatest ? 'border-emerald-200 shadow-sm' : 'border-gray-100'}">
                             <div class="flex flex-wrap items-center justify-between gap-2 mb-1">
-                                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ${badgeClass}">${m.status || 'UPDATE'}</span>
-                                <span class="text-[10px] font-bold text-gray-400">${m.time || '-'}</span>
+                                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ${badgeClass}">${esc(m.status || 'UPDATE')}</span>
+                                <span class="text-[10px] font-bold text-gray-400">${esc(m.time || '-')}</span>
                             </div>
-                            <p class="text-xs leading-relaxed ${textClass}">${m.description || '-'}</p>
+                            <p class="text-xs leading-relaxed ${textClass}">${esc(m.description || '-')}</p>
                         </div>
                     </div>
                 `;
@@ -496,7 +673,7 @@
         } else {
             const defaultMsg = !isInternal && !trackingNumber
                 ? 'Pesanan sedang disiapkan untuk diserahkan ke pihak ekspedisi. Nomor resi akan otomatis muncul di halaman ini setelah diinput oleh Admin.'
-                : `Pesanan sedang diproses pengirimannya melalui ${meta.courier_name || 'Kurir'}.`;
+                : `Pesanan sedang diproses pengirimannya melalui ${esc(meta.courier_name || 'Kurir')}.`;
 
             manifestHtml = `
                 <div class="p-3.5 bg-white rounded-xl border border-purple-100 text-xs font-semibold text-gray-500">
@@ -570,8 +747,8 @@
                         itemsHtml += `
                             <tr class="group">
                                 <td class="py-3 pr-2">
-                                    <p class="font-bold text-gray-800">${productName}</p>
-                                    <p class="text-xs text-gray-400">${categoryName}</p>
+                                    <p class="font-bold text-gray-800">${esc(productName)}</p>
+                                    <p class="text-xs text-gray-400">${esc(categoryName)}</p>
                                 </td>
                                 <td class="py-3 text-center text-gray-600 font-medium">${item.quantity}</td>
                                 <td class="py-3 text-right text-gray-600">${formatRupiah(item.price_at_order)}</td>
@@ -593,6 +770,7 @@
                     let paymentMethod = (order.transaction?.payment_method || 'transfer').toLowerCase();
                     let rawOrderStatus = (order.status || 'pending').toLowerCase().replace(/\s+/g, '_');
                     let isSiapDikirim = ['siap_diambil', 'siap_diantar', 'siap_dikirim', 'dikirim', 'diantar'].includes(rawOrderStatus);
+                    let isPaid = (paymentStatus === 'paid_dp' || paymentStatus === 'paid_full');
 
                     // Render Komponen Live Tracking Paket & Riwayat Manifest Kurir
                     renderLiveTrackingSection(order, meta, rawOrderStatus, paymentStatus);
@@ -627,7 +805,7 @@
                                     <svg class="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <div>
                                         <p class="font-bold text-red-800 text-sm mb-1">Pesanan Dibatalkan</p>
-                                        <p class="text-xs text-red-600 font-medium">Alasan: ${order.cancellation_reason || '-'}</p>
+                                        <p class="text-xs text-red-600 font-medium">Alasan: ${esc(order.cancellation_reason || '-')}</p>
                                     </div>
                                 </div>
                         `;
@@ -657,17 +835,17 @@
                                     : '/storage/bukti_refund/' + order.refund_proof.replace(/^\/?(storage\/)?(bukti_refund\/)?/i, ''));
                                 bottomHtml += `
                                     <div class="bg-white p-3 rounded-xl border border-red-100">
-                                        <span class="text-xs font-bold text-green-600 block mb-3">Dana berhasil dikembalikan oleh Admin ke (${order.refund_account_number || '-'})</span>
-                                        <div class="rounded-lg overflow-hidden border border-gray-100 mb-3 bg-gray-50 flex justify-center p-2 cursor-pointer" onclick="openImageZoomModal('${refundUrl}', 'Bukti Refund Admin')">
-                                            <img src="${refundUrl}" alt="Bukti Refund" class="max-h-48 w-auto object-contain rounded-md shadow-sm">
+                                        <span class="text-xs font-bold text-green-600 block mb-3">Dana berhasil dikembalikan oleh Admin ke (${esc(order.refund_account_number || '-')})</span>
+                                        <div class="rounded-lg overflow-hidden border border-gray-100 mb-3 bg-gray-50 flex justify-center p-2 cursor-pointer" data-zoom-src="${esc(refundUrl)}" data-zoom-caption="Bukti Refund Admin">
+                                            <img src="${esc(refundUrl)}" alt="Bukti Refund" loading="lazy" decoding="async" class="max-h-48 w-auto object-contain rounded-md shadow-sm">
                                         </div>
-                                        <button type="button" onclick="openImageZoomModal('${refundUrl}', 'Bukti Refund Admin')" class="w-full text-xs font-bold text-red-600 hover:text-red-700 underline block text-center">Lihat Bukti Transfer Ukuran Penuh</button>
+                                        <button type="button" data-zoom-src="${esc(refundUrl)}" data-zoom-caption="Bukti Refund Admin" class="w-full text-xs font-bold text-red-600 hover:text-red-700 underline block text-center">Lihat Bukti Transfer Ukuran Penuh</button>
                                     </div>
                                 `;
                             } else {
                                 bottomHtml += `
                                     <div class="flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-200">
-                                        Refund sedang diproses Admin ke rekening (${order.refund_account_number}). Maksimal 1x24 jam.
+                                        Refund sedang diproses Admin ke rekening (${esc(order.refund_account_number)}). Maksimal 1x24 jam.
                                     </div>
                                 `;
                             }
@@ -675,14 +853,13 @@
                         }
 
                         bottomHtml += `</div>`;
-                        $('#bottom-section').html(bottomHtml).removeClass('hidden');
                     } else if (paymentStatus === 'unpaid' || paymentStatus === 'failed') {
                         watermarkHtml = 'BELUM DIBAYAR';
                         $('#watermark-status').addClass('border-red-500 text-red-600 bg-red-50').text(watermarkHtml);
                         $('#summary-label').text('Tagihan Saat Ini');
                         $('#summary-value').text(formatRupiah(order.transaction?.amount || order.total_amount)).removeClass('text-purple-700').addClass('text-red-600');
 
-                        $('#bottom-section').html(`
+                        bottomHtml += `
                             <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-4 flex gap-3 items-start">
                                 <svg class="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <div>
@@ -693,13 +870,13 @@
                             <a href="/pembayaran/${order.order_number}" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-center text-sm transition shadow-md">
                                 Bayar Sekarang via QRIS
                             </a>
-                        `).removeClass('hidden');
+                        `;
                     } else if (paymentStatus === 'paid_full' || remainingAmount <= 0) {
                         watermarkHtml = 'LUNAS';
                         $('#watermark-status').addClass('border-green-500 text-green-600 bg-green-50').text(watermarkHtml);
                         $('#summary-label').text('Total Lunas');
                         $('#summary-value').text(formatRupiah(order.total_amount));
-                        $('#bottom-section').html('<p class="text-sm font-bold text-green-600 text-center">Pesanan telah lunas. Terima kasih telah berbelanja di Raya Kitchen!</p>').removeClass('hidden');
+                        bottomHtml += '<p class="text-sm font-bold text-green-600 text-center">Pesanan telah lunas. Terima kasih telah berbelanja di Raya Kitchen!</p>';
                     } else {
                         watermarkHtml = `DP 30% - Sisa ${formatRupiah(remainingAmount)}`;
                         $('#watermark-status').addClass('border-amber-500 text-amber-600 bg-amber-50').text(watermarkHtml);
@@ -709,7 +886,7 @@
                         $('#summary-value').text(formatRupiah(remainingAmount)).removeClass('text-purple-700').addClass('text-red-600');
 
                         if (paymentMethod === 'cod') {
-                            $('#bottom-section').html(`
+                            bottomHtml += `
                                 <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-4 flex gap-3 items-start">
                                     <svg class="w-6 h-6 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <div>
@@ -720,9 +897,9 @@
                                 <button type="button" id="btn-lunasi" onclick="lunasiTagihan('${order.order_number}')" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-center text-sm transition shadow-md">
                                     Lunasi Sisa Tagihan via QRIS Sekarang
                                 </button>
-                            `).removeClass('hidden');
+                            `;
                         } else {
-                            $('#bottom-section').html(`
+                            bottomHtml += `
                                 <div class="p-4 bg-red-50 rounded-2xl border border-red-100 mb-4 flex gap-3 items-start">
                                     <svg class="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <div>
@@ -730,28 +907,51 @@
                                         <p class="text-xs text-red-600 font-medium">Pesananmu baru dibayar DP. Silakan segera lunasi sisa tagihan sebesar <strong>${formatRupiah(remainingAmount)}</strong> melalui QRIS.</p>
                                     </div>
                                 </div>
-                                <button type="button" id="btn-lunasi" onclick="lunasiTagihan('${order.order_number}')" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-center text-sm transition shadow-[0_4px_10px_rgba(239,68,68,0.3)]">
+                                <button type="button" id="btn-lunasi" onclick="lunasiTagihan('${order.order_number}')" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-center text-sm transition shadow-md">
                                     Bayar Sisa Tagihan Sekarang
                                 </button>
-                            `).removeClass('hidden');
+                            `;
                         }
 
                         if (isSiapDikirim) {
                             $('#reminder-modal-amount').text(formatRupiah(remainingAmount));
-                            $('#btn-modal-lunasi-qris').attr('onclick', `lunasiTagihan('${order.order_number}')`);
+                            $('#btn-modal-lunasi-qris').off('click').on('click', () => lunasiTagihan(order.order_number));
                             if (paymentMethod === 'cod') {
                                 $('#reminder-modal-method').text('Metode: COD (Wajib Pelunasan 70%)');
-                                $('#reminder-modal-desc').html(`Pesanan <strong>#${order.order_number}</strong> sudah <strong>SIAP DIKIRIM</strong>! Mohon segera siapkan uang tunai sebesar <strong>${formatRupiah(remainingAmount)}</strong> untuk diserahkan ke kurir saat barang sampai, atau lunasi praktis via QRIS sekarang.`);
+                                $('#reminder-modal-desc').html(`Pesanan <strong>#${esc(order.order_number)}</strong> sudah <strong>SIAP DIKIRIM</strong>! Mohon segera siapkan uang tunai sebesar <strong>${formatRupiah(remainingAmount)}</strong> untuk diserahkan ke kurir saat barang sampai, atau lunasi praktis via QRIS sekarang.`);
                             } else {
                                 $('#reminder-modal-method').text('Metode: Transfer QRIS (DP 30%)');
-                                $('#reminder-modal-desc').html(`Pesanan <strong>#${order.order_number}</strong> sudah <strong>SIAP DIKIRIM</strong>! Yuk segera selesaikan pelunasan sisa tagihan sebesar <strong>${formatRupiah(remainingAmount)}</strong> agar pesananmu bisa langsung diselesaikan.`);
+                                $('#reminder-modal-desc').html(`Pesanan <strong>#${esc(order.order_number)}</strong> sudah <strong>SIAP DIKIRIM</strong>! Yuk segera selesaikan pelunasan sisa tagihan sebesar <strong>${formatRupiah(remainingAmount)}</strong> agar pesananmu bisa langsung diselesaikan.`);
                             }
-                            openPelunasanReminderModal();
+                            // Jangan buka modal sekarang — tunggu nota selesai ke-render dulu
+                            shouldShowReminder = true;
                         }
+                    }
+
+                    // TAMPILKAN TOMBOL BATAL PESANAN JIKA STATUS PENDING
+                    if (rawOrderStatus === 'pending') {
+                        bottomHtml += `
+                            <div class="mt-6 pt-5 border-t border-gray-100 flex flex-col items-center justify-center">
+                                <button type="button" onclick="openCancelModal(${isPaid})" class="w-full sm:w-auto px-5 py-2.5 bg-white border-2 border-red-200 hover:bg-red-50 text-red-600 font-bold text-sm rounded-xl transition shadow-sm flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Batalkan Pesanan
+                                </button>
+                                <p class="text-[11px] text-gray-400 font-medium mt-2 text-center">Hanya pesanan berstatus "Pending" yang dapat dibatalkan.</p>
+                            </div>
+                        `;
+                    }
+
+                    if (bottomHtml) {
+                        $('#bottom-section').html(bottomHtml).removeClass('hidden');
                     }
 
                     $('#loading-nota').addClass('hidden');
                     $('#nota-card').removeClass('hidden');
+
+                    // Baru munculin pop-up pengingat setelah nota keliatan (kasih napas buat first paint)
+                    if (shouldShowReminder) {
+                        setTimeout(openPelunasanReminderModal, 400);
+                    }
                 }
             },
             error: function() {

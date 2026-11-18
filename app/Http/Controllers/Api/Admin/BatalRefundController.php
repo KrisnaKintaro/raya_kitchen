@@ -158,6 +158,7 @@ class BatalRefundController extends Controller
         // Trigger notifikasi Web & WhatsApp ke pembeli bahwa dana refund telah ditransfer
         NotificationController::send($order, 'refund_selesai');
 
+
         $pendingCount = Order::where('status', 'dibatalkan')
             ->where('refund_status', 'pending')
             ->count();

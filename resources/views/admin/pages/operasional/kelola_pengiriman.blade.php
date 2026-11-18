@@ -230,7 +230,7 @@
 <!-- Mode 1: Upload Bukti (Khusus Kurir Internal)              -->
 <!-- Mode 2: Cek/Inspeksi Bukti Kurir (Khusus Ekspedisi)       -->
 <!-- ========================================================= -->
-<div id="modal-penyelesaian" role="dialog" aria-modal="true" aria-labelledby="modal-title-penyelesaian" class="fixed inset-0 z-50 flex items-center justify-center bg-[#1E1B24]/65 opacity-0 pointer-events-none transition-opacity duration-150 p-4">
+<div id="modal-penyelesaian" role="dialog" aria-modal="true" aria-labelledby="modal-title-penyelesaian" class="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1E1B24]/65 opacity-0 pointer-events-none transition-opacity duration-150 p-4">
     <div id="modal-penyelesaian-card" class="clay-modal-surface w-full max-w-lg p-6 md:p-7 relative max-h-[90dvh] overflow-y-auto hide-scrollbar">
         <button type="button" id="btn-close-modal" aria-label="Tutup modal" class="min-w-[44px] min-h-[44px] absolute top-5 right-5 rounded-full bg-white text-admin-textMuted shadow-sm hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-admin-sideBg transition-transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center">
             <i class="ph ph-x text-lg"></i>
@@ -368,9 +368,9 @@
 @push('script')
 <script>
 /**
- * ===================================================================
- * KELOLA PENGIRIMAN MODULE (v13.0 - Clean Anti-Fake & Anti-Cross Courier)
- * ===================================================================
+- ===================================================================
+- KELOLA PENGIRIMAN MODULE (v13.1 - Z-Index & Bug Fixes Applied)
+- ===================================================================
  */
 (function() {
     'use strict';
@@ -483,9 +483,21 @@
     }
 
     function findOrderById(orderId) {
-        return ordersState.internal.find((o) => o.id === orderId)
-            || ordersState.ekspedisi.find((o) => o.id === orderId)
-            || null;
+        const idStr = String(orderId); // FIX 2: Konversi ke string agar strict comparison === tidak gagal
+
+        let order = ordersState.internal.find((o) => String(o.id) === idStr);
+        if (order) {
+            order._isInternal = true;
+            return order;
+        }
+
+        order = ordersState.ekspedisi.find((o) => String(o.id) === idStr);
+        if (order) {
+            order._isInternal = false;
+            return order;
+        }
+
+        return null;
     }
 
     function renderSkeletons(container) {
@@ -1273,7 +1285,8 @@
         const order = findOrderById(orderId);
         if (!order) return;
 
-        const isInternal = order.type === 'internal';
+        // FIX 3: Gunakan flag yang sudah terset di findOrderById (bukan string 'internal')
+        const isInternal = order._isInternal;
         const sisa = Number(order.remaining_amount || 0);
         const reqPelunasan = sisa > 0;
 
@@ -1347,9 +1360,10 @@
         if (!modalPenyelesaian) return;
         if (show) {
             modalPenyelesaian.classList.remove('opacity-0', 'pointer-events-none');
-            window.requestAnimationFrame(() => {
+            // FIX 4: Jeda tipis biar browser gak skip render transition-nya
+            setTimeout(() => {
                 modalPenyelesaian.classList.add('modal-backdrop-open');
-            });
+            }, 15);
         } else {
             modalPenyelesaian.classList.remove('modal-backdrop-open');
             modalPenyelesaian.classList.add('opacity-0', 'pointer-events-none');
@@ -1618,6 +1632,11 @@
     }
 
     function mount() {
+        // FIX 1: Pindahkan modal ke luar dari container admin_master (bebas dari z-index trap)
+        if (modalPenyelesaian) {
+            document.body.appendChild(modalPenyelesaian);
+        }
+
         tabBtns.forEach((btn) => btn.addEventListener('click', handleTabClick));
         document.addEventListener('click', handleDocumentClick);
         document.addEventListener('keydown', handleKeyDown);
