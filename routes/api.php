@@ -17,6 +17,9 @@ use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
+use App\Http\Controllers\Api\Admin\KelolaAkunController;
+use App\Http\Controllers\Api\Admin\ProfilPerusahaanController;
+use App\Http\Controllers\Api\Admin\ProdukResepController;
 use App\Http\Controllers\Api\WhatsAppBotController;
 use Illuminate\Support\Facades\Route;
 
@@ -130,6 +133,36 @@ Route::prefix('admin')->group(function () {
     Route::get('/bot-templates', [WhatsappBotTemplateController::class, 'index']);
     Route::post('/bot-templates/update', [WhatsappBotTemplateController::class, 'update']);
     Route::post('/bot-templates/reset', [WhatsappBotTemplateController::class, 'reset']);
+
+    // Kelola Akun: Akses Admin & Staf
+    Route::get('/kelola-akses', [KelolaAkunController::class, 'indexAkses']);
+    Route::post('/kelola-akses', [KelolaAkunController::class, 'storeAkses']);
+    Route::post('/kelola-akses/{id}/reset-password', [KelolaAkunController::class, 'resetPasswordAkses']);
+    Route::delete('/kelola-akses/{id}', [KelolaAkunController::class, 'destroyAkses']);
+
+    // Kelola Akun: Daftar Pelanggan
+    Route::get('/pelanggan', [KelolaAkunController::class, 'indexPelanggan']);
+
+    // Sistem & Toko: Profil Perusahaan
+    Route::get('/profil-perusahaan', [ProfilPerusahaanController::class, 'show']);
+    Route::post('/profil-perusahaan', [ProfilPerusahaanController::class, 'update']);
+
+    // Produk & Resep: Katalog Produk & Varian
+    Route::get('/produk', [ProdukResepController::class, 'indexProduk']);
+    Route::post('/produk', [ProdukResepController::class, 'storeProduk']);
+    Route::post('/produk/{id}', [ProdukResepController::class, 'updateProduk']);
+    Route::post('/produk/{id}/toggle', [ProdukResepController::class, 'toggleProduk']);
+    Route::delete('/produk/{id}', [ProdukResepController::class, 'destroyProduk']);
+
+    Route::post('/produk/{productId}/varian', [ProdukResepController::class, 'storeVarian']);
+    Route::post('/varian/{variantId}', [ProdukResepController::class, 'updateVarian']);
+    Route::delete('/varian/{variantId}', [ProdukResepController::class, 'destroyVarian']);
+
+    // Produk & Resep: Resep Digital
+    Route::get('/resep', [ProdukResepController::class, 'indexResep']);
+    Route::post('/resep', [ProdukResepController::class, 'storeResep']);
+    Route::post('/resep/{id}', [ProdukResepController::class, 'updateResep']);
+    Route::delete('/resep/{id}', [ProdukResepController::class, 'destroyResep']);
 });
 
 // |--------------------------------------------------------------------------
