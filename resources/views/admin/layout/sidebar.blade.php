@@ -226,6 +226,7 @@
             try {
                 const res = await fetch('/api/admin/batal-refund/count', {
                     method: 'GET',
+                    credentials: 'same-origin',
                     headers: { 'Accept': 'application/json' },
                     signal: badgeFetchController.signal
                 });

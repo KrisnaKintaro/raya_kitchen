@@ -25,7 +25,9 @@ class ForgResetPasswordController extends Controller
             $waNumber = '62' . $waNumber;
         }
 
-        $user = User::where('whatsapp_number', $waNumber)->first();
+        $user = User::where('whatsapp_number', $waNumber)
+            ->where('role', 'pelanggan')
+            ->first();
 
         if (!$user) {
             return response()->json([
@@ -101,7 +103,9 @@ class ForgResetPasswordController extends Controller
             ], 400);
         }
 
-        $user = User::where('whatsapp_number', $waNumber)->first();
+        $user = User::where('whatsapp_number', $waNumber)
+        ->where('role', 'pelanggan')
+        ->first();
 
         if (!$user) {
             return response()->json(['status' => 'error', 'message' => 'User nggak ketemu!'], 404);

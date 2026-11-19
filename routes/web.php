@@ -10,7 +10,7 @@ Route::get('/', function () {
     return view('pembeli.pages.produk.katalog');
 })->name('katalog');
 
-Route::get('/katalogProduk', function(){
+Route::get('/katalogProduk', function () {
     return view('pembeli.pages.produk.katalog');
 });
 
@@ -37,10 +37,9 @@ Route::get('/pin-lokasi/{id}', function (Request $request, $id) {
 
 
 // ==========================================
-// PROTECTED ROUTES (Hanya buat user yang udah Login)
+// PROTECTED ROUTES PEMBELI (Login + Role Pelanggan)
 // ==========================================
-Route::middleware(['auth'])->group(function () {
-
+Route::middleware(['auth', 'role:pelanggan'])->group(function () {
     Route::get('/keranjang', function () {
         return view('pembeli.pages.keranjang');
     })->name('keranjang');
@@ -53,7 +52,6 @@ Route::middleware(['auth'])->group(function () {
         return view('pembeli.pages.profil');
     })->name('profil');
 
-    // Tambahkan rute alamat di sini dan beri name('alamat')
     Route::get('/alamat', function () {
         return view('pembeli.pages.alamat');
     })->name('alamat');
@@ -65,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 // ==========================================
-// AUTH ROUTES (Login, Register, dll)
+// AUTH ROUTES PEMBELI (Hanya untuk Guest)
 // ==========================================
 Route::middleware(['guest'])->group(function () {
     Route::get('/login', function () {
@@ -95,65 +93,73 @@ Route::middleware(['guest'])->group(function () {
 // ==========================================
 Route::prefix('admin')->group(function () {
 
-    // Auth Admin
-    Route::get('/login', function () {
-        return view('auth.admin.login');
-    })->name('admin.login');
+    // Auth Admin (Hanya untuk Guest)
+    Route::middleware(['guest'])->group(function () {
+        Route::get('/login', function () {
+            return view('auth.admin.login');
+        })->name('admin.login');
 
-    Route::get('/lupa-password', function () {
-        return view('auth.admin.forget_password');
-    })->name('admin.password.request');
+        Route::get('/lupa-password', function () {
+            return view('auth.admin.forget_password');
+        })->name('admin.password.request');
 
-    Route::get('/reset-password', function () {
-        return view('auth.admin.reset_password');
-    })->name('admin.password.reset');
+        Route::get('/reset-password', function () {
+            return view('auth.admin.reset_password');
+        })->name('admin.password.reset');
+    });
 
-    // Halaman Admin
-    Route::get('/dashboard_finansial', function () {
-        return view('admin.pages.finansial.ringkasan_finansial');
-    })->name('admin.dashboard-finansial');
+    // Halaman Dashboard Admin (Wajib Login + Role Admin)
+    Route::middleware(['auth', 'role:admin'])->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('admin.dashboard-finansial');
+        })->name('admin.index');
 
-    Route::get('/profil_perusahaan', function () {
-        return view('admin.pages.sistem_dan_toko.profil_perusahaan');
-    })->name('admin.profil');
+        Route::get('/dashboard_finansial', function () {
+            return view('admin.pages.finansial.ringkasan_finansial');
+        })->name('admin.dashboard-finansial');
 
-    Route::get('/operasional_libur', function () {
-        return view('admin.pages.sistem_dan_toko.operasional_libur');
-    })->name('admin.operasional');
+        Route::get('/profil_perusahaan', function () {
+            return view('admin.pages.sistem_dan_toko.profil_perusahaan');
+        })->name('admin.profil');
+
+        Route::get('/operasional_libur', function () {
+            return view('admin.pages.sistem_dan_toko.operasional_libur');
+        })->name('admin.operasional');
 
         Route::get('/kelola-akses', function () {
-        return view('admin.pages.kelola_akun.akses');
-    })->name('admin.kelola-akses');
+            return view('admin.pages.kelola_akun.akses');
+        })->name('admin.kelola-akses');
 
-    Route::get('/pelanggan', function () {
-        return view('admin.pages.kelola_akun.pelanggan');
-    })->name('admin.pelanggan');
+        Route::get('/pelanggan', function () {
+            return view('admin.pages.kelola_akun.pelanggan');
+        })->name('admin.pelanggan');
 
-    Route::get('/template_pesan', function () {
-        return view('admin.pages.whatsapp_bot.template_pesan');
-    })->name('admin.template-pesan');
+        Route::get('/template_pesan', function () {
+            return view('admin.pages.whatsapp_bot.template_pesan');
+        })->name('admin.template-pesan');
 
-    Route::get('/katalog_varian', function () {
-        return view('admin.pages.produk_resep.katalog_varian');
-    })->name('admin.katalog-varian');
+        Route::get('/katalog_varian', function () {
+            return view('admin.pages.produk_resep.katalog_varian');
+        })->name('admin.katalog-varian');
 
-    Route::get('/resep_digital', function () {
-        return view('admin.pages.produk_resep.resep_digital');
-    })->name('admin.resep-digital');
+        Route::get('/resep_digital', function () {
+            return view('admin.pages.produk_resep.resep_digital');
+        })->name('admin.resep-digital');
 
-    Route::get('/pantauan_dapur', function () {
-        return view('admin.pages.operasional.pantauan_dapur');
-    })->name('admin.pantauan-dapur');
+        Route::get('/pantauan_dapur', function () {
+            return view('admin.pages.operasional.pantauan_dapur');
+        })->name('admin.pantauan-dapur');
 
-    Route::get('/daftar_transaksi', function() {
-        return view('admin.pages.operasional.daftar_transaksi');
-    })->name('admin.daftar-transaksi');
+        Route::get('/daftar_transaksi', function () {
+            return view('admin.pages.operasional.daftar_transaksi');
+        })->name('admin.daftar-transaksi');
 
-    Route::get('/refund_pembatalan', function() {
-        return view('admin.pages.operasional.batal_refund');
-    })->name('admin.refund_pembatalan');
+        Route::get('/refund_pembatalan', function () {
+            return view('admin.pages.operasional.batal_refund');
+        })->name('admin.refund_pembatalan');
 
-    Route::get('/kelola_pengiriman', function () {
-        return view('admin.pages.operasional.kelola_pengiriman');
-    })->name('admin.kelola_pengiriman');
+        Route::get('/kelola_pengiriman', function () {
+            return view('admin.pages.operasional.kelola_pengiriman');
+        })->name('admin.kelola_pengiriman');
+    });
 });

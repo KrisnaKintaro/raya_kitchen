@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reset Sandi Baru Admin - Raya Kitchen</title>
     <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -42,7 +43,7 @@
 
     <!-- Card Utama (Single Centered Card) -->
     <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-admin-accent/50">
-        
+
         <!-- Header Banner dengan Gambar Suasana Dapur -->
         <div class="relative bg-slate-900 p-8 text-center text-white overflow-hidden">
             <div class="absolute inset-0">
@@ -61,11 +62,15 @@
 
         <!-- Form Reset Password -->
         <div class="p-8">
+            <div id="invalid-link-alert" class="hidden mb-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
+                Tautan reset password tidak lengkap atau tidak valid. Silakan ajukan ulang di halaman Lupa Password.
+            </div>
+
             <form id="admin-reset-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Kata Sandi Baru</label>
+                    <label for="password" class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Kata Sandi Baru</label>
                     <div class="relative">
-                        <input type="password" required placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
+                        <input id="password" name="password" type="password" required minlength="6" autocomplete="new-password" placeholder="Minimal 6 karakter" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
                         <button type="button" onclick="togglePassword(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-admin-textMuted hover:text-admin-textMain">
                             <i class="ph ph-eye text-lg"></i>
                         </button>
@@ -73,16 +78,16 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Konfirmasi Sandi Baru</label>
+                    <label for="password_confirmation" class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Konfirmasi Sandi Baru</label>
                     <div class="relative">
-                        <input type="password" required placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
+                        <input id="password_confirmation" name="password_confirmation" type="password" required minlength="6" autocomplete="new-password" placeholder="Ulangi kata sandi baru" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
                         <button type="button" onclick="togglePassword(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-admin-textMuted hover:text-admin-textMain">
                             <i class="ph ph-eye text-lg"></i>
                         </button>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2 mt-2">
+                <button id="btn-submit" type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2 mt-2">
                     <i class="ph ph-check-circle text-base"></i>
                     <span>Simpan Sandi Baru</span>
                 </button>
@@ -91,6 +96,15 @@
     </div>
 
     <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const waParam = urlParams.get('wa') || '';
+        const tokenParam = urlParams.get('token') || '';
+
+        if (!waParam || !tokenParam) {
+            document.getElementById('invalid-link-alert').classList.remove('hidden');
+            document.getElementById('btn-submit').disabled = true;
+        }
+
         function togglePassword(btn) {
             const input = btn.previousElementSibling;
             if (input.type === 'password') {
@@ -102,14 +116,19 @@
             }
         }
 
-        function showNotification(title, message) {
+        function showNotification(title, message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border border-admin-accent shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300';
-            
+            const isError = type === 'error';
+
+            const borderClass = isError ? 'border-red-200' : 'border-admin-accent';
+            const iconBoxClass = isError ? 'bg-red-50 text-red-600' : 'bg-admin-navBg text-admin-sideBg';
+            const iconClass = isError ? 'ph-warning-circle' : 'ph-check-circle';
+
+            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border ${borderClass} shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300`;
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-xl bg-admin-navBg text-admin-sideBg flex items-center justify-center shrink-0">
-                    <i class="ph ph-check-circle text-xl"></i>
+                <div class="w-10 h-10 rounded-xl ${iconBoxClass} flex items-center justify-center shrink-0">
+                    <i class="ph ${iconClass} text-xl"></i>
                 </div>
                 <div>
                     <h4 class="font-black text-sm text-admin-textMain">${title}</h4>
@@ -123,15 +142,74 @@
             setTimeout(() => {
                 toast.classList.add('-translate-y-5', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
-            }, 1800);
+            }, 3500);
         }
 
-        document.getElementById('admin-reset-form').addEventListener('submit', function(e) {
+        document.getElementById('admin-reset-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            showNotification('Sandi Berhasil Diubah!', 'Silakan masuk menggunakan kata sandi baru.');
-            setTimeout(() => {
-                window.location.href = "{{ route('admin.login') }}";
-            }, 1800);
+
+            if (!waParam || !tokenParam) {
+                showNotification('Tautan Tidak Valid', 'Parameter WA atau token tidak ditemukan di URL.', 'error');
+                return;
+            }
+
+            const password = document.getElementById('password').value;
+            const passwordConfirmation = document.getElementById('password_confirmation').value;
+
+            if (password.length < 6) {
+                showNotification('Sandi Terlalu Pendek', 'Kata sandi baru minimal harus 6 karakter.', 'error');
+                return;
+            }
+
+            if (password !== passwordConfirmation) {
+                showNotification('Sandi Tidak Cocok', 'Konfirmasi kata sandi tidak sama dengan kata sandi baru.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit');
+            const originalHtml = btn.innerHTML;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Menyimpan Sandi...</span>';
+
+            try {
+                const response = await fetch('/api/auth/admin/reset-password', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        whatsapp_number: waParam,
+                        token: tokenParam,
+                        password: password,
+                        password_confirmation: passwordConfirmation
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.status !== 'success') {
+                    const errorMsg = result.message || (result.errors ? Object.values(result.errors)[0][0] : 'Gagal mengubah kata sandi.');
+                    showNotification('Reset Gagal', errorMsg, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    return;
+                }
+
+                showNotification('Sandi Berhasil Diubah!', result.message || 'Silakan masuk menggunakan kata sandi baru.', 'success');
+                setTimeout(() => {
+                    window.location.href = result.redirect || "{{ route('admin.login') }}";
+                }, 1500);
+            } catch (err) {
+                showNotification('Koneksi Bermasalah', 'Tidak dapat terhubung ke server. Coba lagi.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         });
     </script>
 </body>

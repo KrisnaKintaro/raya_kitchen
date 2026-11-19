@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login Admin - Raya Kitchen</title>
     <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -42,10 +43,9 @@
 
     <!-- Card Utama (Single Centered Card) -->
     <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-admin-accent/50 relative">
-        
+
         <!-- Header Banner dengan Gambar Suasana Dapur -->
         <div class="relative bg-slate-900 p-8 text-center text-white overflow-hidden">
-            <!-- Background Image Dapur dengan Overlay Gradasi Ungu -->
             <div class="absolute inset-0">
                 <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800" alt="Dapur Raya Kitchen" class="w-full h-full object-cover opacity-45">
                 <div class="absolute inset-0 bg-gradient-to-b from-[#9368B7]/80 via-[#9368B7]/90 to-[#734A97]"></div>
@@ -70,20 +70,20 @@
         <div class="p-8">
             <form id="admin-login-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Nomor WhatsApp</label>
+                    <label for="whatsapp_number" class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Nomor WhatsApp</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-admin-sideBg font-bold text-sm">+62</span>
-                        <input type="tel" required placeholder="81234567890" class="w-full pl-14 pr-4 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
+                        <input id="whatsapp_number" name="whatsapp_number" type="tel" required autocomplete="tel" placeholder="81234567890" class="w-full pl-14 pr-4 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
                     </div>
                 </div>
 
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
-                        <label class="block text-xs font-black uppercase tracking-wider text-admin-textMain">Password</label>
+                        <label for="password" class="block text-xs font-black uppercase tracking-wider text-admin-textMain">Password</label>
                         <a href="{{ route('admin.password.request') }}" class="text-xs font-bold text-admin-sideBg hover:underline">Lupa Password?</a>
                     </div>
                     <div class="relative">
-                        <input type="password" required placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
+                        <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" class="w-full pl-4 pr-12 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
                         <button type="button" onclick="togglePassword(this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-admin-textMuted hover:text-admin-textMain">
                             <i class="ph ph-eye text-lg"></i>
                         </button>
@@ -92,12 +92,12 @@
 
                 <div class="flex items-center text-xs text-admin-textMuted pt-1">
                     <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <input type="checkbox" class="rounded border-purple-300 text-admin-sideBg focus:ring-admin-sideBg w-4 h-4">
+                        <input id="remember" name="remember" type="checkbox" class="rounded border-purple-300 text-admin-sideBg focus:ring-admin-sideBg w-4 h-4">
                         <span>Ingat perangkat ini</span>
                     </label>
                 </div>
 
-                <button type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2 mt-2">
+                <button id="btn-submit" type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2 mt-2">
                     <span>Masuk Dashboard</span>
                     <i class="ph ph-arrow-right text-base"></i>
                 </button>
@@ -122,14 +122,19 @@
             }
         }
 
-        function showNotification(title, message) {
+        function showNotification(title, message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border border-admin-accent shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300';
-            
+            const isError = type === 'error';
+
+            const borderClass = isError ? 'border-red-200' : 'border-admin-accent';
+            const iconBoxClass = isError ? 'bg-red-50 text-red-600' : 'bg-admin-navBg text-admin-sideBg';
+            const iconClass = isError ? 'ph-warning-circle' : 'ph-check-circle';
+
+            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border ${borderClass} shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300`;
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-xl bg-admin-navBg text-admin-sideBg flex items-center justify-center shrink-0">
-                    <i class="ph ph-check-circle text-xl"></i>
+                <div class="w-10 h-10 rounded-xl ${iconBoxClass} flex items-center justify-center shrink-0">
+                    <i class="ph ${iconClass} text-xl"></i>
                 </div>
                 <div>
                     <h4 class="font-black text-sm text-admin-textMain">${title}</h4>
@@ -143,15 +148,62 @@
             setTimeout(() => {
                 toast.classList.add('-translate-y-5', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
-            }, 1800);
+            }, 3000);
         }
 
-        document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+        document.getElementById('admin-login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            showNotification('Login Berhasil!', 'Menuju ke Dashboard Admin...');
-            setTimeout(() => {
-                window.location.href = '/admin/katalog_varian';
-            }, 1500);
+
+            const btn = document.getElementById('btn-submit');
+            const originalHtml = btn.innerHTML;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            const payload = {
+                whatsapp_number: document.getElementById('whatsapp_number').value.trim(),
+                password: document.getElementById('password').value,
+                remember: document.getElementById('remember').checked,
+                device_name: 'web_admin_blade'
+            };
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Memverifikasi...</span>';
+
+            try {
+                const response = await fetch('/api/auth/admin/login', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.status !== 'success') {
+                    const errorMsg = result.message || (result.errors ? Object.values(result.errors)[0][0] : 'Gagal masuk ke dashboard.');
+                    showNotification('Login Gagal', errorMsg, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    return;
+                }
+
+                if (result.token) {
+                    localStorage.setItem('admin_token', result.token);
+                }
+
+                showNotification('Login Berhasil!', 'Mengarahkan ke Dashboard Finansial...', 'success');
+                setTimeout(() => {
+                    window.location.href = result.redirect || "{{ route('admin.dashboard-finansial') }}";
+                }, 900);
+            } catch (err) {
+                showNotification('Koneksi Bermasalah', 'Tidak dapat terhubung ke server. Coba lagi.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         });
     </script>
 </body>
