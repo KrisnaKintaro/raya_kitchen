@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Pemulihan Sandi Admin - Raya Kitchen</title>
     <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -42,7 +43,7 @@
 
     <!-- Card Utama (Single Centered Card) -->
     <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-admin-accent/50">
-        
+
         <!-- Header Banner dengan Gambar Suasana Dapur -->
         <div class="relative bg-slate-900 p-8 text-center text-white overflow-hidden">
             <div class="absolute inset-0">
@@ -63,14 +64,14 @@
         <div class="p-8">
             <form id="admin-forgot-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Nomor WhatsApp</label>
+                    <label for="whatsapp_number" class="block text-xs font-black uppercase tracking-wider text-admin-textMain mb-1.5">Nomor WhatsApp</label>
                     <div class="relative">
                         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-admin-sideBg font-bold text-sm">+62</span>
-                        <input type="tel" required placeholder="81234567890" class="w-full pl-14 pr-4 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
+                        <input id="whatsapp_number" name="whatsapp_number" type="tel" required autocomplete="tel" placeholder="81234567890" class="w-full pl-14 pr-4 py-3.5 rounded-2xl border border-purple-100 bg-admin-bg text-sm font-semibold text-admin-textMain focus:outline-none focus:ring-2 focus:ring-admin-sideBg focus:bg-white transition-all">
                     </div>
                 </div>
 
-                <button type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2">
+                <button id="btn-submit" type="submit" class="w-full py-4 rounded-2xl bg-admin-sideBg hover:bg-admin-sideHover disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-sm shadow-lg shadow-purple-900/15 transition-all flex items-center justify-center gap-2">
                     <i class="ph ph-paper-plane-tilt text-base"></i>
                     <span>Kirim Link Reset</span>
                 </button>
@@ -85,14 +86,19 @@
     </div>
 
     <script>
-        function showNotification(title, message) {
+        function showNotification(title, message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border border-admin-accent shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300';
-            
+            const isError = type === 'error';
+
+            const borderClass = isError ? 'border-red-200' : 'border-admin-accent';
+            const iconBoxClass = isError ? 'bg-red-50 text-red-600' : 'bg-admin-navBg text-admin-sideBg';
+            const iconClass = isError ? 'ph-warning-circle' : 'ph-check-circle';
+
+            toast.className = `pointer-events-auto flex items-start gap-3 p-4 rounded-2xl border ${borderClass} shadow-2xl bg-white transition-all transform -translate-y-5 opacity-0 duration-300`;
             toast.innerHTML = `
-                <div class="w-10 h-10 rounded-xl bg-admin-navBg text-admin-sideBg flex items-center justify-center shrink-0">
-                    <i class="ph ph-check-circle text-xl"></i>
+                <div class="w-10 h-10 rounded-xl ${iconBoxClass} flex items-center justify-center shrink-0">
+                    <i class="ph ${iconClass} text-xl"></i>
                 </div>
                 <div>
                     <h4 class="font-black text-sm text-admin-textMain">${title}</h4>
@@ -106,15 +112,55 @@
             setTimeout(() => {
                 toast.classList.add('-translate-y-5', 'opacity-0');
                 setTimeout(() => toast.remove(), 300);
-            }, 1800);
+            }, 3500);
         }
 
-        document.getElementById('admin-forgot-form').addEventListener('submit', function(e) {
+        document.getElementById('admin-forgot-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            showNotification('Tautan Terkirim!', 'Silakan cek WhatsApp admin untuk instruksi selanjutnya.');
-            setTimeout(() => {
-                window.location.href = "{{ route('admin.login') }}";
-            }, 1800);
+
+            const btn = document.getElementById('btn-submit');
+            const originalHtml = btn.innerHTML;
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+            const payload = {
+                whatsapp_number: document.getElementById('whatsapp_number').value.trim()
+            };
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner-gap animate-spin text-base"></i><span>Mengirim ke WhatsApp...</span>';
+
+            try {
+                const response = await fetch('/api/auth/admin/forgot-password', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || result.status !== 'success') {
+                    const errorMsg = result.message || (result.errors ? Object.values(result.errors)[0][0] : 'Gagal mengirim tautan reset.');
+                    showNotification('Gagal Mengirim', errorMsg, 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    return;
+                }
+
+                showNotification('Tautan Terkirim!', result.message || 'Silakan cek WhatsApp admin untuk instruksi selanjutnya.', 'success');
+                setTimeout(() => {
+                    window.location.href = "{{ route('admin.login') }}";
+                }, 2000);
+            } catch (err) {
+                showNotification('Koneksi Bermasalah', 'Tidak dapat terhubung ke server. Coba lagi.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         });
     </script>
 </body>

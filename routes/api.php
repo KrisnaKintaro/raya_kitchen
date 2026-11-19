@@ -3,11 +3,14 @@
 use App\Http\Controllers\Api\Admin\BatalRefundController;
 use App\Http\Controllers\Api\Admin\DaftarTransaksiController;
 use App\Http\Controllers\Api\Admin\DashboardFinansialController;
+use App\Http\Controllers\Api\Admin\KelolaAkunController;
 use App\Http\Controllers\Api\Admin\KelolaPengirimanController;
 use App\Http\Controllers\Api\Admin\OperasionalLiburController;
 use App\Http\Controllers\Api\Admin\PantauanDapurController;
-use App\Http\Controllers\Api\Admin\SystemStoreController;
+use App\Http\Controllers\Api\Admin\ProdukResepController;
+use App\Http\Controllers\Api\Admin\ProfilPerusahaanController;
 use App\Http\Controllers\Api\Admin\WhatsappBotTemplateController;
+use App\Http\Controllers\Api\Auth\AdminAuthController;
 use App\Http\Controllers\Api\Auth\ForgResetPasswordController;
 use App\Http\Controllers\Api\Auth\LogInOutController;
 use App\Http\Controllers\Api\Auth\RegisterController;
@@ -17,31 +20,43 @@ use App\Http\Controllers\Api\Pembeli\KatalogController;
 use App\Http\Controllers\Api\Pembeli\NotificationController;
 use App\Http\Controllers\Api\Pembeli\ProfileController;
 use App\Http\Controllers\Api\Pembeli\TentangKamiController;
-use App\Http\Controllers\Api\Admin\KelolaAkunController;
-use App\Http\Controllers\Api\Admin\ProfilPerusahaanController;
-use App\Http\Controllers\Api\Admin\ProdukResepController;
 use App\Http\Controllers\Api\WhatsAppBotController;
 use Illuminate\Support\Facades\Route;
 
 // |--------------------------------------------------------------------------
-// | 1. AUTHENTICATION ROUTES (/api/auth)
+// | 1. BUYER AUTHENTICATION ROUTES (/api/auth)
 // |--------------------------------------------------------------------------
-// | Menangani registrasi, verifikasi OTP, login, logout, dan reset password.
+// | Menggunakan middleware 'web' agar bisa menulis Session untuk Blade,
+// | sekaligus tetap mengembalikan Bearer Token Sanctum untuk Mobile/API.
 Route::prefix('auth')->middleware('web')->group(function () {
     Route::post('/register', [RegisterController::class, 'register']);
     Route::post('/verify-otp', [RegisterController::class, 'verifyOtp']);
     Route::post('/resend-otp', [RegisterController::class, 'resendOtp']);
     Route::post('/login', [LogInOutController::class, 'login']);
-    Route::get('/logout', [LogInOutController::class, 'logout'])->middleware('auth:sanctum');
+    Route::match(['get', 'post'], '/logout', [LogInOutController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('/forgot-password', [ForgResetPasswordController::class, 'sendResetLink']);
     Route::post('/reset-password', [ForgResetPasswordController::class, 'resetPassword']);
 });
 
 // |--------------------------------------------------------------------------
+// | 1B. ADMIN AUTHENTICATION ROUTES (/api/auth/admin)
+// |--------------------------------------------------------------------------
+// | Universal Auth khusus Admin (Session Web untuk Blade + Bearer Token Sanctum).
+Route::prefix('auth/admin')->middleware('web')->group(function () {
+    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/forgot-password', [AdminAuthController::class, 'sendResetLink']);
+    Route::post('/reset-password', [AdminAuthController::class, 'resetPassword']);
+
+    Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+        Route::get('/me', [AdminAuthController::class, 'me']);
+        Route::match(['get', 'post'], '/logout', [AdminAuthController::class, 'logout']);
+    });
+});
+
+// |--------------------------------------------------------------------------
 // | 2. BUYER PUBLIC ROUTES (/api/pembeli)
 // |--------------------------------------------------------------------------
-// | Endpoint publik yang dapat diakses tanpa login (termasuk akses langsung
-// | dari tautan WhatsApp Bot seperti halaman pembayaran QRIS, nota, & pin lokasi).
+// | Endpoint publik tanpa login (termasuk akses langsung dari tautan WA Bot).
 Route::prefix('pembeli')->group(function () {
     // Katalog & Informasi Toko
     Route::get('/katalog', [KatalogController::class, 'index']);
@@ -62,8 +77,8 @@ Route::prefix('pembeli')->group(function () {
 // |--------------------------------------------------------------------------
 // | 3. BUYER PROTECTED ROUTES (/api/pembeli)
 // |--------------------------------------------------------------------------
-// | Endpoint khusus pelanggan yang sudah login pada website.
-Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
+// | Support dual auth: Session Web (Blade) & Bearer Token Sanctum (Android/API).
+Route::prefix('pembeli')->middleware(['web', 'auth:sanctum', 'role:pelanggan'])->group(function () {
     // Profil & Manajemen Alamat
     Route::get('/profil-data', [ProfileController::class, 'edit'])->name('profil.data');
     Route::post('/profil-data', [ProfileController::class, 'update']);
@@ -96,8 +111,8 @@ Route::prefix('pembeli')->middleware(['web', 'auth:web'])->group(function () {
 // |--------------------------------------------------------------------------
 // | 4. ADMIN PANEL ROUTES (/api/admin)
 // |--------------------------------------------------------------------------
-// | Endpoint manajemen operasional, finansial, sistem toko, dan bot WhatsApp.
-Route::prefix('admin')->group(function () {
+// | Terproteksi ketat: Wajib login (Session Web atau Bearer Token Sanctum) & role:admin.
+Route::prefix('admin')->middleware(['web', 'auth:sanctum', 'role:admin'])->group(function () {
     // Dashboard Finansial
     Route::get('/dashboard-finansial', [DashboardFinansialController::class, 'index']);
 

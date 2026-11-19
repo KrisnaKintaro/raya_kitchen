@@ -25,7 +25,11 @@ class LogInOutController extends Controller
         }
 
         // 3. Eksekusi Login ngecek ke tabel users
-        if (Auth::attempt(['whatsapp_number' => $waNumber, 'password' => $request->password], $request->remember)) {
+        if (Auth::attempt([
+            'whatsapp_number' => $waNumber,
+            'password'        => $request->password,
+            'role'            => 'pelanggan',
+        ], $request->boolean('remember'))) {
 
             // 4. Setup Session buat Web (Blade)
             $request->session()->regenerate();
